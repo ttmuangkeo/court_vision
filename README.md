@@ -1,6 +1,6 @@
 # Court Vision 🏀
 
-A comprehensive NBA analytics and insights application providing real-time statistics, player analysis, and game insights.
+A film-room companion for NBA superfans, analysts, and creators. Tag plays in real-time, build your personal Synergy-style database, and export ready-made content for YouTube/Twitter.
 
 ##  Features
 
@@ -12,19 +12,22 @@ A comprehensive NBA analytics and insights application providing real-time stati
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Database | PostgreSQL (self-hosted) |
-| ORM | Prisma |
-| API Server | Express.js |
-| Authentication | Clerk/Auth.js |
-| Hosting | Render/Fly.io/Railway |
+| Layer | Technology | Why |
+|-------|------------|-----|
+| Database | PostgreSQL (self-hosted) | Full SQL control, analytics, Timescale/pgvector ready |
+| API | Express + Prisma | Familiar JS, schema-driven, easy migrations |
+| Real-time | Socket.io | Push new plays/tags instantly to all viewers |
+| External Data | balldontlie/BallIsLife API | Pull teams, players & daily schedule |
+| Auth | JWT (passport-jwt) | Simple to start, upgrade to Clerk later |
+| Frontend | React (placeholder) | Game clock, tag buttons, real-time play lists |
+| Deployment | Docker-compose → Fly.io/Render | One command to spin DB + API |
 
 ## 📋 Prerequisites
 
 - Node.js (v18 or higher)
 - PostgreSQL database
 - npm or yarn package manager
+- Docker (optional, for easy setup)
 
 ## 🚀 Getting Started
 
