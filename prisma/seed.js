@@ -114,84 +114,149 @@ async function main() {
       name: 'Pick and Roll',
       category: 'OFFENSIVE_ACTION',
       subcategory: 'PnR',
-      description: 'Ball handler uses a screen to create space',
-      icon: '🔄',
-      color: '#FF6B6B'
+      description: 'Offensive play where a player sets a screen and rolls to the basket',
+      icon: '🏀',
+      color: '#4CAF50',
+      triggers: { 'screen_set': true, 'ball_handler': true },
+      suggestions: ['Drop Coverage', 'Switch', 'Hedge']
     },
     {
       name: 'Isolation',
       category: 'OFFENSIVE_ACTION',
       subcategory: 'ISO',
       description: 'One-on-one offensive play',
-      icon: '��',
-      color: '#4ECDC4'
+      icon: '👤',
+      color: '#2196F3',
+      triggers: { 'one_on_one': true, 'clear_out': true },
+      suggestions: ['Double Team', 'Help Defense', 'Contest']
     },
     {
       name: 'Post Up',
       category: 'OFFENSIVE_ACTION',
       subcategory: 'Post',
-      description: 'Player backs down defender in the post',
-      icon: '🏀',
-      color: '#45B7D1'
+      description: 'Offensive player establishes position in the post',
+      icon: '🏠',
+      color: '#FF9800',
+      triggers: { 'post_position': true, 'back_to_basket': true },
+      suggestions: ['Double Team', 'Deny Entry', 'Front Post']
     },
     {
-      name: 'Drive',
+      name: 'Off-Ball Screen',
       category: 'OFFENSIVE_ACTION',
-      subcategory: 'Drive',
-      description: 'Player drives to the basket',
-      icon: '🏃',
-      color: '#96CEB4'
-    },
-    {
-      name: 'Pull Up Jump Shot',
-      category: 'OFFENSIVE_ACTION',
-      subcategory: 'Shot',
-      description: 'Jump shot off the dribble',
-      icon: '🏀',
-      color: '#FFEAA7'
+      subcategory: 'Screen',
+      description: 'Screen set for a player without the ball',
+      icon: '🚧',
+      color: '#9C27B0',
+      triggers: { 'screen_set': true, 'off_ball': true },
+      suggestions: ['Switch', 'Fight Through', 'Go Under']
     },
 
     // Defensive Actions
     {
       name: 'Drop Coverage',
       category: 'DEFENSIVE_ACTION',
-      subcategory: 'Coverage',
-      description: 'Defender drops back to protect the rim',
+      subcategory: 'PnR Defense',
+      description: 'Defensive strategy where big man drops back on pick and roll',
       icon: '⬇️',
-      color: '#DDA0DD'
+      color: '#F44336',
+      triggers: { 'pick_and_roll': true, 'big_drops': true },
+      suggestions: ['Contest', 'Rebound', 'Help']
     },
     {
       name: 'Switch',
       category: 'DEFENSIVE_ACTION',
-      subcategory: 'Coverage',
-      description: 'Defenders switch assignments',
+      subcategory: 'PnR Defense',
+      description: 'Defenders switch assignments on pick and roll',
       icon: '🔄',
-      color: '#98D8C8'
+      color: '#E91E63',
+      triggers: { 'pick_and_roll': true, 'defenders_switch': true },
+      suggestions: ['Mismatch', 'Help Defense', 'Recover']
     },
     {
       name: 'Double Team',
       category: 'DEFENSIVE_ACTION',
-      subcategory: 'Coverage',
-      description: 'Two defenders guard one player',
-      icon: '��',
-      color: '#F7DC6F'
+      subcategory: 'Help',
+      description: 'Two defenders guard one offensive player',
+      icon: '👥',
+      color: '#795548',
+      triggers: { 'star_player': true, 'isolation': true },
+      suggestions: ['Kick Out', 'Pass', 'Turnover']
     },
     {
-      name: 'Trap',
+      name: 'Help Defense',
       category: 'DEFENSIVE_ACTION',
-      subcategory: 'Coverage',
-      description: 'Defenders trap the ball handler',
-      icon: '🔄',
-      color: '#BB8FCE'
+      subcategory: 'Help',
+      description: 'Defender leaves assignment to help on ball',
+      icon: '🆘',
+      color: '#607D8B',
+      triggers: { 'penetration': true, 'help_needed': true },
+      suggestions: ['Recover', 'Rotate', 'Close Out']
+    },
+
+    // Transition
+    {
+      name: 'Fast Break',
+      category: 'TRANSITION',
+      subcategory: 'Offense',
+      description: 'Quick offensive transition after defensive rebound/steal',
+      icon: '⚡',
+      color: '#FF5722',
+      triggers: { 'defensive_rebound': true, 'quick_transition': true },
+      suggestions: ['Layup', 'Dunk', 'Pull Up Three']
+    },
+    {
+      name: 'Transition Defense',
+      category: 'TRANSITION',
+      subcategory: 'Defense',
+      description: 'Defensive setup after offensive turnover/miss',
+      icon: '🛡️',
+      color: '#3F51B5',
+      triggers: { 'offensive_turnover': true, 'defensive_setup': true },
+      suggestions: ['Match Up', 'Protect Rim', 'Contest']
+    },
+
+    // Set Plays
+    {
+      name: 'Horns',
+      category: 'SET_PLAY',
+      subcategory: 'Formation',
+      description: 'Offensive formation with two bigs at elbows',
+      icon: '🐂',
+      color: '#8BC34A',
+      triggers: { 'formation': 'horns', 'two_bigs': true },
+      suggestions: ['Pick and Roll', 'Post Up', 'Flare Screen']
+    },
+    {
+      name: 'Flare Screen',
+      category: 'SET_PLAY',
+      subcategory: 'Screen',
+      description: 'Screen set away from the ball to free shooter',
+      icon: '🌟',
+      color: '#FFC107',
+      triggers: { 'screen_away': true, 'shooter': true },
+      suggestions: ['Catch and Shoot', 'Relocate', 'Drive']
     }
   ];
 
   for (const tagData of tags) {
-    await prisma.tag.upsert({
+    const tag = await prisma.tag.upsert({
       where: { name: tagData.name },
-      update: {},
+      update: tagData,
       create: tagData
     });
+
+    // Create glossary entry for each tag
+    const glossaryData = getGlossaryEntry(tagData.name);
+    if (glossaryData) {
+      await prisma.glossaryEntry.upsert({
+        where: { tagId: tag.id },
+        update: glossaryData,
+        create: {
+          ...glossaryData,
+          tagId: tag.id
+        }
+      });
+    }
   }
 
   console.log('✅ Basketball tags created successfully');
@@ -243,6 +308,55 @@ async function main() {
   console.log(`- Tags: ${tags.length}`);
   console.log(`- Sample Game: 1`);
   console.log(`- Sample User: 1`);
+}
+
+function getGlossaryEntry(tagName) {
+  const entries = {
+    'Pick and Roll': {
+      title: 'Pick and Roll',
+      definition: 'A fundamental basketball play where one player sets a screen (pick) for the ball handler, then rolls toward the basket.',
+      explanation: 'The pick and roll is one of basketball\'s most effective offensive plays. The screener creates space for the ball handler, who can either drive to the basket or pass to the rolling screener. Defenses must choose between switching, dropping, or hedging to defend this play.',
+      difficulty: 'BEGINNER',
+      relatedTerms: ['Screen', 'Roll', 'Pop', 'Hedge', 'Switch', 'Drop Coverage'],
+      examples: {
+        'scenarios': [
+          'Point guard calls for screen from center',
+          'Center sets screen, then rolls to basket',
+          'Ball handler drives or passes to rolling big'
+        ]
+      }
+    },
+    'Drop Coverage': {
+      title: 'Drop Coverage',
+      definition: 'A defensive strategy where the big man defending the screener drops back toward the basket instead of switching or hedging.',
+      explanation: 'In drop coverage, the defending big man retreats toward the basket to protect the rim while the ball handler\'s defender fights over the screen. This strategy prioritizes rim protection but can leave the ball handler open for mid-range shots.',
+      difficulty: 'INTERMEDIATE',
+      relatedTerms: ['Pick and Roll', 'Hedge', 'Switch', 'Rim Protection', 'Mid-Range'],
+      examples: {
+        'scenarios': [
+          'Big man drops back on screen',
+          'Ball handler gets mid-range opportunity',
+          'Defense prioritizes rim protection'
+        ]
+      }
+    },
+    'Switch': {
+      title: 'Switch',
+      definition: 'A defensive tactic where two defenders exchange their assignments, typically in response to a screen.',
+      explanation: 'When a switch occurs, defenders trade offensive players. This prevents the ball handler from getting open but can create mismatches. Teams often switch to avoid giving up open shots but must be prepared to handle size mismatches.',
+      difficulty: 'INTERMEDIATE',
+      relatedTerms: ['Pick and Roll', 'Mismatch', 'Communication', 'Help Defense'],
+      examples: {
+        'scenarios': [
+          'Screen is set',
+          'Defenders call out switch',
+          'Big man guards guard, guard guards big'
+        ]
+      }
+    }
+  };
+
+  return entries[tagName];
 }
 
 main()

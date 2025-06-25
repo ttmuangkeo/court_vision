@@ -1,3 +1,53 @@
+# 🏀 Court Vision
+
+Film-room companion for NBA superfans, analysts, and creators. Real-time basketball analytics and tagging system.
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Set up database
+npm run db:generate
+npm run db:push
+npm run db:seed
+
+# Sync NBA data from BallDontLie API
+npm run sync:data
+
+# Start development server
+npm run dev
+```
+
+## 📊 BallDontLie API Integration
+
+Court Vision integrates with the [BallDontLie API](https://www.balldontlie.io/) to populate your database with current NBA data.
+
+### Sync Commands
+
+```bash
+# Sync all data (teams, players, games)
+npm run sync:data
+
+# Or run individual syncs via API
+curl -X POST http://localhost:3000/api/teams/sync \
+  -H "Content-Type: application/json" \
+  -d '{"season": "2023-24"}'
+```
+
+### What Gets Synced
+
+- **Teams**: All 30 NBA teams with conference/division info
+- **Players**: Current roster players with stats and team relationships  
+- **Games**: Game schedule, scores, and live status
+- **Tags**: Basketball action categories (seeded manually)
+
+### Rate Limiting
+
+The sync process includes built-in rate limiting to be respectful to the BallDontLie API:
+- 100ms delay between individual records
+- 1 second delay between major operations (teams → players → games)
 
 ## 🗄 Database Schema
 
@@ -13,66 +63,6 @@
 - **Users**: User accounts and preferences
 - **Predictions**: AI prediction system
 - **GlossaryEntries**: Basketball education system
-
-## �� API Endpoints
-
-### Health Check
-- `GET /health` - Server status
-
-### Teams
-- `GET /api/teams` - Get all teams
-- `GET /api/teams?include=players` - Get teams with players
-- `GET /api/teams/:id` - Get specific team
-
-### Players
-- `GET /api/players` - Get all players
-- `GET /api/players?include=team` - Get players with team info
-- `GET /api/players?team=teamId` - Filter by team
-- `GET /api/players/:id` - Get specific player
-
-### Tags
-- `GET /api/tags` - Get all basketball tags
-- `GET /api/tags?category=OFFENSIVE_ACTION` - Filter by category
-- `GET /api/tags/:id` - Get specific tag
-
-## 🧪 Testing the API
-
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# Get all teams
-curl http://localhost:3000/api/teams
-
-# Get teams with players
-curl http://localhost:3000/api/teams?include=players
-
-# Get offensive tags
-curl http://localhost:3000/api/tags?category=OFFENSIVE_ACTION
-```
-
-## �� Current Features
-
-### ✅ Completed
-- [x] Database schema with Prisma
-- [x] Seeded NBA data (teams, players, tags)
-- [x] Express API server with middleware
-- [x] Teams, players, and tags endpoints
-- [x] Database relationships working
-- [x] Health check and API documentation
-
-### 🔄 In Progress
-- [ ] Games endpoint
-- [ ] Plays endpoint for tagging
-- [ ] User authentication
-- [ ] Real-time Socket.io integration
-
-### 📋 Planned
-- [ ] Frontend React interface
-- [ ] Live game tagging system
-- [ ] Predictive tagging AI
-- [ ] Export functionality
-- [ ] balldontlie API integration
 
 ## 🎓 Basketball Tags
 
@@ -119,7 +109,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Tim Muangkeo** - [@ttmuangkeo](https://github.com/ttmuangkeo)
 
-## �� Acknowledgments
+## 🎉 Acknowledgments
 
 - NBA and balldontlie API for data
 - Prisma team for the excellent ORM

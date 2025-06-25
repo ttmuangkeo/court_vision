@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../../db/client');
+const { syncAllData } = require('../../services/nba/syncService');
 
 router.get('/', async (req, res) => {
     try {
@@ -55,6 +56,31 @@ router.get('/:id', async(req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to fetch team'
+        });
+    }
+});
+
+// Sync endpoint to populate data from BallDontLie API
+router.post('/sync', async (req, res) => {
+    try {
+        const { season = '2023-24' } = req.body;
+        
+        console.log(`🔄 Starting sync for season ${season}...`);
+        
+        // Start the sync process
+        await syncAllData(season);
+        
+        res.json({
+            success: true,
+            message: `Successfully synced data for season ${season}`,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error during sync:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to sync data from BallDontLie API',
+            details: error.message
         });
     }
 });
