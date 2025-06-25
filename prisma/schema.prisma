@@ -85,29 +85,23 @@ model Game {
 model Play {
   id              String       @id @default(cuid())
   gameId          String
-  timestamp       DateTime     // When the play occurred
-  gameTime        String       // "11:45 Q2" format
+  timestamp       DateTime     @default(now())
+  gameTime        String
   quarter         Int
-  timeInQuarter   String       // "11:45" format
-  description     String?      // "Jokic brings ball up"
-  
-  // Play Context
-  possession      Possession   // OFFENSE, DEFENSE
-  playType        PlayType     // SET_PLAY, TRANSITION, SPECIAL
-  ballLocation    BallLocation // TOP_KEY, WING, CORNER, etc.
-  
-  // Key Players Involved
-  ballHandlerId   String?      // Player with the ball
-  primaryPlayerId String?      // Main player in the action
-  secondaryPlayerId String?    // Supporting player (screener, etc.)
-  
-  // Play Outcome
-  result          PlayResult?  // MADE, MISSED, TURNOVER, FOUL
-  points          Int?         // Points scored (0, 2, 3)
+  description     String?
+  timeInQuarter   String?
+  possession      Possession?   // optional
+  playType        PlayType?     // optional
+  ballLocation    BallLocation? // optional
+  ballHandlerId   String?       // optional
+  primaryPlayerId String?       // optional
+  secondaryPlayerId String?     // optional
+  result          PlayResult?   // optional
+  points          Int?          // optional
+  createdById     String
   
   // Metadata
   isVerified      Boolean      @default(false) // Multiple users tagged same play
-  createdById     String       // Changed from createdBy to createdById
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 

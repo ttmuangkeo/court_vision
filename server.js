@@ -9,6 +9,8 @@ const teamsRouter = require('./src/api/teams');
 const playersRouter = require('./src/api/players');
 const tagsRouter = require('./src/api/tags');
 const gamesRouter = require('./src/api/games');
+const playsRouter = require('./src/api/plays');
+const authRouter = require('./src/api/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +34,7 @@ app.use('/api/teams', teamsRouter);
 app.use('/api/players', playersRouter);
 app.use('/api/tags', tagsRouter);
 app.use('/api/games', gamesRouter);
+app.use('/api/plays', playsRouter);
 
 // API Docs
 app.get('/api', (req, res) => {
