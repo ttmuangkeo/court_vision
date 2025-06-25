@@ -8,6 +8,7 @@ require('dotenv').config();
 const teamsRouter = require('./src/api/teams');
 const playersRouter = require('./src/api/players');
 const tagsRouter = require('./src/api/tags');
+const gamesRouter = require('./src/api/games');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.get('/health', (req, res) => {
 app.use('/api/teams', teamsRouter);
 app.use('/api/players', playersRouter);
 app.use('/api/tags', tagsRouter);
+app.use('/api/games', gamesRouter);
 
 // API Docs
 app.get('/api', (req, res) => {
