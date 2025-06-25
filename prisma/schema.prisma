@@ -1,0 +1,334 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  nbaId        String   @unique
+  name         String
+  abbreviation String   @unique
+  city         String
+  conference   String
+  division     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relation
+  players      Player[]
+  homeGames    Game[]   @relation("HomeTeam")
+  awayGames    Game[]   @relation("AwayTeam")
+  playTags     PlayTag[]
+  favoriteBy   User[]   @relation("UserFavoriteTeams")
+
+  @@map("teams")
+} 
+
+model Player {
+  id              String   @id @default(cuid())
+  nbaId           String   @unique
+  name            String
+  position        String
+  teamId          String?
+  height          String?
+  weight          Int?
+  birthDate       DateTime?
+  college         String?
+  draftYear       Int?
+  draftRound      Int?
+  draftNumber     Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  team            Team?    @relation(fields: [teamId], references: [id])
+  playTags        PlayTag[]
+  ballHandlerPlays Play[]  @relation("BallHandler")
+  primaryPlays    Play[]   @relation("PrimaryPlayer")
+  secondaryPlays  Play[]   @relation("SecondaryPlayer")
+  predictions     Prediction[]
+  favoriteBy      User[]   @relation("UserFavoritePlayers")
+
+  @@map("players")
+}
+
+model Game {
+  id            String     @id @default(cuid())
+  nbaId         String     @unique
+  date          DateTime
+  homeTeamId    String
+  awayTeamId    String
+  homeScore     Int?
+  awayScore     Int?
+  status        GameStatus
+  quarter       Int        @default(1)
+  timeRemaining String?    // "11:45" format
+  attendance    Int?
+  arena         String?
+  season        String     // "2023-24"
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  homeTeam      Team       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam      Team       @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  plays         Play[]
+  viewers       GameViewer[]
+
+  @@map("games")
+}
+
+model Play {
+  id              String       @id @default(cuid())
+  gameId          String
+  timestamp       DateTime     // When the play occurred
+  gameTime        String       // "11:45 Q2" format
+  quarter         Int
+  timeInQuarter   String       // "11:45" format
+  description     String?      // "Jokic brings ball up"
+  
+  // Play Context
+  possession      Possession   // OFFENSE, DEFENSE
+  playType        PlayType     // SET_PLAY, TRANSITION, SPECIAL
+  ballLocation    BallLocation // TOP_KEY, WING, CORNER, etc.
+  
+  // Key Players Involved
+  ballHandlerId   String?      // Player with the ball
+  primaryPlayerId String?      // Main player in the action
+  secondaryPlayerId String?    // Supporting player (screener, etc.)
+  
+  // Play Outcome
+  result          PlayResult?  // MADE, MISSED, TURNOVER, FOUL
+  points          Int?         // Points scored (0, 2, 3)
+  
+  // Metadata
+  isVerified      Boolean      @default(false) // Multiple users tagged same play
+  createdById     String       // Changed from createdBy to createdById
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  game            Game         @relation(fields: [gameId], references: [id])
+  ballHandler     Player?      @relation("BallHandler", fields: [ballHandlerId], references: [id])
+  primaryPlayer   Player?      @relation("PrimaryPlayer", fields: [primaryPlayerId], references: [id])
+  secondaryPlayer Player?      @relation("SecondaryPlayer", fields: [secondaryPlayerId], references: [id])
+  tags            PlayTag[]
+  predictions     Prediction[]
+  createdBy       User         @relation("UserPlays", fields: [createdById], references: [id])
+
+  @@map("plays")
+}
+
+model Tag {
+  id              String       @id @default(cuid())
+  name            String       @unique // "High Pick and Roll", "Drop Coverage"
+  category        TagCategory
+  subcategory     String?      // "PnR", "ISO", "Post", etc.
+  description     String?
+  icon            String?      // "🏀", ""
+  color           String?      // "#FF6B6B"
+  
+  // Basketball Glossary/Education
+  glossaryEntry   GlossaryEntry?
+  
+  // Predictive Properties
+  triggers        Json?        // What actions trigger this tag
+  suggestions     Json?        // What tags typically follow this
+  isActive        Boolean      @default(true)
+  usageCount      Int          @default(0)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  playTags        PlayTag[]
+  predictions     Prediction[]
+
+  @@map("tags")
+}
+
+// Basketball Glossary/Education System
+model GlossaryEntry {
+  id              String       @id @default(cuid())
+  tagId           String       @unique
+  title           String       // "Drop Coverage"
+  definition      String       // "A defensive strategy where..."
+  explanation     String       // Detailed explanation with examples
+  videoUrl        String?      // Link to video example
+  imageUrl        String?      // Diagram or screenshot
+  difficulty      Difficulty   @default(BEGINNER)
+  relatedTerms    String[]     // ["Switch", "Hedge", "Trap"]
+  examples        Json?        // Example plays/scenarios
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  tag             Tag          @relation(fields: [tagId], references: [id])
+
+  @@map("glossary_entries")
+}
+
+model PlayTag {
+  id              String       @id @default(cuid())
+  playId          String
+  tagId           String
+  playerId        String?      // Which player was involved
+  teamId          String?      // Which team
+  
+  // Tag Context
+  context         Json?        // Additional data like "defense: drop", "result: made"
+  confidence      Float        @default(1.0) // How confident the user is (0.0-1.0)
+  
+  createdById     String       // User who tagged
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  play            Play         @relation(fields: [playId], references: [id])
+  tag             Tag          @relation(fields: [tagId], references: [id])
+  player          Player?      @relation(fields: [playerId], references: [id])
+  team            Team?        @relation(fields: [teamId], references: [id])
+  createdBy       User         @relation("UserPlayTags", fields: [createdById], references: [id])
+
+  @@unique([playId, tagId, playerId, createdById])
+  @@map("play_tags")
+}
+
+model Prediction {
+  id              String       @id @default(cuid())
+  playId          String
+  tagId           String
+  playerId        String?
+  confidence      Float        // 0.0 to 1.0
+  context         Json         // What triggered this prediction
+  isCorrect       Boolean?     // Was user's choice the same as prediction?
+  createdById     String       // Changed from createdBy to createdById
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  play            Play         @relation(fields: [playId], references: [id])
+  tag             Tag          @relation(fields: [tagId], references: [id])
+  player          Player?      @relation(fields: [playerId], references: [id])
+  createdBy       User         @relation("UserPredictions", fields: [createdById], references: [id])
+
+  @@map("predictions")
+}
+
+// Basketball-Specific Enums
+enum GameStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  CANCELLED
+  POSTPONED
+}
+
+enum Possession {
+  OFFENSE
+  DEFENSE
+}
+
+enum PlayType {
+  SET_PLAY
+  TRANSITION
+  SPECIAL
+  FREE_THROW
+  REBOUND
+}
+
+enum BallLocation {
+  TOP_KEY
+  WING_LEFT
+  WING_RIGHT
+  CORNER_LEFT
+  CORNER_RIGHT
+  POST_LEFT
+  POST_RIGHT
+  PAINT
+  PERIMETER
+}
+
+enum PlayResult {
+  MADE_2
+  MADE_3
+  MISSED_2
+  MISSED_3
+  TURNOVER
+  FOUL
+  REBOUND_OFFENSIVE
+  REBOUND_DEFENSIVE
+  ASSIST
+  BLOCK
+  STEAL
+}
+
+enum TagCategory {
+  OFFENSIVE_ACTION
+  DEFENSIVE_ACTION
+  TRANSITION
+  SET_PLAY
+  SPECIAL_SITUATION
+  PLAYER_ACTION
+  TEAM_ACTION
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+model User {
+  id              String       @id @default(cuid())
+  email           String       @unique
+  username        String       @unique
+  password        String       // Hashed password
+  firstName       String?
+  lastName        String?
+  avatar          String?      // Profile picture URL
+  bio             String?      // User bio
+  isActive        Boolean      @default(true)
+  role            UserRole     @default(USER)
+  emailVerified   Boolean      @default(false)
+  lastLoginAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // User Preferences
+  favoriteTeams   Team[]       @relation("UserFavoriteTeams")
+  favoritePlayers Player[]     @relation("UserFavoritePlayers")
+  
+  // User Activity
+  plays           Play[]       @relation("UserPlays")
+  playTags        PlayTag[]    @relation("UserPlayTags")
+  predictions     Prediction[] @relation("UserPredictions")
+  gameViewers     GameViewer[]
+
+  @@map("users")
+}
+
+model GameViewer {
+  id              String       @id @default(cuid())
+  gameId          String
+  userId          String
+  joinedAt        DateTime     @default(now())
+  lastSeen        DateTime     @default(now())
+  isActive        Boolean      @default(true)
+
+  // Relations
+  game            Game         @relation(fields: [gameId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@unique([gameId, userId])
+  @@map("game_viewers")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
