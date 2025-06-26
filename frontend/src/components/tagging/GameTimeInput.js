@@ -1,4 +1,5 @@
 import React from 'react';
+import './GameTimeInput.css';
 
 function GameTimeInput({ gameTime, setGameTime, currentQuarter, setCurrentQuarter }) {
   const quickTimes = [
@@ -9,83 +10,46 @@ function GameTimeInput({ gameTime, setGameTime, currentQuarter, setCurrentQuarte
     { label: 'End', value: '0:30' }
   ];
 
-  const handleQuickTime = (timeValue) => {
-    setGameTime(timeValue);
-  };
-
   return (
-    <>
-      {/* Quarter Selection */}
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Quarter:</label>
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {[1, 2, 3, 4].map(q => (
-            <button
-              key={q}
-              onClick={() => setCurrentQuarter(q)}
-              style={{
-                padding: '8px 12px',
-                background: currentQuarter === q ? '#007bff' : '#fff',
-                color: currentQuarter === q ? '#fff' : '#333',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              Q{q}
-            </button>
-          ))}
-        </div>
+    <div className="game-time-input-container">
+      <label className="game-time-input-label" htmlFor="game-time-input">Game Time:</label>
+      <input
+        className="game-time-input-field"
+        id="game-time-input"
+        type="text"
+        value={gameTime}
+        onChange={e => setGameTime(e.target.value)}
+        placeholder="MM:SS"
+      />
+      {/* Quick time buttons */}
+      <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+        {quickTimes.map(qt => (
+          <button
+            key={qt.label}
+            className="game-time-quick-btn"
+            type="button"
+            onClick={() => setGameTime(qt.value)}
+          >
+            {qt.label}
+          </button>
+        ))}
       </div>
-
-      {/* Quick Time Selection */}
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Game Time (Q{currentQuarter}):
-        </label>
-        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-          {quickTimes.map((time, index) => (
-            <button
-              key={index}
-              onClick={() => handleQuickTime(time.value)}
-              style={{
-                padding: '8px 12px',
-                background: gameTime === time.value ? '#28a745' : '#fff',
-                color: gameTime === time.value ? '#fff' : '#333',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                minWidth: '60px'
-              }}
-            >
-              {time.label}
-            </button>
-          ))}
-        </div>
-        
-        {/* Custom Time Input (Optional) */}
-        <div style={{ marginTop: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', color: '#666' }}>
-            Custom time (optional):
-          </label>
-          <input
-            type="text"
-            value={gameTime}
-            onChange={(e) => setGameTime(e.target.value)}
-            placeholder="e.g., 8:30"
-            style={{
-              width: '100%',
-              padding: '6px',
-              fontSize: '14px',
-              border: '1px solid #ddd',
-              borderRadius: '4px'
-            }}
-          />
-        </div>
+      <label className="game-time-input-label" htmlFor="quarter-input" style={{ marginLeft: 16 }}>Quarter:</label>
+      {/* Quarter buttons */}
+      <div style={{ display: 'flex', gap: 4 }}>
+        {[1, 2, 3, 4].map(q => (
+          <button
+            key={q}
+            className={`game-time-quick-btn${currentQuarter === q ? ' selected' : ''}`}
+            type="button"
+            onClick={() => setCurrentQuarter(q)}
+            style={currentQuarter === q ? { background: '#dbeafe', color: '#1d4ed8' } : {}}
+          >
+            {q}
+          </button>
+        ))}
       </div>
-    </>
+    </div>
   );
 }
 

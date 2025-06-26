@@ -1,0 +1,37 @@
+/* GameTimeInput.css */
+
+.game-time-input-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-time-input-label {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.game-time-input-field {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 1rem;
+  width: 80px;
+}
+
+.game-time-quick-btn {
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 4px 12px;
+  margin-left: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s, color 0.2s;
+}
+.game-time-quick-btn:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+} 

@@ -1,185 +1,441 @@
 import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:3000/api';
 
-function GameDetail({ gameId, onBack }) {
-  const [game, setGame] = useState(null);
-  const [loading, setLoading] = useState(true);
+function GameDetail() {
+    const { gameId } = useParams();
+    const navigate = useNavigate();
+    const [game, setGame] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [recentPlays, setRecentPlays] = useState([]);
 
-  // Form state
-  const [description, setDescription] = useState('');
-  const [quarter, setQuarter] = useState(1);
-  const [tagId, setTagId] = useState('');
-  const [playerId, setPlayerId] = useState('');
-  const [teamId, setTeamId] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [tags, setTags] = useState([]);
-  const [players, setPlayers] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [gameTime, setGameTime] = useState('');
+    useEffect(() => {
+        const fetchGameData = async () => {
+            try {
+                setLoading(true);
+                
+                // Fetch game details with teams
+                const gameRes = await axios.get(`${API_BASE}/games/${gameId}?include=teams`);
+                setGame(gameRes.data.data);
+                
+                // Fetch recent plays for this game
+                const playsRes = await axios.get(`${API_BASE}/plays?game_id=${gameId}&limit=10`);
+                setRecentPlays(playsRes.data.data || []);
+                
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching game data:', err);
+                setLoading(false);
+            }
+        };
 
-  // Fetch game details
-  useEffect(() => {
-    setLoading(true);
-    axios.get(`${API_BASE}/games/${gameId}?include=full`)
-      .then(res => {
-        setGame(res.data.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching game:', err);
-        setLoading(false);
-      });
-  }, [gameId]);
+        if (gameId) {
+            fetchGameData();
+        }
+    }, [gameId]);
 
-  // Fetch tags, players, teams for the form
-  useEffect(() => {
-    axios.get(`${API_BASE}/tags`).then(res => setTags(res.data.data));
-    axios.get(`${API_BASE}/players`).then(res => setPlayers(res.data.data));
-    axios.get(`${API_BASE}/teams`).then(res => setTeams(res.data.data));
-  }, []);
+    const handleBackClick = () => {
+        navigate('/games');
+    };
 
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
+    const handleStartTagging = () => {
+        navigate(`/games/${gameId}/tag`);
+    };
 
-    // For demo, use the first user in your DB as createdById
-    // In production, use the logged-in user's ID
-    const createdById = 'cmcbiuq8z000kpqkgzdegexx6'; // Replace with a real user ID
+    const handleViewAnalytics = () => {
+        navigate(`/games/${gameId}/analytics`);
+    };
 
-    try {
-      await axios.post(`${API_BASE}/plays`, {
-        gameId,
-        description,
-        quarter: Number(quarter),
-        gameTime,
-        createdById,
-        tags: [
-          {
-            tagId,
-            playerId,
-            teamId,
-            context: { result: "custom" }
-          }
-        ]
-      });
-      // Refresh game details to show the new play
-      const res = await axios.get(`${API_BASE}/games/${gameId}?include=full`);
-      setGame(res.data.data);
-      // Reset form
-      setDescription('');
-      setQuarter(1);
-      setTagId('');
-      setPlayerId('');
-      setTeamId('');
-      setGameTime('');
-    } catch (err) {
-      alert('Error tagging play: ' + (err.response?.data?.error || err.message));
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'LIVE': return '#f59e0b';
+            case 'FINISHED': return '#10b981';
+            case 'SCHEDULED': return '#6b7280';
+            default: return '#6b7280';
+        }
+    };
+
+    const getStatusBackground = (status) => {
+        switch (status) {
+            case 'LIVE': return '#fef3c7';
+            case 'FINISHED': return '#d1fae5';
+            case 'SCHEDULED': return '#f3f4f6';
+            default: return '#f3f4f6';
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '60vh',
+                fontSize: '1.1rem',
+                color: '#8e8e93',
+                fontWeight: '400'
+            }}>
+                Loading game details...
+            </div>
+        );
     }
-    setSubmitting(false);
-  };
 
-  if (loading) return <div>Loading game details...</div>;
-  if (!game) return <div>Game not found.</div>;
+    if (!game) {
+        return (
+            <div style={{ 
+                textAlign: 'center', 
+                padding: '40px',
+                fontSize: '1.2rem',
+                color: '#8e8e93'
+            }}>
+                Game not found
+            </div>
+        );
+    }
 
-  return (
-    <div>
-      <button onClick={onBack}>← Back to Games</button>
-      <h2>
-        {game.homeTeam?.name} vs {game.awayTeam?.name}
-      </h2>
-      <p>
-        <strong>Date:</strong> {new Date(game.date).toLocaleString()}<br />
-        <strong>Status:</strong> {game.status}<br />
-        <strong>Score:</strong> {game.homeTeam?.abbreviation} {game.homeScore} - {game.awayTeam?.abbreviation} {game.awayScore}
-      </p>
+    return (
+        <div style={{ 
+            minHeight: '100vh',
+            backgroundColor: '#fafafa',
+            padding: '0'
+        }}>
+            {/* Hero Section */}
+            <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                padding: '60px 20px 40px',
+                color: 'white',
+                position: 'relative'
+            }}>
+                {/* Back Button */}
+                <div style={{ 
+                    maxWidth: '1200px', 
+                    margin: '0 auto',
+                    position: 'relative'
+                }}>
+                    <button
+                        onClick={handleBackClick}
+                        style={{
+                            padding: '12px 20px',
+                            border: 'none',
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            fontWeight: '500',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            transition: 'all 0.2s ease',
+                            marginBottom: '40px'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                    >
+                        ← Back to Games
+                    </button>
+                    
+                    <div style={{ textAlign: 'center' }}>
+                        <h1 style={{ 
+                            fontSize: '3rem', 
+                            fontWeight: '700', 
+                            marginBottom: '16px',
+                            letterSpacing: '-0.02em',
+                            lineHeight: '1.1'
+                        }}>
+                            {game.homeTeam?.abbreviation} vs {game.awayTeam?.abbreviation}
+                        </h1>
+                        <p style={{ 
+                            fontSize: '1.25rem', 
+                            fontWeight: '400',
+                            opacity: '0.9',
+                            lineHeight: '1.5',
+                            marginBottom: '20px'
+                        }}>
+                            {new Date(game.date).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            })}
+                        </p>
+                        <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 16px',
+                            backgroundColor: getStatusBackground(game.status),
+                            color: getStatusColor(game.status),
+                            borderRadius: '12px',
+                            fontSize: '0.9rem',
+                            fontWeight: '600'
+                        }}>
+                            <span style={{
+                                width: '8px',
+                                height: '8px',
+                                backgroundColor: getStatusColor(game.status),
+                                borderRadius: '50%'
+                            }} />
+                            {game.status}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-      <h3>Tag a New Play</h3>
-      <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-        <label>
-          Description:
-          <input value={description} onChange={e => setDescription(e.target.value)} required />
-        </label>
-        <br />
-        <label>
-          Quarter:
-          <select value={quarter} onChange={e => setQuarter(e.target.value)}>
-            {[1,2,3,4].map(q => <option key={q} value={q}>{q}</option>)}
-          </select>
-        </label>
-        <br />
-        <label>
-          Game Time (e.g., 11:45 Q2):
-          <input
-            value={gameTime}
-            onChange={e => setGameTime(e.target.value)}
-            required
-            placeholder="e.g., 11:45 Q2"
-          />
-        </label>
-        <br />
-        <label>
-          Tag:
-          <select value={tagId} onChange={e => setTagId(e.target.value)} required>
-            <option value="">Select tag</option>
-            {tags.map(tag => (
-              <option key={tag.id} value={tag.id}>{tag.name}</option>
-            ))}
-          </select>
-        </label>
-        <br />
-        <label>
-          Player:
-          <select value={playerId} onChange={e => setPlayerId(e.target.value)} required>
-            <option value="">Select player</option>
-            {players.map(player => (
-              <option key={player.id} value={player.id}>{player.name}</option>
-            ))}
-          </select>
-        </label>
-        <br />
-        <label>
-          Team:
-          <select value={teamId} onChange={e => setTeamId(e.target.value)} required>
-            <option value="">Select team</option>
-            {teams.map(team => (
-              <option key={team.id} value={team.id}>{team.abbreviation}</option>
-            ))}
-          </select>
-        </label>
-        <br />
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Tagging...' : 'Tag Play'}
-        </button>
-      </form>
+            {/* Content Section */}
+            <div style={{ 
+                maxWidth: '1200px', 
+                margin: '0 auto', 
+                padding: '60px 20px',
+                backgroundColor: '#fafafa'
+            }}>
+                {/* Game Score Card */}
+                <div style={{
+                    backgroundColor: 'white',
+                    borderRadius: '16px',
+                    padding: '40px',
+                    marginBottom: '40px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                    border: '1px solid rgba(0, 0, 0, 0.05)',
+                    textAlign: 'center'
+                }}>
+                    <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: '1fr auto 1fr', 
+                        alignItems: 'center',
+                        gap: '40px'
+                    }}>
+                        {/* Home Team */}
+                        <div>
+                            <div style={{
+                                width: '80px',
+                                height: '80px',
+                                backgroundColor: '#f8fafc',
+                                borderRadius: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '2rem',
+                                fontWeight: '700',
+                                color: '#1e293b',
+                                margin: '0 auto 16px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                border: '1px solid rgba(0, 0, 0, 0.05)'
+                            }}>
+                                {game.homeTeam?.abbreviation}
+                            </div>
+                            <h3 style={{ 
+                                fontSize: '1.5rem', 
+                                fontWeight: '700', 
+                                color: '#1e293b',
+                                marginBottom: '8px'
+                            }}>
+                                {game.homeTeam?.name}
+                            </h3>
+                            <div style={{ 
+                                fontSize: '3rem', 
+                                fontWeight: '700', 
+                                color: '#667eea'
+                            }}>
+                                {game.homeScore || 0}
+                            </div>
+                        </div>
 
-      <h3>Plays</h3>
-      {game.plays && game.plays.length > 0 ? (
-        <ul>
-          {game.plays.map(play => (
-            <li key={play.id}>
-              <strong>Q{play.quarter}:</strong> {play.description || 'No description'}
-              {play.tags && play.tags.length > 0 && (
-                <ul>
-                  {play.tags.map(tag => (
-                    <li key={tag.id}>
-                      <span>{tag.tag?.name}</span>
-                      {tag.player && <> ({tag.player.name})</>}
-                      {tag.team && <> [{tag.team.abbreviation}]</>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No plays tagged for this game yet.</p>
-      )}
-    </div>
-  );
+                        {/* VS */}
+                        <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#64748b' }}>
+                            VS
+                        </div>
+
+                        {/* Away Team */}
+                        <div>
+                            <div style={{
+                                width: '80px',
+                                height: '80px',
+                                backgroundColor: '#f8fafc',
+                                borderRadius: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '2rem',
+                                fontWeight: '700',
+                                color: '#1e293b',
+                                margin: '0 auto 16px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                border: '1px solid rgba(0, 0, 0, 0.05)'
+                            }}>
+                                {game.awayTeam?.abbreviation}
+                            </div>
+                            <h3 style={{ 
+                                fontSize: '1.5rem', 
+                                fontWeight: '700', 
+                                color: '#1e293b',
+                                marginBottom: '8px'
+                            }}>
+                                {game.awayTeam?.name}
+                            </h3>
+                            <div style={{ 
+                                fontSize: '3rem', 
+                                fontWeight: '700', 
+                                color: '#667eea'
+                            }}>
+                                {game.awayScore || 0}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '20px', 
+                    justifyContent: 'center',
+                    marginBottom: '50px'
+                }}>
+                    <button
+                        onClick={handleStartTagging}
+                        style={{
+                            padding: '16px 32px',
+                            border: 'none',
+                            borderRadius: '12px',
+                            backgroundColor: '#667eea',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                        }}
+                    >
+                        🏀 Start Tagging Plays
+                    </button>
+                    
+                    <button
+                        onClick={handleViewAnalytics}
+                        style={{
+                            padding: '16px 32px',
+                            border: 'none',
+                            borderRadius: '12px',
+                            backgroundColor: '#10b981',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                        }}
+                    >
+                        📊 View Analytics
+                    </button>
+                </div>
+
+                {/* Recent Plays */}
+                <div>
+                    <h2 style={{ 
+                        fontSize: '2rem', 
+                        fontWeight: '700', 
+                        color: '#1e293b',
+                        marginBottom: '24px',
+                        letterSpacing: '-0.01em'
+                    }}>
+                        Recent Plays
+                    </h2>
+                    
+                    {recentPlays.length > 0 ? (
+                        <div style={{ 
+                            display: 'grid', 
+                            gap: '16px'
+                        }}>
+                            {recentPlays.map(play => (
+                                <div
+                                    key={play.id}
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: '20px',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <p style={{ 
+                                                fontSize: '1rem', 
+                                                color: '#1e293b',
+                                                marginBottom: '4px',
+                                                fontWeight: '500'
+                                            }}>
+                                                {play.description || 'Play tagged'}
+                                            </p>
+                                            <p style={{ 
+                                                fontSize: '0.875rem', 
+                                                color: '#64748b'
+                                            }}>
+                                                Q{play.quarter} • {play.gameTime}
+                                            </p>
+                                        </div>
+                                        <div style={{
+                                            padding: '4px 8px',
+                                            backgroundColor: '#f1f5f9',
+                                            color: '#475569',
+                                            borderRadius: '6px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '500'
+                                        }}>
+                                            {play.tags?.length || 0} tags
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '40px',
+                            borderRadius: '12px',
+                            textAlign: 'center',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                        }}>
+                            <p style={{ 
+                                fontSize: '1rem', 
+                                color: '#64748b',
+                                marginBottom: '16px'
+                            }}>
+                                No plays tagged yet for this game
+                            </p>
+                            <p style={{ 
+                                fontSize: '0.875rem', 
+                                color: '#94a3b8'
+                            }}>
+                                Start tagging plays to see them appear here
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default GameDetail;

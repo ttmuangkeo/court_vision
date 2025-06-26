@@ -1,0 +1,63 @@
+/* QuickActions.css */
+
+.quick-actions-container {
+  width: 100%;
+}
+
+.quick-actions-instruction {
+  font-size: 0.98rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.quick-actions-category-label {
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.97rem;
+  margin-bottom: 4px;
+  margin-left: 2px;
+}
+
+.quick-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-x: unset;
+}
+
+.quick-actions-btn {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 1.08rem;
+  font-weight: 500;
+  min-width: 110px;
+  min-height: 44px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  white-space: nowrap;
+  opacity: 1;
+  text-align: center;
+}
+
+.quick-actions-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quick-actions-btn.suggested {
+  border: 3px solid #f59e0b !important;
+  box-shadow: 0 0 8px 2px #fde68a, 0 2px 8px rgba(0,0,0,0.10);
+  filter: brightness(1.08);
+  transform: scale(1.04);
+  z-index: 2;
+} 

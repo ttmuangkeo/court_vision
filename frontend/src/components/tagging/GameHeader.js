@@ -1,22 +1,16 @@
 import React from 'react';
+import './GameHeader.css';
 
 function GameHeader({ game, onBack, currentQuarter }) {
   if (!game) return null;
 
   return (
-    <>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <button onClick={onBack} style={{ fontSize: '16px', padding: '8px 16px' }}>
-          ← Back to Games
-        </button>
-        <h2 style={{ margin: 0 }}>
-          {game.homeTeam?.abbreviation} vs {game.awayTeam?.abbreviation}
-        </h2>
-        <div style={{ textAlign: 'right' }}>
-          <div>Q{currentQuarter}</div>
-          <div>{game.status}</div>
-        </div>
+    <div className="game-header-container">
+      <button className="game-header-back-btn" onClick={onBack}>&larr; Back</button>
+      <span className="game-header-title">{game.homeTeam?.abbreviation} vs {game.awayTeam?.abbreviation}</span>
+      <div style={{ textAlign: 'right' }}>
+        <div>Q{currentQuarter}</div>
+        <div>{game.status}</div>
       </div>
 
       {/* Score Display */}
@@ -30,7 +24,7 @@ function GameHeader({ game, onBack, currentQuarter }) {
       }}>
         <strong>{game.homeTeam?.abbreviation} {game.homeScore} - {game.awayTeam?.abbreviation} {game.awayScore}</strong>
       </div>
-    </>
+    </div>
   );
 }
 

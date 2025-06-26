@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import GameHeader from './GameHeader';
 import PlayerSelector from './PlayerSelector';
 import GameTimeInput from './GameTimeInput';
 import QuickActions from './QuickActions';
-import RecentPlays from './RecentPlays';
-import { quickActions } from './quickActionsConfig';
+import PredictionPanel from './PredictionPanel';
+import DecisionQualityPanel from './DecisionQualityPanel';
+import './FastTagging.css';
 
 const API_BASE = 'http://localhost:3000/api';
 
-function FastTagging({ gameId, onBack }) {
+function useWindowWidth() {
+  const [width, setWidth] = React.useState(window.innerWidth);
+  React.useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return width;
+}
+
+function FastTagging() {
+  const { gameId } = useParams();
+  const navigate = useNavigate();
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tags, setTags] = useState([]);
@@ -17,17 +31,19 @@ function FastTagging({ gameId, onBack }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [gameTime, setGameTime] = useState('');
-  const [recentPlays, setRecentPlays] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [currentPlayTags, setCurrentPlayTags] = useState([]); // Track multiple tags for current play
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger for refreshing panels
+
+  const width = useWindowWidth();
+  const isNarrow = width < 1200;
+  const isVeryNarrow = width < 900;
 
   useEffect(() => {
-    // Fetch game details and plays
     setLoading(true);
     axios.get(`${API_BASE}/games/${gameId}?include=full`)
       .then(res => {
         setGame(res.data.data);
-        const plays = res.data.data.plays || [];
-        setRecentPlays(plays.slice(-5)); // Show last 5 plays
         setLoading(false);
       })
       .catch(err => {
@@ -36,12 +52,10 @@ function FastTagging({ gameId, onBack }) {
       });
   }, [gameId]);
 
-  // Fetch tags (only once)
   useEffect(() => {
     axios.get(`${API_BASE}/tags`).then(res => setTags(res.data.data));
   }, []);
 
-  // Fetch players when game data is available
   useEffect(() => {
     if (game && game.homeTeamId && game.awayTeamId) {
       const teamIds = [game.homeTeamId, game.awayTeamId];
@@ -49,62 +63,68 @@ function FastTagging({ gameId, onBack }) {
         .then(res => setPlayers(res.data.data))
         .catch(err => {
           console.error('Error fetching players:', err);
-          setPlayers([]); // Set empty array on error
+          setPlayers([]);
         });
     }
   }, [game]);
+
+  const handleBackClick = () => {
+    navigate(`/games/${gameId}`);
+  };
 
   const handleQuickTag = async (actionName) => {
     if (!selectedPlayer) {
       alert('Please select a player first');
       return;
     }
-
     if (!gameTime) {
       alert('Please enter game time');
       return;
     }
+    const tag = tags.find(t => t.name === actionName);
+    if (!tag) {
+      console.warn(`Tag "${actionName}" not found in database`);
+      return;
+    }
+    setCurrentPlayTags(prev => [...prev, { tag, actionName }]);
+  };
 
+  const handleSavePlay = async () => {
+    if (currentPlayTags.length === 0) {
+      alert('Please add at least one tag to the play');
+      return;
+    }
     try {
-      // Find the tag by name
-      const tag = tags.find(t => t.name === actionName);
-      if (!tag) {
-        console.warn(`Tag "${actionName}" not found in database`);
-        return;
-      }
-
-      // For demo, use a hardcoded user ID - replace with actual user ID in production
       const createdById = 'cmccsd5oj00001xhj6xnvor24';
-
-      await axios.post(`${API_BASE}/plays`, {
+      const playData = {
         gameId,
-        description: `${actionName} by ${selectedPlayer.name}`,
+        description: `${currentPlayTags.map(t => t.actionName).join(' → ')} by ${selectedPlayer.name}`,
         quarter: currentQuarter,
         gameTime,
         createdById,
-        tags: [
-          {
-            tagId: tag.id,
-            playerId: selectedPlayer.id,
-            teamId: selectedPlayer.teamId,
-            context: { action: actionName }
+        tags: currentPlayTags.map(tagData => ({
+          tagId: tagData.tag.id,
+          playerId: selectedPlayer.id,
+          teamId: selectedPlayer.teamId,
+          context: {
+            action: tagData.actionName,
+            sequence: currentPlayTags.indexOf(tagData) + 1,
+            totalActions: currentPlayTags.length
           }
-        ]
-      });
-
-      // Update recent plays
-      const res = await axios.get(`${API_BASE}/games/${gameId}?include=full`);
-      const plays = res.data.data.plays || [];
-      setRecentPlays(plays.slice(-5));
-
-      // Clear game time for next tag
+        }))
+      };
+      await axios.post(`${API_BASE}/plays`, playData);
+      setCurrentPlayTags([]);
       setGameTime('');
-      
-      console.log(`✅ Tagged: ${actionName} for ${selectedPlayer.name}`);
+      setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       console.error('Error tagging play:', err);
       alert('Error tagging play: ' + (err.response?.data?.error || err.message));
     }
+  };
+
+  const handleClearPlay = () => {
+    setCurrentPlayTags([]);
   };
 
   const handlePlayerSelect = (player) => {
@@ -119,40 +139,113 @@ function FastTagging({ gameId, onBack }) {
   if (!game) return <div>Game not found.</div>;
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <GameHeader 
-        game={game} 
-        onBack={onBack} 
-        currentQuarter={currentQuarter} 
+    <div
+      className={`fast-tagging-root`}
+      style={{
+        padding: '0',
+        maxWidth: '100vw',
+        minHeight: '100vh',
+        background: '#f8fafc',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      <GameHeader
+        game={game}
+        onBack={handleBackClick}
+        currentQuarter={currentQuarter}
       />
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '20px' }}>
-        <PlayerSelector
-          game={game}
-          players={players}
-          selectedPlayer={selectedPlayer}
-          selectedTeam={selectedTeam}
-          onPlayerSelect={handlePlayerSelect}
-          onTeamSelect={handleTeamSelect}
-        />
-
-        <div>
-          <GameTimeInput
-            gameTime={gameTime}
-            setGameTime={setGameTime}
-            currentQuarter={currentQuarter}
-            setCurrentQuarter={setCurrentQuarter}
-          />
-
-          <QuickActions
-            quickActions={quickActions}
-            onQuickTag={handleQuickTag}
+      <div className="fast-tagging-main-row">
+        {/* Sidebar: Player/Team selection */}
+        <div
+          className={`fast-tagging-sidebar${isVeryNarrow ? ' narrow' : ''}`}
+        >
+          <PlayerSelector
+            game={game}
+            players={players}
             selectedPlayer={selectedPlayer}
-            gameTime={gameTime}
+            selectedTeam={selectedTeam}
+            onPlayerSelect={handlePlayerSelect}
+            onTeamSelect={handleTeamSelect}
           />
         </div>
-
-        <RecentPlays recentPlays={recentPlays} />
+        {/* Main Area */}
+        <div className="fast-tagging-main-area">
+          {/* Top Bar: Game Time/Quarter */}
+          <div className="fast-tagging-topbar">
+            <GameTimeInput
+              gameTime={gameTime}
+              setGameTime={setGameTime}
+              currentQuarter={currentQuarter}
+              setCurrentQuarter={setCurrentQuarter}
+            />
+          </div>
+          {/* Main Row: Sequence | Quick Actions | Prediction | Decision Quality */}
+          <div className="fast-tagging-panels-row">
+            {/* Sequence Box */}
+            <div className="fast-tagging-sequence-panel">
+              <div className="fast-tagging-sequence-title">Current Play Sequence</div>
+              {currentPlayTags.length > 0 ? (
+                <>
+                  <div className="fast-tagging-sequence-list">
+                    {currentPlayTags.map((tagData, index) => (
+                      <div className="fast-tagging-sequence-tag" key={index}>
+                        <span>{index + 1}.</span>
+                        <span>{tagData.actionName}</span>
+                        {index < currentPlayTags.length - 1 && <span>→</span>}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="fast-tagging-sequence-actions">
+                    <button
+                      className="fast-tagging-save-btn"
+                      onClick={handleSavePlay}
+                    >
+                      ✅ Save Play
+                    </button>
+                    <button
+                      className="fast-tagging-clear-btn"
+                      onClick={handleClearPlay}
+                    >
+                      🗑️ Clear
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="fast-tagging-sequence-empty">No actions tagged yet. Use the buttons below to build your sequence.</div>
+              )}
+            </div>
+            {/* Quick Actions Bar (contextual) - now outside the sequence box */}
+            <div className="fast-tagging-quickactions-panel">
+              <QuickActions
+                onQuickTag={handleQuickTag}
+                selectedPlayer={selectedPlayer}
+                gameTime={gameTime}
+                compact={true}
+                currentSequence={currentPlayTags}
+              />
+            </div>
+            {/* Prediction Panel */}
+            <div className="fast-tagging-prediction-panel">
+              <PredictionPanel
+                gameId={gameId}
+                selectedPlayer={selectedPlayer}
+                selectedTeam={selectedTeam}
+                currentQuarter={currentQuarter}
+                gameTime={gameTime}
+                refreshTrigger={refreshTrigger}
+              />
+            </div>
+            {/* Decision Quality Panel */}
+            <div className="fast-tagging-decision-panel">
+              <DecisionQualityPanel
+                gameId={gameId}
+                selectedPlayer={selectedPlayer}
+                refreshTrigger={refreshTrigger}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
