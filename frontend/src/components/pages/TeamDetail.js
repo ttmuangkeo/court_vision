@@ -307,7 +307,8 @@ function TeamDetail() {
                                         gap: '20px',
                                         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
                                         border: '1px solid rgba(0, 0, 0, 0.05)',
-                                        transition: 'all 0.2s ease'
+                                        transition: 'all 0.2s ease',
+                                        cursor: 'pointer'
                                     }}
                                     onMouseEnter={(e) => {
                                         e.target.style.transform = 'translateY(-2px)';
@@ -317,6 +318,7 @@ function TeamDetail() {
                                         e.target.style.transform = 'translateY(0)';
                                         e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
                                     }}
+                                    onClick={() => navigate(`/players/${player.id}`)}
                                 >
                                     {/* Player Avatar */}
                                     <div style={{

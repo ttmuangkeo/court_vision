@@ -9,6 +9,7 @@ import FastTagging from './components/tagging/FastTagging';
 import TeamsList from './components/pages/TeamsList';
 import TeamDetail from './components/pages/TeamDetail';
 import PlayersList from './components/pages/PlayersList';
+import PlayerDetail from './components/pages/PlayerDetail';
 // import TagsList from './components/TagsList'; // (create this next!)
 import './App.css';
 
@@ -26,6 +27,7 @@ function App() {
           <Route path="/teams" element={<TeamsList />} />
           <Route path="/teams/:teamId" element={<TeamDetail />} />
           <Route path="/players" element={<PlayersList />} />
+          <Route path="/players/:playerId" element={<PlayerDetail />} />
           {/* <Route path="/tags" element={<TagsList />} /> */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
