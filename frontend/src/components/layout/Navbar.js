@@ -1,12 +1,22 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-function Navbar({ currentView, onViewChange }) {
+function Navbar() {
+  const location = useLocation();
+  
   const navItems = [
-    { key: 'dashboard', label: 'Dashboard' },
-    { key: 'teams', label: 'Teams' },
-    { key: 'players', label: 'Players' },
-    { key: 'games', label: 'Games' }
+    { path: '/', label: 'Dashboard' },
+    { path: '/teams', label: 'Teams' },
+    { path: '/players', label: 'Players' },
+    { path: '/games', label: 'Games' }
   ];
+
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <nav style={{ 
@@ -18,21 +28,23 @@ function Navbar({ currentView, onViewChange }) {
       gap: '10px'
     }}>
       {navItems.map(item => (
-        <button 
-          key={item.key}
-          onClick={() => onViewChange(item.key)} 
+        <Link 
+          key={item.path}
+          to={item.path}
           style={{ 
             padding: '8px 16px', 
-            background: currentView === item.key ? '#007bff' : 'transparent',
+            background: isActive(item.path) ? '#007bff' : 'transparent',
             color: '#fff', 
             border: '1px solid #fff', 
             borderRadius: '4px', 
             cursor: 'pointer',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            textDecoration: 'none',
+            display: 'inline-block'
           }}
         >
           {item.label}
-        </button>
+        </Link>
       ))}
     </nav>
   );

@@ -1,40 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import GamesDashboard from './components/pages/GamesDashboard';
 import TeamsList from './components/pages/TeamsList';
+import TeamDetail from './components/pages/TeamDetail';
 import PlayersList from './components/pages/PlayersList';
 import GamesList from './components/pages/GamesList';
 // import TagsList from './components/TagsList'; // (create this next!)
 import './App.css';
 
 function App() {
-  const [view, setView] = useState('dashboard');
-
-  const handleViewChange = (newView) => {
-    setView(newView);
-  };
-
-  const renderCurrentView = () => {
-    switch (view) {
-      case 'dashboard':
-        return <GamesDashboard />;
-      case 'teams':
-        return <TeamsList />;
-      case 'players':
-        return <PlayersList />;
-      case 'games':
-        return <GamesList />;
-      default:
-        return <GamesDashboard />;
-    }
-  };
-
   return (
-    <div className="App">
-      <Navbar currentView={view} onViewChange={handleViewChange} />
-      {renderCurrentView()}
-      {/* {view === 'tags' && <TagsList />} */}
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<GamesDashboard />} />
+          <Route path="/teams" element={<TeamsList />} />
+          <Route path="/teams/:teamId" element={<TeamDetail />} />
+          <Route path="/players" element={<PlayersList />} />
+          <Route path="/games" element={<GamesList />} />
+          {/* <Route path="/tags" element={<TagsList />} /> */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
