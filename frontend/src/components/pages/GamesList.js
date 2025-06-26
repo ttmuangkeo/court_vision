@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import FastTagging from '../tagging/FastTagging';
 
 const API_BASE = 'http://localhost:3000/api';
 
 function GamesList() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedGameId, setSelectedGameId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get(`${API_BASE}/games?include=teams&limit=20`)
@@ -21,16 +21,11 @@ function GamesList() {
       });
   }, []);
 
-  if (loading) return <div>Loading games...</div>;
+  const handleGameClick = (gameId) => {
+    navigate(`/games/${gameId}/tag`);
+  };
 
-  if (selectedGameId) {
-    return (
-      <FastTagging
-        gameId={selectedGameId}
-        onBack={() => setSelectedGameId(null)}
-      />
-    );
-  }
+  if (loading) return <div>Loading games...</div>;
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
@@ -39,7 +34,7 @@ function GamesList() {
         {games.map(game => (
           <div
             key={game.id}
-            onClick={() => setSelectedGameId(game.id)}
+            onClick={() => handleGameClick(game.id)}
             style={{
               padding: '15px',
               border: '1px solid #ddd',
