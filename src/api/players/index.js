@@ -4,10 +4,14 @@ const prisma = require('../../db/client');
 
 router.get('/', async (req, res) => {
     try {
-        const {include, team, position } = req.query;
+        const {include, team, team_ids, position } = req.query;
 
         const where = {};
         if(team) where.teamId = team;
+        if(team_ids) {
+            const teamIdArray = team_ids.split(',');
+            where.teamId = { in: teamIdArray };
+        }
         if(position) where.position = position;
 
         const players = await prisma.player.findMany({
