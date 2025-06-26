@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import GameHeader from './tagging/GameHeader';
-import PlayerSelector from './tagging/PlayerSelector';
-import GameTimeInput from './tagging/GameTimeInput';
-import QuickActions from './tagging/QuickActions';
-import RecentPlays from './tagging/RecentPlays';
-import { quickActions } from './tagging/quickActionsConfig';
+import GameHeader from './GameHeader';
+import PlayerSelector from './PlayerSelector';
+import GameTimeInput from './GameTimeInput';
+import QuickActions from './QuickActions';
+import RecentPlays from './RecentPlays';
+import { quickActions } from './quickActionsConfig';
 
 const API_BASE = 'http://localhost:3000/api';
 
@@ -52,7 +52,7 @@ function FastTagging({ gameId, onBack }) {
           setPlayers([]); // Set empty array on error
         });
     }
-  }, [game?.homeTeamId, game?.awayTeamId]);
+  }, [game]);
 
   const handleQuickTag = async (actionName) => {
     if (!selectedPlayer) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import FastTagging from './FastTagging';
+import FastTagging from '../tagging/FastTagging';
 
 const API_BASE = 'http://localhost:3000/api';
 

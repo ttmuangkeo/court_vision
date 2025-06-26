@@ -1,25 +1,38 @@
 import React, { useState } from 'react';
-import TeamsList from './components/TeamsList';
-import PlayersList from './components/PlayersList';
-import GamesList from './components/GamesList';
+import Navbar from './components/layout/Navbar';
+import GamesDashboard from './components/pages/GamesDashboard';
+import TeamsList from './components/pages/TeamsList';
+import PlayersList from './components/pages/PlayersList';
+import GamesList from './components/pages/GamesList';
 // import TagsList from './components/TagsList'; // (create this next!)
 import './App.css';
 
 function App() {
-  const [view, setView] = useState('teams');
+  const [view, setView] = useState('dashboard');
+
+  const handleViewChange = (newView) => {
+    setView(newView);
+  };
+
+  const renderCurrentView = () => {
+    switch (view) {
+      case 'dashboard':
+        return <GamesDashboard />;
+      case 'teams':
+        return <TeamsList />;
+      case 'players':
+        return <PlayersList />;
+      case 'games':
+        return <GamesList />;
+      default:
+        return <GamesDashboard />;
+    }
+  };
 
   return (
     <div className="App">
-      <h1>Court Vision</h1>
-      <nav>
-        <button onClick={() => setView('teams')}>Teams</button>
-        <button onClick={() => setView('players')}>Players</button>
-        <button onClick={() => setView('games')}>Games</button>
-        {/* <button onClick={() => setView('tags')}>Tags</button> */}
-      </nav>
-      {view === 'teams' && <TeamsList />}
-      {view === 'players' && <PlayersList />}
-      {view === 'games' && <GamesList />}
+      <Navbar currentView={view} onViewChange={handleViewChange} />
+      {renderCurrentView()}
       {/* {view === 'tags' && <TagsList />} */}
     </div>
   );
