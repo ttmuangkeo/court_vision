@@ -1,6 +1,28 @@
 # 🏀 Court Vision
 
-Film-room companion for NBA superfans, analysts, and creators. Real-time basketball analytics and tagging system.
+**Real-time basketball analytics for the modern NBA fan.** 
+
+Court Vision is a lightning-fast tagging system that lets you capture and analyze basketball plays as they happen. Whether you're watching live games, reviewing film, or creating content, Court Vision helps you track defensive strategies, offensive actions, and player performance with just a few clicks.
+
+## 🎯 What Makes Court Vision Special
+
+### ⚡ **Speed-First Design**
+- **One-click tagging** - Tag plays in under 2 seconds
+- **Quick time inputs** - Pre-set buttons for common game times
+- **Smart suggestions** - AI-powered play predictions
+- **Minimal cognitive load** - Designed for live game watching
+
+### 🏆 **Built for NBA Analysis**
+- **Real-time data** - Live integration with BallDontLie API
+- **Comprehensive tagging** - 20+ basketball action categories
+- **Player tracking** - Follow individual players across games
+- **Team insights** - Analyze defensive schemes and offensive patterns
+
+### 🎬 **Perfect for Content Creators**
+- **Film room companion** - Tag plays during replay analysis
+- **Export capabilities** - Share insights with your audience
+- **Historical tracking** - Build databases of player tendencies
+- **Collaborative features** - Work with other analysts
 
 ## 🚀 Quick Start
 
@@ -20,9 +42,55 @@ npm run sync:data
 npm run dev
 ```
 
-## 📊 BallDontLie API Integration
+## 🎮 How It Works
 
-Court Vision integrates with the [BallDontLie API](https://www.balldontlie.io/) to populate your database with current NBA data.
+### 1. **Select a Game**
+Choose from recent NBA games or upcoming matchups
+
+### 2. **Pick Your Player**
+Focus on one star player or track multiple players
+
+### 3. **Tag Plays Fast**
+- Click quick action buttons (Double Team, ISO, PnR, etc.)
+- Use time presets (0:30, 1:00, 2:00, etc.)
+- See recent plays update in real-time
+
+### 4. **Analyze Patterns**
+Review tagged plays to identify trends and strategies
+
+## 🏀 Basketball Actions You Can Tag
+
+### **Offensive Actions**
+- Pick and Roll (PnR)
+- Isolation (ISO) 
+- Post Up
+- Drive
+- Pull Up Jump Shot
+- Catch and Shoot
+- Off-Ball Movement
+
+### **Defensive Actions**
+- Drop Coverage
+- Switch
+- Double Team
+- Trap
+- Blitz
+- Zone Defense
+- Help Defense
+
+### **Special Situations**
+- Transition
+- Set Plays
+- End of Quarter
+- Crunch Time
+
+## 📊 Data Integration
+
+Court Vision integrates with the [BallDontLie API](https://www.balldontlie.io/) to provide:
+
+- **Live game data** - Scores, schedules, and player stats
+- **Current rosters** - All 30 NBA teams and players
+- **Historical data** - Past games and performance metrics
 
 ### Sync Commands
 
@@ -30,52 +98,47 @@ Court Vision integrates with the [BallDontLie API](https://www.balldontlie.io/) 
 # Sync all data (teams, players, games)
 npm run sync:data
 
-# Or run individual syncs via API
-curl -X POST http://localhost:3000/api/teams/sync \
-  -H "Content-Type: application/json" \
-  -d '{"season": "2023-24"}'
+# Or run individual syncs
+npm run sync:teams
+npm run sync:players
+npm run sync:games
 ```
 
-### What Gets Synced
+## 🗄 Technical Architecture
 
-- **Teams**: All 30 NBA teams with conference/division info
-- **Players**: Current roster players with stats and team relationships  
-- **Games**: Game schedule, scores, and live status
-- **Tags**: Basketball action categories (seeded manually)
+### **Frontend**
+- React.js with modern hooks
+- Component-based architecture
+- Responsive design for any screen size
 
-### Rate Limiting
+### **Backend**
+- Node.js with Express
+- Prisma ORM for database management
+- PostgreSQL for data storage
+- Real-time WebSocket support
 
-The sync process includes built-in rate limiting to be respectful to the BallDontLie API:
-- 100ms delay between individual records
-- 1 second delay between major operations (teams → players → games)
+### **Database Schema**
+- **Teams & Players** - NBA roster data
+- **Games & Plays** - Game events and tagging
+- **Tags & Categories** - Basketball action taxonomy
+- **Users & Analytics** - User preferences and insights
 
-## 🗄 Database Schema
+## 🎯 Use Cases
 
-### Core NBA Data
-- **Teams**: All NBA teams with conference/division info
-- **Players**: NBA players with team relationships
-- **Games**: Game schedule and live data
-- **Tags**: Basketball action categories (PnR, ISO, Drop, etc.)
+### **For NBA Fans**
+- Track your favorite player's defensive assignments
+- Analyze team defensive schemes
+- Build databases of player tendencies
 
-### App Features
-- **Plays**: Individual play events for tagging
-- **PlayTags**: User tagging relationships
-- **Users**: User accounts and preferences
-- **Predictions**: AI prediction system
-- **GlossaryEntries**: Basketball education system
+### **For Content Creators**
+- Create data-driven analysis videos
+- Generate insights for social media
+- Collaborate with other analysts
 
-## 🎓 Basketball Tags
-
-The system includes comprehensive basketball action categories:
-
-### Offensive Actions
-- Pick and Roll, Isolation, Post Up, Drive, Pull Up Jump Shot
-
-### Defensive Actions  
-- Drop Coverage, Switch, Double Team, Trap
-
-### Categories
-- OFFENSIVE_ACTION, DEFENSIVE_ACTION, TRANSITION, SET_PLAY, SPECIAL_SITUATION
+### **For Coaches & Scouts**
+- Review opponent tendencies
+- Track player development
+- Build scouting reports
 
 ## 🔧 Development
 
@@ -95,6 +158,8 @@ npm run dev            # Start with nodemon
 
 ## 🤝 Contributing
 
+We're building the future of basketball analysis! Contributions are welcome:
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
@@ -111,10 +176,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🎉 Acknowledgments
 
-- NBA and balldontlie API for data
+- [BallDontLie API](https://www.balldontlie.io/) for comprehensive NBA data
 - Prisma team for the excellent ORM
-- Express.js community
+- Express.js community for the robust backend framework
 
 ---
 
-*Building the future of basketball analysis, one tag at a time.*
+*Building the future of basketball analysis, one tag at a time.* 🏀
