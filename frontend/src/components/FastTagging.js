@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import GameHeader from './tagging/GameHeader';
+import PlayerSelector from './tagging/PlayerSelector';
+import GameTimeInput from './tagging/GameTimeInput';
+import QuickActions from './tagging/QuickActions';
+import RecentPlays from './tagging/RecentPlays';
+import { quickActions } from './tagging/quickActionsConfig';
 
 const API_BASE = 'http://localhost:3000/api';
 
@@ -12,19 +18,7 @@ function FastTagging({ gameId, onBack }) {
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [gameTime, setGameTime] = useState('');
   const [recentPlays, setRecentPlays] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState(null); // Track selected team for filtering
-
-  // Quick action buttons for common tags
-  const quickActions = [
-    { name: 'Double Team', color: '#FF6B6B', icon: '👥' },
-    { name: 'Isolation', color: '#4ECDC4', icon: '🏀' },
-    { name: 'Pick & Roll', color: '#45B7D1', icon: '🔄' },
-    { name: 'Post Up', color: '#96CEB4', icon: '📯' },
-    { name: 'Transition', color: '#FFEAA7', icon: '⚡' },
-    { name: '3-Pointer', color: '#DDA0DD', icon: '🎯' },
-    { name: 'Block', color: '#FF8C42', icon: '🛡️' },
-    { name: 'Steal', color: '#FFD93D', icon: '🤲' }
-  ];
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
   useEffect(() => {
     // Fetch game details and plays
@@ -58,7 +52,7 @@ function FastTagging({ gameId, onBack }) {
           setPlayers([]); // Set empty array on error
         });
     }
-  }, [game?.homeTeamId, game?.awayTeamId]); // Only depend on the specific team IDs
+  }, [game?.homeTeamId, game?.awayTeamId]);
 
   const handleQuickTag = async (actionName) => {
     if (!selectedPlayer) {
@@ -117,230 +111,48 @@ function FastTagging({ gameId, onBack }) {
     setSelectedPlayer(player);
   };
 
+  const handleTeamSelect = (teamId) => {
+    setSelectedTeam(teamId);
+  };
+
   if (loading) return <div>Loading game...</div>;
   if (!game) return <div>Game not found.</div>;
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <button onClick={onBack} style={{ fontSize: '16px', padding: '8px 16px' }}>
-          ← Back to Games
-        </button>
-        <h2 style={{ margin: 0 }}>
-          {game.homeTeam?.abbreviation} vs {game.awayTeam?.abbreviation}
-        </h2>
-        <div style={{ textAlign: 'right' }}>
-          <div>Q{currentQuarter}</div>
-          <div>{game.status}</div>
-        </div>
-      </div>
-
-      {/* Score Display */}
-      <div style={{ 
-        background: '#f5f5f5', 
-        padding: '15px', 
-        borderRadius: '8px', 
-        marginBottom: '20px',
-        textAlign: 'center',
-        fontSize: '18px'
-      }}>
-        <strong>{game.homeTeam?.abbreviation} {game.homeScore} - {game.awayTeam?.abbreviation} {game.awayScore}</strong>
-      </div>
+      <GameHeader 
+        game={game} 
+        onBack={onBack} 
+        currentQuarter={currentQuarter} 
+      />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '20px' }}>
-        {/* Player Selection */}
-        <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
-          <h3>Select Player</h3>
-          
-          {/* Team Filter */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Filter by Team:
-            </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => setSelectedTeam(null)}
-                style={{
-                  padding: '8px 12px',
-                  background: selectedTeam === null ? '#007bff' : '#fff',
-                  color: selectedTeam === null ? '#fff' : '#333',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                All Players
-              </button>
-              <button
-                onClick={() => setSelectedTeam(game.homeTeamId)}
-                style={{
-                  padding: '8px 12px',
-                  background: selectedTeam === game.homeTeamId ? '#007bff' : '#fff',
-                  color: selectedTeam === game.homeTeamId ? '#fff' : '#333',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                {game.homeTeam?.abbreviation}
-              </button>
-              <button
-                onClick={() => setSelectedTeam(game.awayTeamId)}
-                style={{
-                  padding: '8px 12px',
-                  background: selectedTeam === game.awayTeamId ? '#007bff' : '#fff',
-                  color: selectedTeam === game.awayTeamId ? '#fff' : '#333',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                {game.awayTeam?.abbreviation}
-              </button>
-            </div>
-          </div>
-          
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {players
-              .filter(player => !selectedTeam || player.teamId === selectedTeam)
-              .map(player => (
-                <div
-                  key={player.id}
-                  onClick={() => handlePlayerSelect(player)}
-                  style={{
-                    padding: '8px 12px',
-                    margin: '4px 0',
-                    background: selectedPlayer?.id === player.id ? '#007bff' : '#fff',
-                    color: selectedPlayer?.id === player.id ? '#fff' : '#333',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    border: '1px solid #ddd'
-                  }}
-                >
-                  <div style={{ fontWeight: 'bold' }}>{player.name}</div>
-                  <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                    {player.team?.abbreviation} • {player.position}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
+        <PlayerSelector
+          game={game}
+          players={players}
+          selectedPlayer={selectedPlayer}
+          selectedTeam={selectedTeam}
+          onPlayerSelect={handlePlayerSelect}
+          onTeamSelect={handleTeamSelect}
+        />
 
-        {/* Quick Actions */}
         <div>
-          <h3>Quick Actions</h3>
-          
-          {/* Game Time Input */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>
-              Game Time (e.g., 11:45):
-            </label>
-            <input
-              type="text"
-              value={gameTime}
-              onChange={(e) => setGameTime(e.target.value)}
-              placeholder="11:45"
-              style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '16px',
-                border: '1px solid #ddd',
-                borderRadius: '4px'
-              }}
-            />
-          </div>
+          <GameTimeInput
+            gameTime={gameTime}
+            setGameTime={setGameTime}
+            currentQuarter={currentQuarter}
+            setCurrentQuarter={setCurrentQuarter}
+          />
 
-          {/* Quarter Selection */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Quarter:</label>
-            <select
-              value={currentQuarter}
-              onChange={(e) => setCurrentQuarter(Number(e.target.value))}
-              style={{
-                padding: '8px',
-                fontSize: '16px',
-                border: '1px solid #ddd',
-                borderRadius: '4px'
-              }}
-            >
-              {[1, 2, 3, 4].map(q => (
-                <option key={q} value={q}>Q{q}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Quick Action Buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-            {quickActions.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => handleQuickTag(action.name)}
-                disabled={!selectedPlayer || !gameTime}
-                style={{
-                  padding: '15px',
-                  fontSize: '16px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: action.color,
-                  color: '#fff',
-                  cursor: selectedPlayer && gameTime ? 'pointer' : 'not-allowed',
-                  opacity: selectedPlayer && gameTime ? 1 : 0.6,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>{action.icon}</span>
-                {action.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Selected Player Display */}
-          {selectedPlayer && (
-            <div style={{ 
-              marginTop: '20px', 
-              padding: '15px', 
-              background: '#e3f2fd', 
-              borderRadius: '8px',
-              textAlign: 'center'
-            }}>
-              <strong>Selected:</strong> {selectedPlayer.name} ({selectedPlayer.team?.abbreviation})
-            </div>
-          )}
+          <QuickActions
+            quickActions={quickActions}
+            onQuickTag={handleQuickTag}
+            selectedPlayer={selectedPlayer}
+            gameTime={gameTime}
+          />
         </div>
 
-        {/* Recent Plays */}
-        <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
-          <h3>Recent Plays</h3>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {recentPlays.length > 0 ? (
-              recentPlays.map(play => (
-                <div key={play.id} style={{ 
-                  padding: '10px', 
-                  margin: '8px 0', 
-                  background: '#fff', 
-                  borderRadius: '4px',
-                  border: '1px solid #ddd'
-                }}>
-                  <div style={{ fontSize: '12px', color: '#666' }}>
-                    Q{play.quarter} • {play.gameTime}
-                  </div>
-                  <div style={{ fontWeight: 'bold' }}>{play.description}</div>
-                  {play.tags && play.tags.length > 0 && (
-                    <div style={{ fontSize: '12px', color: '#007bff' }}>
-                      {play.tags.map(tag => tag.tag?.name).join(', ')}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p style={{ color: '#666', fontStyle: 'italic' }}>No plays tagged yet</p>
-            )}
-          </div>
-        </div>
+        <RecentPlays recentPlays={recentPlays} />
       </div>
     </div>
   );
