@@ -247,7 +247,7 @@ router.get('/suggestions', async (req, res) => {
     try {
         const { gameId, playerId, teamId, quarter, gameTime } = req.query;
 
-        // Get recent plays for context
+        // Get recent plays for context (more data for better analysis)
         const recentPlays = await prisma.playTag.findMany({
             where: {
                 ...(gameId && { play: { gameId } }),
@@ -260,80 +260,168 @@ router.get('/suggestions', async (req, res) => {
                 player: true,
                 team: true
             },
-            orderBy: {
-                createdAt: 'desc'
-            },
-            take: 10
+            orderBy: [
+                { createdAt: 'desc' }
+            ],
+            take: 50 // More data for better patterns
         });
 
-        // Analyze patterns to generate suggestions
         const suggestions = [];
 
-        // Check for repeated patterns
-        const recentTags = recentPlays.slice(0, 3).map(pt => pt.tag.name);
-        if (recentTags.length >= 2) {
-            const lastTag = recentTags[0];
-            const secondLastTag = recentTags[1];
+        // 1. NEXT ACTION PREDICTION (based on sequence patterns)
+        if (recentPlays.length >= 2) {
+            const lastAction = recentPlays[0].tag.name;
+            const secondLastAction = recentPlays[1].tag.name;
             
-            if (lastTag === secondLastTag) {
-                suggestions.push({
-                    type: 'pattern',
-                    message: `${lastTag} has been used twice in a row`,
-                    confidence: 0.8
+            // Find all sequences that start with the last action
+            const sequencesStartingWithLast = recentPlays.filter((pt, index) => {
+                if (index === recentPlays.length - 1) return false; // Can't be last
+                return pt.tag.name === lastAction;
+            });
+
+            if (sequencesStartingWithLast.length > 0) {
+                // Find what comes after this action
+                const nextActions = {};
+                sequencesStartingWithLast.forEach(pt => {
+                    const playIndex = recentPlays.findIndex(p => p.id === pt.id);
+                    if (playIndex < recentPlays.length - 1) {
+                        const nextAction = recentPlays[playIndex + 1].tag.name;
+                        nextActions[nextAction] = (nextActions[nextAction] || 0) + 1;
+                    }
                 });
+
+                // Calculate confidence based on frequency and sample size
+                const totalSequences = Object.values(nextActions).reduce((sum, count) => sum + count, 0);
+                const mostLikelyNext = Object.entries(nextActions)
+                    .sort(([,a], [,b]) => b - a)[0];
+
+                if (mostLikelyNext && totalSequences >= 2) {
+                    const confidence = Math.min(0.95, (mostLikelyNext[1] / totalSequences) * (1 + Math.log10(totalSequences) * 0.1));
+                    const percentage = Math.round(confidence * 100);
+                    
+                    suggestions.push({
+                        type: 'next_action_prediction',
+                        message: `After "${lastAction}", this player typically follows with "${mostLikelyNext[0]}"`,
+                        confidence: confidence,
+                        context: `Based on ${totalSequences} recent sequences. ${mostLikelyNext[1]} out of ${totalSequences} times (${Math.round((mostLikelyNext[1] / totalSequences) * 100)}% frequency)`,
+                        action: mostLikelyNext[0]
+                    });
+                }
             }
         }
 
-        // Check for player tendencies
-        if (playerId) {
-            const playerTags = recentPlays.filter(pt => pt.playerId === playerId);
-            if (playerTags.length > 0) {
-                const mostCommon = playerTags.reduce((acc, pt) => {
-                    acc[pt.tag.name] = (acc[pt.tag.name] || 0) + 1;
-                    return acc;
-                }, {});
+        // 2. DEFENSIVE ADJUSTMENT PREDICTION (pattern recognition)
+        if (recentPlays.length >= 3) {
+            const lastThreeActions = recentPlays.slice(0, 3).map(pt => pt.tag.name);
+            
+            // Check for repeated patterns that defenses might catch
+            if (lastThreeActions[0] === lastThreeActions[1] && lastThreeActions[1] === lastThreeActions[2]) {
+                const repeatedAction = lastThreeActions[0];
                 
-                const topAction = Object.entries(mostCommon).sort(([,a], [,b]) => b - a)[0];
-                if (topAction) {
+                // Look for defensive responses to repeated actions
+                const defensiveResponses = recentPlays.filter(pt => 
+                    ['Double Teamed', 'Double Team Defense', 'Block', 'Steal'].includes(pt.tag.name)
+                );
+
+                if (defensiveResponses.length > 0) {
+                    const recentDefensiveCount = defensiveResponses.filter(pt => 
+                        new Date(pt.createdAt) > new Date(Date.now() - 10 * 60 * 1000) // Last 10 minutes
+                    ).length;
+
+                    const confidence = Math.min(0.9, 0.6 + (recentDefensiveCount * 0.1));
+                    
+                    suggestions.push({
+                        type: 'defensive_adjustment',
+                        message: `Defense may adjust to repeated "${repeatedAction}" - consider mixing up the play`,
+                        confidence: confidence,
+                        context: `"${repeatedAction}" used 3 times in a row. ${recentDefensiveCount} defensive plays in last 10 minutes.`,
+                        warning: true
+                    });
+                }
+            }
+        }
+
+        // 3. PLAYER TENDENCY ANALYSIS (based on frequency and recency)
+        if (playerId && recentPlays.length > 0) {
+            const playerPlays = recentPlays.filter(pt => pt.playerId === playerId);
+            
+            if (playerPlays.length >= 3) {
+                const actionFrequency = {};
+                const recentActions = playerPlays.slice(0, 10); // Last 10 actions
+                
+                recentActions.forEach(pt => {
+                    actionFrequency[pt.tag.name] = (actionFrequency[pt.tag.name] || 0) + 1;
+                });
+
+                const totalActions = recentActions.length;
+                const mostFrequent = Object.entries(actionFrequency)
+                    .sort(([,a], [,b]) => b - a)[0];
+
+                if (mostFrequent && mostFrequent[1] >= 3) {
+                    const frequency = mostFrequent[1] / totalActions;
+                    const recencyBonus = recentActions.slice(0, 3).filter(pt => pt.tag.name === mostFrequent[0]).length / 3;
+                    const confidence = Math.min(0.85, frequency * 0.7 + recencyBonus * 0.3);
+                    
                     suggestions.push({
                         type: 'player_tendency',
-                        message: `${topAction[0]} is this player's most common action`,
-                        confidence: 0.7
+                        message: `"${mostFrequent[0]}" is ${selectedPlayer?.name || 'this player'}'s go-to move recently`,
+                        confidence: confidence,
+                        context: `${mostFrequent[1]} out of ${totalActions} recent actions (${Math.round(frequency * 100)}% frequency). ${recencyBonus > 0.5 ? 'Very recent trend.' : 'Established pattern.'}`,
+                        action: mostFrequent[0]
                     });
                 }
             }
         }
 
-        // Check for quarter patterns
-        if (quarter) {
+        // 4. GAME CONTEXT PREDICTION (quarter/time based patterns)
+        if (quarter && gameTime) {
             const quarterPlays = recentPlays.filter(pt => pt.play.quarter === parseInt(quarter));
-            if (quarterPlays.length > 0) {
-                const quarterTags = quarterPlays.reduce((acc, pt) => {
+            
+            if (quarterPlays.length >= 2) {
+                const quarterActions = quarterPlays.reduce((acc, pt) => {
                     acc[pt.tag.name] = (acc[pt.tag.name] || 0) + 1;
                     return acc;
                 }, {});
-                
-                const topQuarterAction = Object.entries(quarterTags).sort(([,a], [,b]) => b - a)[0];
-                if (topQuarterAction) {
+
+                const totalQuarterPlays = quarterPlays.length;
+                const quarterTrend = Object.entries(quarterActions)
+                    .sort(([,a], [,b]) => b - a)[0];
+
+                if (quarterTrend && quarterTrend[1] >= 2) {
+                    const quarterConfidence = Math.min(0.75, (quarterTrend[1] / totalQuarterPlays) * 0.8);
+                    
                     suggestions.push({
                         type: 'quarter_pattern',
-                        message: `${topQuarterAction[0]} is common in Q${quarter}`,
-                        confidence: 0.6
+                        message: `"${quarterTrend[0]}" is working well in Q${quarter}`,
+                        confidence: quarterConfidence,
+                        context: `${quarterTrend[1]} successful uses this quarter. Quarter-specific pattern.`,
+                        action: quarterTrend[0]
                     });
                 }
             }
         }
+
+        // Sort suggestions by confidence (highest first)
+        suggestions.sort((a, b) => b.confidence - a.confidence);
 
         res.json({
             success: true,
             data: {
-                suggestions,
+                suggestions: suggestions.slice(0, 5), // Top 5 suggestions
+                totalPlaysAnalyzed: recentPlays.length,
+                confidenceExplanation: {
+                    next_action_prediction: "Confidence in predicting the next action based on recent sequence patterns",
+                    defensive_adjustment: "Likelihood that defense will adjust to repeated patterns",
+                    player_tendency: "Strength of player's recent behavioral pattern",
+                    quarter_pattern: "Effectiveness of specific actions in current game context"
+                },
                 recentContext: recentPlays.slice(0, 5).map(pt => ({
                     tag: pt.tag.name,
                     player: pt.player?.name,
                     team: pt.team?.abbreviation,
                     quarter: pt.play.quarter,
-                    gameTime: pt.play.gameTime
+                    gameTime: pt.play.gameTime,
+                    timestamp: pt.createdAt
                 }))
             }
         });

@@ -84,20 +84,65 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
             {(suggestions || []).length > 0 && (
                 <div style={{ marginBottom: '24px' }}>
                     <h4 className="prediction-panel-section-title">
-                        💡 Smart Suggestions
+                        💡 Smart Predictions
                     </h4>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '8px' }}>
+                        Based on {gameContext?.totalPlaysAnalyzed || 'recent'} plays analyzed
+                    </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {(suggestions || []).map((suggestion, index) => (
                             <div
                                 key={index}
                                 className="prediction-panel-suggestion-card"
+                                style={{
+                                    borderLeft: suggestion.warning ? '4px solid #f59e0b' : '4px solid #3b82f6',
+                                    backgroundColor: suggestion.warning ? '#fef3c7' : '#f8fafc'
+                                }}
                             >
-                                {suggestion.message}
+                                <div style={{ fontWeight: '500', color: '#1e293b', marginBottom: '4px' }}>
+                                    {suggestion.message}
+                                </div>
                                 <div className="prediction-panel-confidence">
                                     Confidence: {Math.round(suggestion.confidence * 100)}%
                                 </div>
+                                {suggestion.context && (
+                                    <div style={{ 
+                                        fontSize: '0.75rem', 
+                                        color: '#64748b', 
+                                        marginTop: '4px',
+                                        fontStyle: 'italic'
+                                    }}>
+                                        {suggestion.context}
+                                    </div>
+                                )}
+                                {suggestion.action && (
+                                    <div style={{ 
+                                        fontSize: '0.75rem', 
+                                        color: '#3b82f6', 
+                                        marginTop: '4px',
+                                        fontWeight: '500'
+                                    }}>
+                                        Suggested action: {suggestion.action}
+                                    </div>
+                                )}
                             </div>
                         ))}
+                    </div>
+                    
+                    {/* Confidence Explanation */}
+                    <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px 12px', 
+                        backgroundColor: '#f1f5f9', 
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        color: '#475569'
+                    }}>
+                        <div style={{ fontWeight: '600', marginBottom: '4px' }}>What does confidence mean?</div>
+                        <div>• <strong>Next Action:</strong> How likely the player will follow this pattern</div>
+                        <div>• <strong>Defensive Adjustment:</strong> How likely the defense will catch on</div>
+                        <div>• <strong>Player Tendency:</strong> Strength of the player's recent behavior</div>
+                        <div>• <strong>Quarter Pattern:</strong> How well this works in current game context</div>
                     </div>
                 </div>
             )}
