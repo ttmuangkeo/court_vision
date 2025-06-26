@@ -1,26 +1,13 @@
-const axios = require('axios');
 const prisma = require('../../db/client');
-
-// Rate limiting helper
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const { apiClient, delay, filterCurrentNBATeams } = require('./baseService');
 
 async function syncTeamsFromAPI() {
   try {
     console.log('🔄 Syncing current NBA teams from BallDontLie API...');
     
-    const response = await axios.get('https://api.balldontlie.io/v1/teams', {
-      headers: {
-        'Authorization': `Bearer ${process.env.BALLDONTLIE_API_KEY}`
-      }
-    });
-    
+    const response = await apiClient.get('/teams');
     const allTeams = response.data.data;
-    
-    // Filter for current NBA teams only (30 teams)
-    const currentTeams = allTeams.filter(team => {
-      // Current NBA teams have these conferences
-      return team.conference === 'East' || team.conference === 'West';
-    });
+    const currentTeams = filterCurrentNBATeams(allTeams);
     
     console.log(`Found ${allTeams.length} total teams, syncing ${currentTeams.length} current NBA teams...`);
 
@@ -53,6 +40,4 @@ async function syncTeamsFromAPI() {
   }
 }
 
-module.exports = { 
-  syncTeamsFromAPI
-};
+module.exports = { syncTeamsFromAPI };

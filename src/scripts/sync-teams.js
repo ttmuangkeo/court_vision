@@ -1,4 +1,4 @@
-const {syncTeamsFromAPI} = require('../services/nba/syncService');
+const {syncTeamsFromAPI} = require('../services/nba/teamsService');
 
 async function main() {
     try {

@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "db:seed": "node prisma/seed.js",
     "sync:teams": "node src/scripts/sync-teams.js",
+    "sync:players": "node src/scripts/sync-players.js",
     "test": "jest"
   },
   "keywords": [
