@@ -59,7 +59,7 @@ model Player {
   name             String
   position         String
   teamEspnId       String? // Foreign key to Team.espnId
-  height           String?
+  height           String? // Restore to String?
   weight           Int?
   birthDate        DateTime?
   college          String?
@@ -67,7 +67,6 @@ model Player {
   draftRound       Int?
   draftNumber      Int?
   jerseyNumber     String?
-  country          String?
   
   // ESPN metadata
   espnUid          String?   // ESPN's unique identifier
