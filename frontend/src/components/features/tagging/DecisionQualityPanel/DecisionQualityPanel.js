@@ -10,14 +10,14 @@ function DecisionQualityPanel({ gameId, selectedPlayer, refreshTrigger }) {
 
     useEffect(() => {
         const fetchDecisionQuality = async () => {
-            if (!selectedPlayer?.id) {
+            if (!selectedPlayer?.espnId) {
                 setDecisionData(null);
                 return;
             }
 
             try {
                 setLoading(true);
-                const response = await axios.get(`${API_BASE}/analytics/decision-quality/${selectedPlayer.id}`, {
+                const response = await axios.get(`${API_BASE}/analytics/decision-quality/${selectedPlayer.espnId}`, {
                     params: { gameId }
                 });
                 setDecisionData(response.data.data);
@@ -29,7 +29,7 @@ function DecisionQualityPanel({ gameId, selectedPlayer, refreshTrigger }) {
         };
 
         fetchDecisionQuality();
-    }, [selectedPlayer?.id, gameId, refreshTrigger]);
+    }, [selectedPlayer?.espnId, gameId, refreshTrigger]);
 
     if (loading) {
         return (

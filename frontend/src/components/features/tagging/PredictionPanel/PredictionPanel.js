@@ -24,7 +24,7 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
                 const suggestionsRes = await axios.get(`${API_BASE}/analytics/suggestions`, {
                     params: {
                         gameId,
-                        playerId: selectedPlayer?.id,
+                        playerId: selectedPlayer?.espnId,
                         teamId: selectedTeam,
                         quarter: currentQuarter,
                         gameTime
@@ -33,8 +33,8 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
                 setSuggestions(suggestionsRes.data.data.suggestions);
 
                 // Fetch player patterns if player is selected
-                if (selectedPlayer?.id) {
-                    const playerRes = await axios.get(`${API_BASE}/analytics/player-patterns/${selectedPlayer.id}`, {
+                if (selectedPlayer?.espnId) {
+                    const playerRes = await axios.get(`${API_BASE}/analytics/player-patterns/${selectedPlayer.espnId}`, {
                         params: { gameId }
                     });
                     setPlayerPatterns(playerRes.data.data);
@@ -62,7 +62,7 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
         if (gameId) {
             fetchAnalytics();
         }
-    }, [gameId, selectedPlayer?.id, selectedTeam, currentQuarter, gameTime, refreshTrigger]);
+    }, [gameId, selectedPlayer?.espnId, selectedTeam, currentQuarter, gameTime, refreshTrigger]);
 
     if (loading) {
         return (
@@ -151,7 +151,7 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
             {selectedPlayer && playerPatterns && (
                 <div style={{ marginBottom: '24px' }}>
                     <h4 className="prediction-panel-section-title">
-                        🎯 {selectedPlayer.name} Patterns
+                        🎯 {selectedPlayer.fullName || selectedPlayer.name || 'Unknown Player'} Patterns
                     </h4>
                     {playerPatterns.totalPlays > 0 ? (
                         <div>

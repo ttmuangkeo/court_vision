@@ -19,10 +19,10 @@ router.get('/', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const where = {};
-        if(team) where.teamId = team;
+        if(team) where.teamEspnId = team;
         if(team_ids) {
             const teamIdArray = team_ids.split(',');
-            where.teamId = { in: teamIdArray };
+            where.teamEspnId = { in: teamIdArray };
         }
         if(position) where.position = position;
         
@@ -31,14 +31,26 @@ router.get('/', async (req, res) => {
             const searchTerm = search.trim();
             where.OR = [
                 {
-                    name: {
+                    fullName: {
                         contains: searchTerm,
                         mode: 'insensitive' // Case-insensitive search
                     }
                 },
                 {
-                    name: {
+                    fullName: {
                         startsWith: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    firstName: {
+                        contains: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    lastName: {
+                        contains: searchTerm,
                         mode: 'insensitive'
                     }
                 }
@@ -65,9 +77,9 @@ router.get('/', async (req, res) => {
                 position: order
             };
         } else {
-            // Default: sort by name
+            // Default: sort by fullName
             orderBy = {
-                name: order
+                fullName: order
             };
         }
 
@@ -133,14 +145,26 @@ router.get('/recently-active', async (req, res) => {
             const searchTerm = search.trim();
             where.OR = [
                 {
-                    name: {
+                    fullName: {
                         contains: searchTerm,
                         mode: 'insensitive'
                     }
                 },
                 {
-                    name: {
+                    fullName: {
                         startsWith: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    firstName: {
+                        contains: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    lastName: {
+                        contains: searchTerm,
                         mode: 'insensitive'
                     }
                 }
@@ -213,14 +237,26 @@ router.get('/most-tagged', async (req, res) => {
             const searchTerm = search.trim();
             where.OR = [
                 {
-                    name: {
+                    fullName: {
                         contains: searchTerm,
                         mode: 'insensitive'
                     }
                 },
                 {
-                    name: {
+                    fullName: {
                         startsWith: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    firstName: {
+                        contains: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    lastName: {
+                        contains: searchTerm,
                         mode: 'insensitive'
                     }
                 }
@@ -273,7 +309,7 @@ router.get('/by-team/:teamId', async (req, res) => {
 
         const teamPlayers = await prisma.player.findMany({
             where: {
-                teamId: teamId
+                teamEspnId: teamId
             },
             include: {
                 team: true,
@@ -311,7 +347,7 @@ router.get('/:id', async (req, res) => {
         const {include} = req.query;
 
         const player = await prisma.player.findUnique({
-            where: {id},
+            where: {espnId: id},
             include: include === 'team' ? { team: true } : undefined
         });
 
@@ -375,7 +411,7 @@ router.get('/stats/game/:gameId', async (req, res) => {
             include: {
                 player: {
                     select: {
-                        name: true,
+                        fullName: true,
                         position: true,
                         team: {
                             select: {
@@ -438,7 +474,7 @@ router.get('/stats/player/:playerId', async (req, res) => {
                 },
                 player: {
                     select: {
-                        name: true,
+                        fullName: true,
                         position: true,
                         team: {
                             select: {
@@ -520,7 +556,7 @@ router.get('/stats/team/:teamId', async (req, res) => {
             include: {
                 player: {
                     select: {
-                        name: true,
+                        fullName: true,
                         position: true
                     }
                 },

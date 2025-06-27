@@ -97,16 +97,16 @@ function PlayerSelector({
             .filter(player => !selectedTeam || player.teamId === selectedTeam)
             .map(player => (
               <div
-                key={player.id}
-                className={`player-selector-item${selectedPlayer && selectedPlayer.id === player.id ? ' selected' : ''}`}
+                key={player.espnId}
+                className={`player-selector-item${selectedPlayer && selectedPlayer.espnId === player.espnId ? ' selected' : ''}`}
                 onClick={() => onPlayerSelect(player)}
                 style={{
-                  borderLeft: selectedPlayer && selectedPlayer.id === player.id 
+                  borderLeft: selectedPlayer && selectedPlayer.espnId === player.espnId 
                     ? `4px solid ${getTeamPrimaryColor(player.teamId, teams)}` 
                     : '4px solid transparent'
                 }}
               >
-                <div style={{ fontWeight: 'bold' }}>{player.name}</div>
+                <div style={{ fontWeight: 'bold' }}>{player.fullName || player.name || 'Unknown Player'}</div>
                 <div style={{ fontSize: '12px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {getTeamLogo(player.teamId, teams) && (
                     <img 

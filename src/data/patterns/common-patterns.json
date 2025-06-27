@@ -1,0 +1,86 @@
+{
+  "patterns": [
+    {
+      "name": "Pick and Roll Sequence",
+      "description": "Screen set, ball handler uses screen, screener rolls",
+      "sequence": [
+        "Screen",
+        "Pick and Roll",
+        "Pass to Roller"
+      ],
+      "category": "OFFENSIVE_ACTION",
+      "frequency": "HIGH",
+      "successRate": 0.65
+    },
+    {
+      "name": "Isolation to Double Team",
+      "description": "Star player isolated, defense sends double team",
+      "sequence": [
+        "Isolation",
+        "Double Team",
+        "Pass to Open Player"
+      ],
+      "category": "OFFENSIVE_ACTION",
+      "frequency": "HIGH",
+      "successRate": 0.55
+    },
+    {
+      "name": "Transition Fast Break",
+      "description": "Defensive rebound leads to fast break",
+      "sequence": [
+        "Rebound",
+        "Transition Offense",
+        "Layup"
+      ],
+      "category": "TRANSITION",
+      "frequency": "MEDIUM",
+      "successRate": 0.7
+    },
+    {
+      "name": "Post Up to Kick Out",
+      "description": "Post player gets ball, kicks out to shooter",
+      "sequence": [
+        "Post Up",
+        "Double Team",
+        "Pass Out"
+      ],
+      "category": "OFFENSIVE_ACTION",
+      "frequency": "MEDIUM",
+      "successRate": 0.6
+    },
+    {
+      "name": "Zone Defense Response",
+      "description": "Team faces zone defense, finds open shooter",
+      "sequence": [
+        "Zone Defense 2-3",
+        "Perimeter Shot",
+        "Three Point Shot"
+      ],
+      "category": "DEFENSIVE_ACTION",
+      "frequency": "MEDIUM",
+      "successRate": 0.45
+    },
+    {
+      "name": "End of Game Foul Strategy",
+      "description": "Team down late, fouls to extend game",
+      "sequence": [
+        "End-of-Game Scenario",
+        "Strategic Foul",
+        "Free Throw"
+      ],
+      "category": "SPECIAL_SITUATION",
+      "frequency": "LOW",
+      "successRate": 0.3
+    }
+  ],
+  "metadata": {
+    "totalPatterns": 6,
+    "categories": [
+      "OFFENSIVE_ACTION",
+      "DEFENSIVE_ACTION",
+      "TRANSITION",
+      "SPECIAL_SITUATION"
+    ],
+    "lastUpdated": "2025-06-27T21:21:36.412Z"
+  }
+}

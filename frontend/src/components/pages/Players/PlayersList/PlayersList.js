@@ -377,7 +377,7 @@ function PlayersList() {
               >
                 <option value="">All Teams</option>
                 {teams.map(team => (
-                  <option key={team.id} value={team.id}>
+                  <option key={team.espnId} value={team.espnId}>
                     {team.name}
                   </option>
                 ))}
@@ -456,7 +456,7 @@ function PlayersList() {
         }}>
           {players.map(player => (
             <div
-              key={player.id}
+              key={player.espnId}
               style={{
                 backgroundColor: 'white',
                 padding: '24px',
@@ -477,7 +477,7 @@ function PlayersList() {
                 e.target.style.transform = 'translateY(0)';
                 e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
               }}
-              onClick={() => handlePlayerClick(player.id)}
+              onClick={() => handlePlayerClick(player.espnId)}
             >
               {/* Player Avatar */}
               <div style={{
@@ -492,9 +492,22 @@ function PlayersList() {
                 fontWeight: '700',
                 color: '#1e293b',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                border: '1px solid rgba(0, 0, 0, 0.05)'
+                border: '1px solid rgba(0, 0, 0, 0.05)',
+                overflow: 'hidden'
               }}>
-                {player.name.split(' ').map(n => n[0]).join('')}
+                {player.headshot ? (
+                  <img 
+                    src={player.headshot} 
+                    alt={player.fullName || player.name}
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover'
+                    }}
+                  />
+                ) : (
+                  (player.fullName || player.name || 'P').split(' ').map(n => n[0]).join('')
+                )}
               </div>
               
               {/* Player Info */}
@@ -503,12 +516,23 @@ function PlayersList() {
                   fontSize: '1.25rem', 
                   fontWeight: '700', 
                   color: '#1e293b',
-                  marginBottom: '8px',
+                  marginBottom: '4px',
                   lineHeight: '1.3'
                 }}>
-                  {player.name}
+                  {player.fullName || player.name || 'Unknown Player'}
                 </h4>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                {player.shortName && player.shortName !== (player.fullName || player.name) && (
+                  <p style={{ 
+                    fontSize: '0.9rem', 
+                    color: '#94a3b8',
+                    marginBottom: '8px',
+                    fontWeight: '500',
+                    fontStyle: 'italic'
+                  }}>
+                    {player.shortName}
+                  </p>
+                )}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
                   <span style={{
                     padding: '6px 12px',
                     backgroundColor: getPositionColor(player.position),
@@ -531,11 +555,35 @@ function PlayersList() {
                       #{player.jerseyNumber}
                     </span>
                   )}
-                  {player._count?.playTags > 0 && (
+                  {player.age && (
                     <span style={{
                       padding: '6px 12px',
                       backgroundColor: '#fef3c7',
                       color: '#92400e',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}>
+                      {player.age} years old
+                    </span>
+                  )}
+                  {player.experience && (
+                    <span style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#dbeafe',
+                      color: '#1e40af',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}>
+                      {player.experience} years exp
+                    </span>
+                  )}
+                  {player._count?.playTags > 0 && (
+                    <span style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#f0fdf4',
+                      color: '#166534',
                       borderRadius: '8px',
                       fontSize: '0.8rem',
                       fontWeight: '600'
@@ -552,14 +600,48 @@ function PlayersList() {
                 }}>
                   {player.team?.name}
                 </p>
-                {player.height && (
-                  <p style={{ 
-                    fontSize: '0.875rem', 
-                    color: '#64748b',
-                    fontWeight: '500'
-                  }}>
-                    {player.height} • {player.weight} lbs
-                  </p>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap' }}>
+                  {player.displayHeight && (
+                    <span style={{ 
+                      fontSize: '0.875rem', 
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>
+                      {player.displayHeight}
+                    </span>
+                  )}
+                  {player.displayWeight && (
+                    <span style={{ 
+                      fontSize: '0.875rem', 
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>
+                      {player.displayWeight}
+                    </span>
+                  )}
+                  {player.birthPlace && (
+                    <span style={{ 
+                      fontSize: '0.875rem', 
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>
+                      • {player.birthPlace}
+                    </span>
+                  )}
+                </div>
+                {player.status && player.status !== 'Active' && (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                    <span style={{
+                      padding: '4px 8px',
+                      backgroundColor: player.status === 'Injured' ? '#fee2e2' : '#fef3c7',
+                      color: player.status === 'Injured' ? '#dc2626' : '#92400e',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600'
+                    }}>
+                      {player.status === 'Injured' ? '🏥 Injured' : player.status}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

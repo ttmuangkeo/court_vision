@@ -11,6 +11,7 @@ const tagsRouter = require('./src/api/tags');
 const gamesRouter = require('./src/api/games');
 const playsRouter = require('./src/api/plays');
 const analyticsRouter = require('./src/api/analytics');
+const patternsRouter = require('./src/api/patterns');
 const authRouter = require('./src/api/auth');
 
 const app = express();
@@ -37,6 +38,7 @@ app.use('/api/tags', tagsRouter);
 app.use('/api/games', gamesRouter);
 app.use('/api/plays', playsRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/patterns', patternsRouter);
 
 // API Docs
 app.get('/api', (req, res) => {
@@ -50,6 +52,7 @@ app.get('/api', (req, res) => {
            tags: '/api/tags',
            plays: '/api/plays',
            analytics: '/api/analytics',
+           patterns: '/api/patterns',
        }
    });
 });

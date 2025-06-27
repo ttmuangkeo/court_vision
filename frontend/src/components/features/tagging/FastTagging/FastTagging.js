@@ -107,13 +107,13 @@ function FastTagging() {
       const createdById = 'cmccsd5oj00001xhj6xnvor24';
       const playData = {
         gameId,
-        description: `${currentPlayTags.map(t => t.actionName).join(' → ')} by ${selectedPlayer.name}`,
+        description: `${currentPlayTags.map(t => t.actionName).join(' → ')} by ${selectedPlayer.fullName || selectedPlayer.name || 'Unknown Player'}`,
         quarter: currentQuarter,
         gameTime,
         createdById,
         tags: currentPlayTags.map(tagData => ({
           tagId: tagData.tag.id,
-          playerId: selectedPlayer.id,
+          playerId: selectedPlayer.espnId,
           teamId: selectedPlayer.teamId,
           context: {
             action: tagData.actionName,
