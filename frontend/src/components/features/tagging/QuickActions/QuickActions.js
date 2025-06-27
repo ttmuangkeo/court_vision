@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { quickActions, actionCategories, tagTransitionMap, starterActions } from './quickActionsConfig';
-import TagDetailsModal from './TagDetailsModal';
 import './QuickActions.css';
+import { quickActions, actionCategories, tagTransitionMap, starterActions } from './quickActionsConfig.js';
+import TagDetailsModal from '../TagDetailsModal';
 
 const API_BASE = 'http://localhost:3000/api';
 

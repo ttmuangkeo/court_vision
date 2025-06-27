@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import GameHeader from './GameHeader';
-import PlayerSelector from './PlayerSelector';
-import GameTimeInput from './GameTimeInput';
-import QuickActions from './QuickActions';
-import PredictionPanel from './PredictionPanel';
-import DecisionQualityPanel from './DecisionQualityPanel';
+import GameHeader from '../GameHeader';
+import PlayerSelector from '../PlayerSelector';
+import GameTimeInput from '../GameTimeInput';
+import QuickActions from '../QuickActions';
+import PredictionPanel from '../PredictionPanel';
+import DecisionQualityPanel from '../DecisionQualityPanel';
 import './FastTagging.css';
 
 const API_BASE = 'http://localhost:3000/api';

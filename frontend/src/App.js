@@ -1,15 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
-import GamesDashboard from './components/pages/GamesDashboard';
-import GamesList from './components/pages/GamesList';
-import GameDetail from './components/pages/GameDetail';
-import GameAnalytics from './components/pages/GameAnalytics';
-import FastTagging from './components/tagging/FastTagging';
-import TeamsList from './components/pages/TeamsList';
-import TeamDetail from './components/pages/TeamDetail';
-import PlayersList from './components/pages/PlayersList';
-import PlayerDetail from './components/pages/PlayerDetail';
+import GamesDashboard from './components/pages/Games/GamesDashboard';
+import GamesList from './components/pages/Games/GamesList';
+import GameDetail from './components/pages/Games/GameDetail';
+import GameAnalytics from './components/pages/Analytics/GameAnalytics';
+import FastTagging from './components/features/tagging/FastTagging';
+import TeamsList from './components/pages/Teams/TeamsList';
+import TeamDetail from './components/pages/Teams/TeamDetail';
+import PlayersList from './components/pages/Players/PlayersList';
+import PlayerDetail from './components/pages/Players/PlayerDetail';
 // import TagsList from './components/TagsList'; // (create this next!)
 import './App.css';
 
