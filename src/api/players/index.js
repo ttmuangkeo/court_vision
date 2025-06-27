@@ -335,4 +335,282 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// GET /api/players/stats/sync - Sync recent player stats
+router.get('/stats/sync', async (req, res) => {
+    try {
+        const PlayerStatsSyncService = require('../../services/espn/playerStatsSyncService');
+        const statsService = new PlayerStatsSyncService();
+        
+        console.log('API: Starting player stats sync...');
+        
+        const result = await statsService.syncRecentGamesFromScoreboard();
+        
+        res.json({
+            success: true,
+            message: 'Player stats sync completed',
+            data: {
+                gamesProcessed: result.gamesProcessed,
+                totalSynced: result.totalSynced,
+                totalErrors: result.totalErrors
+            }
+        });
+    } catch(error) {
+        console.error('API: Error syncing player stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to sync player stats'
+        });
+    }
+});
+
+// GET /api/players/stats/game/:gameId - Get player stats for a specific game
+router.get('/stats/game/:gameId', async (req, res) => {
+    try {
+        const { gameId } = req.params;
+        
+        const stats = await prisma.playerGameStat.findMany({
+            where: {
+                gameId: gameId
+            },
+            include: {
+                player: {
+                    select: {
+                        name: true,
+                        position: true,
+                        team: {
+                            select: {
+                                name: true,
+                                abbreviation: true
+                            }
+                        }
+                    }
+                },
+                game: {
+                    select: {
+                        date: true,
+                        homeTeam: true,
+                        awayTeam: true,
+                        homeScore: true,
+                        awayScore: true
+                    }
+                }
+            },
+            orderBy: [
+                { points: 'desc' },
+                { rebounds: 'desc' },
+                { assists: 'desc' }
+            ]
+        });
+        
+        res.json({
+            success: true,
+            data: stats,
+            count: stats.length
+        });
+    } catch(error) {
+        console.error('Error fetching game player stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch game player stats'
+        });
+    }
+});
+
+// GET /api/players/stats/player/:playerId - Get stats for a specific player
+router.get('/stats/player/:playerId', async (req, res) => {
+    try {
+        const { playerId } = req.params;
+        const { limit = 10 } = req.query;
+        
+        const stats = await prisma.playerGameStat.findMany({
+            where: {
+                playerId: playerId
+            },
+            include: {
+                game: {
+                    select: {
+                        date: true,
+                        homeTeam: true,
+                        awayTeam: true,
+                        homeScore: true,
+                        awayScore: true
+                    }
+                },
+                player: {
+                    select: {
+                        name: true,
+                        position: true,
+                        team: {
+                            select: {
+                                name: true,
+                                abbreviation: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                game: {
+                    date: 'desc'
+                }
+            },
+            take: parseInt(limit)
+        });
+        
+        // Calculate averages
+        const averages = stats.reduce((acc, stat) => {
+            acc.points += stat.points || 0;
+            acc.rebounds += stat.rebounds || 0;
+            acc.assists += stat.assists || 0;
+            acc.steals += stat.steals || 0;
+            acc.blocks += stat.blocks || 0;
+            acc.turnovers += stat.turnovers || 0;
+            acc.fouls += stat.fouls || 0;
+            acc.threesMade += stat.threesMade || 0;
+            acc.threesAtt += stat.threesAtt || 0;
+            acc.fieldGoalsMade += stat.fieldGoalsMade || 0;
+            acc.fieldGoalsAtt += stat.fieldGoalsAtt || 0;
+            acc.freeThrowsMade += stat.freeThrowsMade || 0;
+            acc.freeThrowsAtt += stat.freeThrowsAtt || 0;
+            acc.plusMinus += stat.plusMinus || 0;
+            acc.minutes += stat.minutes || 0;
+            return acc;
+        }, {
+            points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0,
+            turnovers: 0, fouls: 0, threesMade: 0, threesAtt: 0,
+            fieldGoalsMade: 0, fieldGoalsAtt: 0, freeThrowsMade: 0,
+            freeThrowsAtt: 0, plusMinus: 0, minutes: 0
+        });
+        
+        const gameCount = stats.length;
+        if (gameCount > 0) {
+            Object.keys(averages).forEach(key => {
+                averages[key] = Math.round((averages[key] / gameCount) * 10) / 10;
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: {
+                stats: stats,
+                averages: averages,
+                gameCount: gameCount
+            },
+            count: stats.length
+        });
+    } catch(error) {
+        console.error('Error fetching player stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch player stats'
+        });
+    }
+});
+
+// GET /api/players/stats/team/:teamId - Get stats for all players on a team
+router.get('/stats/team/:teamId', async (req, res) => {
+    try {
+        const { teamId } = req.params;
+        const { limit = 50 } = req.query;
+        
+        const stats = await prisma.playerGameStat.findMany({
+            where: {
+                teamId: teamId
+            },
+            include: {
+                player: {
+                    select: {
+                        name: true,
+                        position: true
+                    }
+                },
+                game: {
+                    select: {
+                        date: true,
+                        homeTeam: true,
+                        awayTeam: true
+                    }
+                }
+            },
+            orderBy: [
+                { game: { date: 'desc' } },
+                { points: 'desc' }
+            ],
+            take: parseInt(limit)
+        });
+        
+        // Group by player and calculate totals/averages
+        const playerStats = {};
+        stats.forEach(stat => {
+            const playerId = stat.playerId;
+            if (!playerStats[playerId]) {
+                playerStats[playerId] = {
+                    player: stat.player,
+                    games: 0,
+                    totals: {
+                        points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0,
+                        turnovers: 0, fouls: 0, threesMade: 0, threesAtt: 0,
+                        fieldGoalsMade: 0, fieldGoalsAtt: 0, freeThrowsMade: 0,
+                        freeThrowsAtt: 0, plusMinus: 0, minutes: 0
+                    },
+                    averages: {},
+                    recentGames: []
+                };
+            }
+            
+            playerStats[playerId].games++;
+            playerStats[playerId].totals.points += stat.points || 0;
+            playerStats[playerId].totals.rebounds += stat.rebounds || 0;
+            playerStats[playerId].totals.assists += stat.assists || 0;
+            playerStats[playerId].totals.steals += stat.steals || 0;
+            playerStats[playerId].totals.blocks += stat.blocks || 0;
+            playerStats[playerId].totals.turnovers += stat.turnovers || 0;
+            playerStats[playerId].totals.fouls += stat.fouls || 0;
+            playerStats[playerId].totals.threesMade += stat.threesMade || 0;
+            playerStats[playerId].totals.threesAtt += stat.threesAtt || 0;
+            playerStats[playerId].totals.fieldGoalsMade += stat.fieldGoalsMade || 0;
+            playerStats[playerId].totals.fieldGoalsAtt += stat.fieldGoalsAtt || 0;
+            playerStats[playerId].totals.freeThrowsMade += stat.freeThrowsMade || 0;
+            playerStats[playerId].totals.freeThrowsAtt += stat.freeThrowsAtt || 0;
+            playerStats[playerId].totals.plusMinus += stat.plusMinus || 0;
+            playerStats[playerId].totals.minutes += stat.minutes || 0;
+            
+            // Keep track of recent games
+            if (playerStats[playerId].recentGames.length < 5) {
+                playerStats[playerId].recentGames.push({
+                    date: stat.game.date,
+                    opponent: stat.game.homeTeam === stat.game.awayTeam ? stat.game.awayTeam : stat.game.homeTeam,
+                    points: stat.points,
+                    rebounds: stat.rebounds,
+                    assists: stat.assists
+                });
+            }
+        });
+        
+        // Calculate averages for each player
+        Object.values(playerStats).forEach(player => {
+            player.averages = {};
+            Object.keys(player.totals).forEach(key => {
+                player.averages[key] = Math.round((player.totals[key] / player.games) * 10) / 10;
+            });
+        });
+        
+        const playerStatsArray = Object.values(playerStats).sort((a, b) => 
+            b.averages.points - a.averages.points
+        );
+        
+        res.json({
+            success: true,
+            data: playerStatsArray,
+            count: playerStatsArray.length
+        });
+    } catch(error) {
+        console.error('Error fetching team player stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch team player stats'
+        });
+    }
+});
+
 module.exports = router;

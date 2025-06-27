@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getTeamLogo, getTeamPrimaryColor, getTeamDisplayName } from '../../../../utils/teamBranding';
 
 const API_BASE = 'http://localhost:3000/api';
 
@@ -83,6 +84,11 @@ function TeamDetail() {
         );
     }
 
+    // Get team branding data
+    const primaryColor = getTeamPrimaryColor(team.id, [team]);
+    const logoUrl = getTeamLogo(team.id, [team]);
+    const displayName = getTeamDisplayName(team.id, [team]);
+
     return (
         <div style={{ 
             minHeight: '100vh',
@@ -91,7 +97,7 @@ function TeamDetail() {
         }}>
             {/* Hero Section */}
             <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
                 padding: '60px 20px 40px',
                 color: 'white',
                 position: 'relative'
@@ -106,7 +112,6 @@ function TeamDetail() {
                         onClick={handleBackClick}
                         style={{
                             padding: '12px 20px',
-                            border: 'none',
                             borderRadius: '12px',
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
                             color: 'white',
@@ -128,25 +133,65 @@ function TeamDetail() {
                         ← Back to Teams
                     </button>
                     
-                    <div style={{ textAlign: 'center' }}>
-                        <h1 style={{ 
-                            fontSize: '3.5rem', 
-                            fontWeight: '700', 
-                            marginBottom: '16px',
-                            letterSpacing: '-0.02em',
-                            lineHeight: '1.1'
+                    <div style={{ 
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '24px'
+                    }}>
+                        {/* Team Logo */}
+                        <div style={{
+                            width: '120px',
+                            height: '120px',
+                            backgroundColor: logoUrl ? 'transparent' : 'rgba(255, 255, 255, 0.2)',
+                            borderRadius: '30px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: logoUrl ? '0' : '3rem',
+                            fontWeight: '700',
+                            color: 'white',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                            border: logoUrl ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
+                            overflow: 'hidden'
                         }}>
-                            {team.name}
-                        </h1>
-                        <p style={{ 
-                            fontSize: '1.25rem', 
-                            fontWeight: '400',
-                            opacity: '0.9',
-                            lineHeight: '1.5',
-                            marginBottom: '0'
-                        }}>
-                            {team.city} • {team.conference} Conference • {team.division} Division
-                        </p>
+                            {logoUrl ? (
+                                <img 
+                                    src={logoUrl} 
+                                    alt={team.abbreviation}
+                                    style={{ 
+                                        width: '100%', 
+                                        height: '100%', 
+                                        objectFit: 'contain',
+                                        padding: '12px'
+                                    }}
+                                />
+                            ) : (
+                                team.abbreviation
+                            )}
+                        </div>
+                        
+                        <div>
+                            <h1 style={{ 
+                                fontSize: '3.5rem', 
+                                fontWeight: '700', 
+                                marginBottom: '16px',
+                                letterSpacing: '-0.02em',
+                                lineHeight: '1.1'
+                            }}>
+                                {displayName}
+                            </h1>
+                            <p style={{ 
+                                fontSize: '1.25rem', 
+                                fontWeight: '400',
+                                opacity: '0.9',
+                                lineHeight: '1.5',
+                                marginBottom: '0'
+                            }}>
+                                {team.city} • {team.conference} Conference • {team.division} Division
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -171,9 +216,9 @@ function TeamDetail() {
                         borderRadius: '16px',
                         textAlign: 'center',
                         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                        border: `2px solid ${primaryColor}20`
                     }}>
-                        <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#667eea', marginBottom: '8px' }}>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '700', color: primaryColor, marginBottom: '8px' }}>
                             {players.length}
                         </div>
                         <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: '500' }}>
@@ -247,7 +292,7 @@ function TeamDetail() {
                             flex: 1,
                             padding: '16px 24px',
                             border: 'none',
-                            backgroundColor: activeTab === 'roster' ? '#667eea' : 'transparent',
+                            backgroundColor: activeTab === 'roster' ? primaryColor : 'transparent',
                             color: activeTab === 'roster' ? 'white' : '#64748b',
                             fontWeight: '600',
                             cursor: 'pointer',
@@ -264,7 +309,7 @@ function TeamDetail() {
                             flex: 1,
                             padding: '16px 24px',
                             border: 'none',
-                            backgroundColor: activeTab === 'stats' ? '#667eea' : 'transparent',
+                            backgroundColor: activeTab === 'stats' ? primaryColor : 'transparent',
                             color: activeTab === 'stats' ? 'white' : '#64748b',
                             fontWeight: '600',
                             cursor: 'pointer',

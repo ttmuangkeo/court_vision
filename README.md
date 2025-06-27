@@ -13,7 +13,9 @@ Court Vision is a lightning-fast tagging system that lets you capture and analyz
 - **Minimal cognitive load** - Designed for live game watching
 
 ### 🏆 **Built for NBA Analysis**
-- **Real-time data** - Live integration with BallDontLie API
+- **Real-time data** - Live integration with ESPN Core API
+- **Complete NBA database** - 820+ players with rich profiles
+- **Automated sync** - Intelligent data synchronization
 - **Comprehensive tagging** - 20+ basketball action categories
 - **Player tracking** - Follow individual players across games
 - **Team insights** - Analyze defensive schemes and offensive patterns
@@ -31,12 +33,12 @@ Court Vision is a lightning-fast tagging system that lets you capture and analyz
 npm install
 
 # Set up database
-npm run db:generate
-npm run db:push
-npm run db:seed
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed
 
-# Sync NBA data from BallDontLie API
-npm run sync:data
+# Set up automated sync
+node scripts/setup-cron-jobs.sh
 
 # Start development server
 npm run dev
@@ -86,22 +88,36 @@ Review tagged plays to identify trends and strategies
 
 ## 📊 Data Integration
 
-Court Vision integrates with the [BallDontLie API](https://www.balldontlie.io/) to provide:
+Court Vision integrates with **ESPN's Core API** to provide comprehensive NBA data:
 
-- **Live game data** - Scores, schedules, and player stats
-- **Current rosters** - All 30 NBA teams and players
-- **Historical data** - Past games and performance metrics
+### 🏀 **Complete NBA Database**
+- **820+ Players** - Full NBA roster with rich profiles
+- **30 Teams** - All NBA teams with current rosters
+- **Recent Games** - Live game data and statistics
+- **Player Stats** - Game-by-game performance metrics
+
+### 🔄 **Automated Sync System**
+- **Season Detection** - Automatically adjusts for regular season vs offseason
+- **Daily Sync** - Keeps data fresh during the season
+- **Smart Logging** - Comprehensive monitoring and error handling
+- **Offseason Handling** - Continues monitoring during breaks
+
+### Data Sources
+- **ESPN Core API** (`sports.core.api.espn.com`) - Complete player and team data
+- **ESPN Scoreboard API** - Recent games and player statistics
+- **Automated Sync** - Background data synchronization
 
 ### Sync Commands
 
 ```bash
-# Sync all data (teams, players, games)
-npm run sync:data
+# Manual sync
+node src/scripts/automated-player-stats-sync.js
 
-# Or run individual syncs
-npm run sync:teams
-npm run sync:players
-npm run sync:games
+# Check sync status
+node scripts/monitor-sync.js
+
+# View logs
+tail -f logs/sync.log
 ```
 
 ## 🗄 Technical Architecture
@@ -117,37 +133,41 @@ npm run sync:games
 - PostgreSQL for data storage
 - Real-time WebSocket support
 
+### **Data Services**
+- **ESPN Integration** - Core API and Scoreboard API
+- **Automated Sync** - Intelligent data synchronization
+- **Error Handling** - Robust error management and logging
+
 ### **Database Schema**
-- **Teams & Players** - NBA roster data
+- **Teams & Players** - NBA roster data (ESPN Core API)
 - **Games & Plays** - Game events and tagging
+- **Player Stats** - Game-by-game statistics
 - **Tags & Categories** - Basketball action taxonomy
 - **Users & Analytics** - User preferences and insights
-
-## 🎯 Use Cases
-
-### **For NBA Fans**
-- Track your favorite player's defensive assignments
-- Analyze team defensive schemes
-- Build databases of player tendencies
-
-### **For Content Creators**
-- Create data-driven analysis videos
-- Generate insights for social media
-- Collaborate with other analysts
-
-### **For Coaches & Scouts**
-- Review opponent tendencies
-- Track player development
-- Build scouting reports
 
 ## 🔧 Development
 
 ### Database Commands
 ```bash
-npm run db:generate    # Generate Prisma client
-npm run db:push        # Push schema changes
-npm run db:studio      # Open Prisma Studio
-npm run db:seed        # Seed with sample data
+npx prisma generate    # Generate Prisma client
+npx prisma migrate dev # Run migrations
+npx prisma studio      # Open Prisma Studio
+npx prisma db seed     # Seed with sample data
+```
+
+### Sync Commands
+```bash
+# Full data sync
+node src/scripts/automated-player-stats-sync.js
+
+# Individual syncs
+node src/scripts/sync-all-athletes.js
+node src/scripts/sync-all-teams.js
+node src/scripts/sync-all-games.js
+node src/scripts/sync-recent-player-stats.js
+
+# Monitoring
+node scripts/monitor-sync.js
 ```
 
 ### API Development
@@ -155,6 +175,31 @@ npm run db:seed        # Seed with sample data
 npm start              # Start production server
 npm run dev            # Start with nodemon
 ```
+
+## 📚 Documentation
+
+- **[Automated Sync Setup](docs/AUTOMATED_SYNC_SETUP.md)** - Complete setup guide for the automated sync system
+- **[Player Stats Sync](docs/PLAYER_STATS_SYNC.md)** - Detailed documentation of the player statistics system
+
+## 🎯 Use Cases
+
+### **For NBA Fans**
+- Track your favorite player's defensive assignments
+- Analyze team defensive schemes
+- Build databases of player tendencies
+- Access comprehensive player profiles and statistics
+
+### **For Content Creators**
+- Create data-driven analysis videos
+- Generate insights for social media
+- Collaborate with other analysts
+- Use rich player data for storytelling
+
+### **For Coaches & Scouts**
+- Review opponent tendencies
+- Track player development
+- Build scouting reports
+- Access detailed player statistics
 
 ## 🤝 Contributing
 
@@ -176,9 +221,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🎉 Acknowledgments
 
-- [BallDontLie API](https://www.balldontlie.io/) for comprehensive NBA data
-- Prisma team for the excellent ORM
-- Express.js community for the robust backend framework
+- **ESPN** for providing comprehensive NBA data through their Core API
+- **Prisma team** for the excellent ORM
+- **Express.js community** for the robust backend framework
+- **React team** for the amazing frontend framework
 
 ---
 

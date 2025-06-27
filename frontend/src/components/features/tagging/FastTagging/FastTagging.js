@@ -28,6 +28,7 @@ function FastTagging() {
   const [loading, setLoading] = useState(true);
   const [tags, setTags] = useState([]);
   const [players, setPlayers] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [gameTime, setGameTime] = useState('');
@@ -36,12 +37,11 @@ function FastTagging() {
   const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger for refreshing panels
 
   const width = useWindowWidth();
-  const isNarrow = width < 1200;
   const isVeryNarrow = width < 900;
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`${API_BASE}/games/${gameId}?include=full`)
+    axios.get(`${API_BASE}/games/${gameId}?include=teams`)
       .then(res => {
         setGame(res.data.data);
         setLoading(false);
@@ -57,9 +57,18 @@ function FastTagging() {
   }, []);
 
   useEffect(() => {
+    axios.get(`${API_BASE}/teams`)
+      .then(res => setTeams(res.data.data))
+      .catch(err => {
+        console.error('Error fetching teams:', err);
+        setTeams([]);
+      });
+  }, []);
+
+  useEffect(() => {
     if (game && game.homeTeamId && game.awayTeamId) {
       const teamIds = [game.homeTeamId, game.awayTeamId];
-      axios.get(`${API_BASE}/players?team_ids=${teamIds.join(',')}`)
+      axios.get(`${API_BASE}/players?team_ids=${teamIds.join(',')}&limit=100`)
         .then(res => setPlayers(res.data.data))
         .catch(err => {
           console.error('Error fetching players:', err);
@@ -167,6 +176,7 @@ function FastTagging() {
             selectedTeam={selectedTeam}
             onPlayerSelect={handlePlayerSelect}
             onTeamSelect={handleTeamSelect}
+            teams={teams}
           />
         </div>
         {/* Main Area */}
