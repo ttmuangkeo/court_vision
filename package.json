@@ -14,14 +14,11 @@
     "db:studio": "prisma studio",
     "db:seed": "node prisma/seed.js",
     "sync-teams": "node src/scripts/sync-all-teams.js",
-    "sync-players": "node src/scripts/sync-all-players.js",
+    "sync-athletes": "node src/scripts/sync-all-athletes.js",
     "sync-games": "node src/scripts/sync-all-games.js",
     "sync-player-stats": "node src/scripts/scheduled-player-stats-sync.js",
     "sync-recent-stats": "node src/scripts/sync-recent-player-stats.js",
-    "sync-automated": "node src/scripts/automated-player-stats-sync.js",
-    "sync-athletes": "node src/scripts/sync-all-athletes.js",
-    "test-player-stats": "node src/scripts/test-player-stats-sync.js",
-    "migrate-games": "node src/scripts/migrate-games-to-core-api.js"
+    "sync-automated": "node src/scripts/automated-player-stats-sync.js"
   },
   "keywords": [
     "nba",
@@ -34,7 +31,6 @@
   "author": "Tim Muangkeo",
   "license": "MIT",
   "dependencies": {
-    "@balldontlie/sdk": "^1.2.2",
     "@prisma/client": "^5.22.0",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",

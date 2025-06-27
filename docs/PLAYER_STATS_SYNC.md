@@ -30,7 +30,7 @@ The Player Stats Sync system extracts basketball statistics from ESPN's public A
 - ✅ Scoreboard endpoint (works, limited data)
 - ❌ Boxscore endpoint (404 errors)
 - ❌ Historical endpoints (not accessible)
-- ❌ Alternative APIs (balldontlie, etc.)
+- ❌ Alternative APIs (not suitable for our needs)
 
 ## Data Sources
 
