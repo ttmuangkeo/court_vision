@@ -104,7 +104,7 @@ function FastTagging() {
       return;
     }
     try {
-      const createdById = 'cmccsd5oj00001xhj6xnvor24';
+      const createdById = 'demo-user-1';
       const playData = {
         gameId,
         description: `${currentPlayTags.map(t => t.actionName).join(' → ')} by ${selectedPlayer.fullName || selectedPlayer.name || 'Unknown Player'}`,

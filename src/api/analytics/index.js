@@ -159,7 +159,7 @@ router.get('/game-context/:gameId', async (req, res) => {
 
         // Get game details
         const game = await prisma.game.findUnique({
-            where: { id: gameId },
+            where: { espnId: gameId },
             include: {
                 homeTeam: true,
                 awayTeam: true,
