@@ -1,15 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import './QuickActions.css';
 import TagDetailsModal from '../TagDetailsModal';
+import { playFlows, quickSequences } from './quickActionsConfig';
 
 const API_BASE = 'http://localhost:3000/api';
 
-function QuickActions({ onQuickTag, selectedPlayer, gameTime, compact, currentSequence = [] }) {
+// List of actions that should auto-save the sequence (handoff actions)
+const HANDOFF_ACTIONS = [
+  'Pass to Roller', 'Pass to Corner', 'Pass to Popper', 'Pass Out', 'Assist',
+  'Quick Shot', 'Pull Up Shot', 'Step Back', 'Fade Away', 'Layup/Dunk',
+  'Made Shot', 'Missed Shot', 'Blocked', 'Shot Attempt',
+  'Foul Drawn', 'Free Throws', 'And One', 'Offensive Foul',
+  'Turnover', 'Bad Pass', 'Traveling', 'Shot Clock Violation',
+  'Offensive Rebound', 'Defensive Rebound', 'Out of Bounds'
+];
+
+function QuickActions({ onQuickTag, onAutoSave, selectedPlayer, gameTime, compact, currentSequence = [] }) {
   const isDisabled = !selectedPlayer || !gameTime;
   const [modalTag, setModalTag] = useState(null);
   const [historicSuggestions, setHistoricSuggestions] = useState([]);
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Flow-based state
+  const [currentFlow, setCurrentFlow] = useState('initial');
+  const [flowHistory, setFlowHistory] = useState([]);
+  const [showQuickSequences, setShowQuickSequences] = useState(false);
 
   // Fetch all tags from the database
   useEffect(() => {
@@ -52,75 +68,65 @@ function QuickActions({ onQuickTag, selectedPlayer, gameTime, compact, currentSe
     fetchSuggestions();
   }, [currentSequence]);
 
-  // Group tags by category and subcategory
-  const groupedTags = tags.reduce((acc, tag) => {
-    const category = tag.category || 'OTHER';
-    const subcategory = tag.subcategory || 'General';
-    
-    if (!acc[category]) {
-      acc[category] = {};
+  const handleFlowOption = (option) => {
+    // Add the action to the sequence
+    onQuickTag(option.name);
+    // Auto-save if this is a handoff action
+    if (HANDOFF_ACTIONS.includes(option.name) && typeof onAutoSave === 'function') {
+      setTimeout(() => {
+        onAutoSave();
+        // After auto-save, reset the flow and flow history
+        setCurrentFlow('initial');
+        setFlowHistory([]);
+      }, 0);
+      return; // Prevent further flow logic after auto-save
     }
-    if (!acc[category][subcategory]) {
-      acc[category][subcategory] = [];
-    }
-    acc[category][subcategory].push(tag);
-    return acc;
-  }, {});
-
-  // Category labels and colors
-  const categoryConfig = {
-    'OFFENSIVE_ACTION': {
-      label: '🏀 Offensive Actions',
-      color: '#4CAF50',
-      icon: '🏀'
-    },
-    'DEFENSIVE_ACTION': {
-      label: '🛡️ Defensive Actions',
-      color: '#F44336',
-      icon: '🛡️'
-    },
-    'TRANSITION': {
-      label: '⚡ Transition',
-      color: '#FF9800',
-      icon: '⚡'
-    },
-    'SET_PLAY': {
-      label: '📋 Set Plays',
-      color: '#9C27B0',
-      icon: '📋'
-    },
-    'SPECIAL_SITUATION': {
-      label: '⏰ Special Situations',
-      color: '#607D8B',
-      icon: '⏰'
-    },
-    'PLAYER_ACTION': {
-      label: '👤 Player Actions',
-      color: '#2196F3',
-      icon: '👤'
-    },
-    'TEAM_ACTION': {
-      label: '🏆 Team Actions',
-      color: '#795548',
-      icon: '🏆'
-    },
-    'OTHER': {
-      label: '📝 Other',
-      color: '#9E9E9E',
-      icon: '📝'
+    // Update flow history
+    setFlowHistory(prev => [...prev, { flow: currentFlow, option }]);
+    // Move to next flow if it exists
+    if (option.nextFlow && option.nextFlow !== 'end') {
+      setCurrentFlow(option.nextFlow);
+    } else {
+      // Play is complete, reset to initial flow
+      setCurrentFlow('initial');
+      setFlowHistory([]);
     }
   };
 
-  // Subcategory labels
-  const subcategoryLabels = {
-    'DefensiveScheme': 'Defensive Schemes',
-    'OffensiveAction': 'Offensive Actions',
-    'Shot': 'Shots',
-    'Drive': 'Drives',
-    'Pass': 'Passes',
-    'GameManagement': 'Game Management',
-    'General': 'General'
+  const handleQuickSequence = (sequenceName, actions) => {
+    // Apply all actions in the sequence
+    actions.forEach(action => {
+      onQuickTag(action);
+    });
+    // Reset flow
+    setCurrentFlow('initial');
+    setFlowHistory([]);
+    setShowQuickSequences(false);
   };
+
+  const handleBackInFlow = () => {
+    if (flowHistory.length > 0) {
+      const newHistory = flowHistory.slice(0, -1);
+      setFlowHistory(newHistory);
+      if (newHistory.length > 0) {
+        setCurrentFlow(newHistory[newHistory.length - 1].flow);
+      } else {
+        setCurrentFlow('initial');
+      }
+    }
+  };
+
+  const resetFlow = () => {
+    setCurrentFlow('initial');
+    setFlowHistory([]);
+  };
+
+  const getCurrentFlowData = () => {
+    return playFlows[currentFlow] || playFlows.initial;
+  };
+
+  // Only enable flow options if not at initial state or if sequence is not empty
+  const canSelectOption = currentFlow !== 'initial' || (currentFlow === 'initial' && currentSequence.length === 0);
 
   if (loading) {
     return (
@@ -131,177 +137,197 @@ function QuickActions({ onQuickTag, selectedPlayer, gameTime, compact, currentSe
   }
 
   if (compact) {
-    // Compact, vertically stacked, icon+label bar, grouped by category
     return (
       <>
         <div className="quick-actions-container">
-          <div className="quick-actions-instruction">
-            Select the next action performed by the player:
-          </div>
-          {Object.entries(groupedTags).map(([category, subcategories]) => (
-            <div key={category} style={{ marginBottom: '18px' }}>
-              <div className="quick-actions-category-label">
-                {categoryConfig[category]?.label || `${categoryConfig[category]?.icon || '📝'} ${category}`}
-              </div>
-              {Object.entries(subcategories).map(([subcategory, categoryTags]) => (
-                <div key={subcategory} style={{ marginBottom: '12px' }}>
-                  <div className="quick-actions-subcategory-label">
-                    {subcategoryLabels[subcategory] || subcategory}
-                  </div>
-                  <div className="quick-actions-row">
-                    {categoryTags.map(tag => (
-                      <div key={tag.id} style={{ position: 'relative', width: '100%' }}>
-                        <button
-                          onClick={() => onQuickTag(tag.name)}
-                          disabled={isDisabled}
-                          title={tag.description || tag.name}
-                          className={`quick-actions-btn${historicSuggestions.includes(tag.name) ? ' suggested' : ''}`}
-                          style={{
-                            backgroundColor: tag.color || categoryConfig[category]?.color || '#9E9E9E',
-                            border: historicSuggestions.includes(tag.name) ? '2px solid #f59e0b' : 'none',
-                            boxShadow: historicSuggestions.includes(tag.name) ? '0 0 0 2px #fde68a' : 'none',
-                            width: '100%'
-                          }}
-                          onMouseEnter={e => {
-                            if (!isDisabled) {
-                              e.target.style.transform = 'translateY(-2px)';
-                              e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.12)';
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (!isDisabled) {
-                              e.target.style.transform = 'translateY(0)';
-                              e.target.style.boxShadow = historicSuggestions.includes(tag.name) ? '0 0 0 2px #fde68a' : 'none';
-                            }
-                          }}
-                        >
-                          <span style={{ fontSize: '1.2rem' }}>{tag.icon || categoryConfig[category]?.icon || '🏀'}</span>
-                          <span style={{ fontSize: '1.02rem', fontWeight: 500 }}>{tag.name}</span>
-                          <span
-                            style={{
-                              marginLeft: 8,
-                              fontSize: 18,
-                              color: '#64748b',
-                              cursor: 'pointer',
-                              background: 'none',
-                              border: 'none',
-                              outline: 'none'
-                            }}
-                            title="Show tag details"
-                            onClick={e => {
-                              e.stopPropagation();
-                              setModalTag(tag);
-                            }}
-                          >
-                            ℹ️
-                          </span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+          {/* Flow Header */}
+          <div className="flow-header">
+            <div className="flow-title">{getCurrentFlowData().label}</div>
+            <div className="flow-description">{getCurrentFlowData().description}</div>
+            
+            {/* Flow Navigation */}
+            <div className="flow-navigation">
+              {flowHistory.length > 0 && (
+                <button 
+                  onClick={handleBackInFlow}
+                  className="flow-back-btn"
+                  title="Go back one step"
+                >
+                  ← Back
+                </button>
+              )}
+              <button 
+                onClick={resetFlow}
+                className="flow-reset-btn"
+                title="Start over"
+              >
+                🔄 Reset
+              </button>
+              <button 
+                onClick={() => setShowQuickSequences(!showQuickSequences)}
+                className="flow-quick-btn"
+                title="Quick sequences"
+              >
+                ⚡ Quick
+              </button>
             </div>
-          ))}
-        </div>
-        <TagDetailsModal tag={modalTag} onClose={() => setModalTag(null)} />
-      </>
-    );
-  }
+          </div>
 
-  // Full version (for non-compact mode, e.g. analytics page)
-  return (
-    <div style={{ marginTop: '20px' }}>
-      <h3 style={{
-        fontSize: '1.1rem',
-        fontWeight: '700',
-        color: '#1e293b',
-        marginBottom: '16px'
-      }}>
-        Enhanced Tag Categories
-      </h3>
-      {Object.entries(groupedTags).map(([category, subcategories]) => (
-        <div key={category} style={{ marginBottom: '24px' }}>
-          <h4 style={{
-            fontSize: '1rem',
-            fontWeight: '600',
-            color: '#374151',
-            marginBottom: '12px',
-            padding: '6px 12px',
-            backgroundColor: categoryConfig[category]?.color || '#9E9E9E',
-            color: 'white',
-            borderRadius: '8px',
-            display: 'inline-block'
-          }}>
-            {categoryConfig[category]?.label || `${categoryConfig[category]?.icon || '📝'} ${category}`}
-          </h4>
-          {Object.entries(subcategories).map(([subcategory, categoryTags]) => (
-            <div key={subcategory} style={{ marginBottom: '16px' }}>
-              <h5 style={{
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                color: '#64748b',
-                marginBottom: '8px',
-                padding: '4px 8px',
-                backgroundColor: '#f1f5f9',
-                borderRadius: '6px',
-                display: 'inline-block'
-              }}>
-                {subcategoryLabels[subcategory] || subcategory}
-              </h5>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '8px'
-              }}>
-                {categoryTags.map(tag => (
+          {/* Quick Sequences Panel */}
+          {showQuickSequences && (
+            <div className="quick-sequences-panel">
+              <div className="quick-sequences-title">Quick Sequences</div>
+              <div className="quick-sequences-grid">
+                {Object.entries(quickSequences).map(([name, actions]) => (
                   <button
-                    key={tag.id}
-                    onClick={() => onQuickTag(tag.name)}
+                    key={name}
+                    onClick={() => handleQuickSequence(name, actions)}
                     disabled={isDisabled}
-                    className={`quick-actions-btn${historicSuggestions.includes(tag.name) ? ' suggested' : ''}`}
-                    style={{
-                      padding: '12px 8px',
-                      border: historicSuggestions.includes(tag.name) ? '2px solid #f59e0b' : 'none',
-                      borderRadius: '8px',
-                      backgroundColor: tag.color || categoryConfig[category]?.color || '#9E9E9E',
-                      color: 'white',
-                      cursor: isDisabled ? 'not-allowed' : 'pointer',
-                      fontSize: '0.8rem',
-                      fontWeight: '500',
-                      opacity: isDisabled ? 0.5 : 1,
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '4px',
-                      minHeight: '60px',
-                      justifyContent: 'center'
-                    }}
-                    onMouseEnter={e => {
-                      if (!isDisabled) {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.12)';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!isDisabled) {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = historicSuggestions.includes(tag.name) ? '0 0 0 2px #fde68a' : 'none';
-                      }
-                    }}
+                    className="quick-sequence-btn"
+                    title={`${name}: ${actions.join(' → ')}`}
                   >
-                    <span style={{ fontSize: '1.2rem' }}>{tag.icon || categoryConfig[category]?.icon || '🏀'}</span>
-                    <span>{tag.name}</span>
+                    <div className="quick-sequence-name">{name}</div>
+                    <div className="quick-sequence-preview">
+                      {actions.slice(0, 3).join(' → ')}
+                      {actions.length > 3 && '...'}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Flow Options */}
+          <div className="flow-options">
+            {getCurrentFlowData().options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleFlowOption(option)}
+                disabled={isDisabled || (currentFlow === 'initial' && currentSequence.length !== 0)}
+                className="flow-option-btn"
+                style={{
+                  backgroundColor: option.color,
+                  border: historicSuggestions.includes(option.name) ? '2px solid #f59e0b' : 'none',
+                  boxShadow: historicSuggestions.includes(option.name) ? '0 0 0 2px #fde68a' : 'none'
+                }}
+                title={option.name}
+              >
+                <span className="flow-option-icon">{option.icon}</span>
+                <span className="flow-option-name">{option.name}</span>
+                {option.nextFlow && option.nextFlow !== 'end' && (
+                  <span className="flow-option-arrow">→</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Flow Progress */}
+          {flowHistory.length > 0 && (
+            <div className="flow-progress">
+              <div className="flow-progress-title">Play Sequence:</div>
+              <div className="flow-progress-steps">
+                {flowHistory.map((step, index) => (
+                  <div key={index} className="flow-progress-step">
+                    <span className="flow-progress-icon">{step.option.icon}</span>
+                    <span className="flow-progress-name">{step.option.name}</span>
+                    {index < flowHistory.length - 1 && <span className="flow-progress-arrow">→</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Legacy Tag System (fallback) */}
+          <div className="legacy-tags-section">
+            <div className="legacy-tags-title">All Tags (Advanced)</div>
+            <div className="legacy-tags-grid">
+              {tags.slice(0, 12).map(tag => (
+                <button
+                  key={tag.id}
+                  onClick={() => onQuickTag(tag.name)}
+                  disabled={isDisabled}
+                  className="legacy-tag-btn"
+                  title={tag.description || tag.name}
+                >
+                  <span className="legacy-tag-icon">{tag.icon || '🏀'}</span>
+                  <span className="legacy-tag-name">{tag.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      ))}
-      <TagDetailsModal tag={modalTag} onClose={() => setModalTag(null)} />
-    </div>
+
+        {/* Tag Details Modal */}
+        {modalTag && (
+          <TagDetailsModal
+            tag={modalTag}
+            onClose={() => setModalTag(null)}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Non-compact version (original layout)
+  return (
+    <>
+      <div className="quick-actions-container">
+        <div className="quick-actions-instruction">
+          Select the next action performed by the player:
+        </div>
+        
+        {/* Flow-based options */}
+        <div className="flow-section">
+          <div className="flow-title">{getCurrentFlowData().label}</div>
+          <div className="flow-description">{getCurrentFlowData().description}</div>
+          
+          <div className="flow-options-grid">
+            {getCurrentFlowData().options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleFlowOption(option)}
+                disabled={isDisabled}
+                className="flow-option-btn-large"
+                style={{ backgroundColor: option.color }}
+                title={option.name}
+              >
+                <span className="flow-option-icon-large">{option.icon}</span>
+                <span className="flow-option-name-large">{option.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Sequences */}
+        <div className="quick-sequences-section">
+          <div className="quick-sequences-title">Quick Sequences</div>
+          <div className="quick-sequences-grid">
+            {Object.entries(quickSequences).map(([name, actions]) => (
+              <button
+                key={name}
+                onClick={() => handleQuickSequence(name, actions)}
+                disabled={isDisabled}
+                className="quick-sequence-btn-large"
+                title={`${name}: ${actions.join(' → ')}`}
+              >
+                <div className="quick-sequence-name-large">{name}</div>
+                <div className="quick-sequence-preview-large">
+                  {actions.join(' → ')}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tag Details Modal */}
+      {modalTag && (
+        <TagDetailsModal
+          tag={modalTag}
+          onClose={() => setModalTag(null)}
+        />
+      )}
+    </>
   );
 }
 

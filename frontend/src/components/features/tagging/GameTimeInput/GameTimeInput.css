@@ -1,37 +1,387 @@
-/* GameTimeInput.css */
+/* GameTimeInput.css - Enhanced time input with auto-increment and smart presets */
 
 .game-time-input-container {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  border: 1px solid #e2e8f0;
+}
+
+/* Time Mode Toggle */
+.time-mode-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+
+.mode-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Time Input Section */
+.time-input-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .game-time-input-label {
-  font-size: 1rem;
-  color: #64748b;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
 }
 
 .game-time-input-field {
-  padding: 6px 10px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  font-size: 1rem;
-  width: 80px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  background: white;
+  min-width: 80px;
+  text-align: center;
 }
 
-.game-time-quick-btn {
-  background: #f1f5f9;
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 4px 12px;
-  margin-left: 4px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: background 0.2s, color 0.2s;
+.game-time-input-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
+
+.game-time-input-field:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Time Adjustments */
+.time-adjustments {
+  display: flex;
+  gap: 4px;
+}
+
+.time-adjust-btn {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  color: #64748b;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-adjust-btn:hover {
+  background: #f8fafc;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+/* Smart Presets */
+.smart-presets {
+  margin-top: 8px;
+}
+
+.presets-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 6px;
+}
+
+.preset-btn {
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  position: relative;
+}
+
+.preset-btn:hover {
+  background: #f8fafc;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.preset-icon {
+  font-size: 1rem;
+}
+
+.preset-label {
+  font-weight: 600;
+}
+
+.preset-time {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.preset-shortcut {
+  font-size: 0.6rem;
+  color: #9ca3af;
+  font-weight: 400;
+  background: #f3f4f6;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+}
+
+/* Quarter Section */
+.quarter-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quarter-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.quarter-btn {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  text-align: center;
+}
+
+.quarter-btn:hover {
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+
+.quarter-btn.selected {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Auto-increment Toggle */
+.auto-increment-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+.toggle-text {
+  font-weight: 500;
+}
+
+/* Time Status */
+.time-status {
+  padding: 8px 12px;
+  background: #f0f9ff;
+  border-radius: 6px;
+  border: 1px solid #bae6fd;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-text {
+  color: #0369a1;
+  font-weight: 500;
+}
+
+.status-hint {
+  color: #7dd3fc;
+  font-size: 0.75rem;
+}
+
+/* Keyboard Shortcuts Help */
+.shortcuts-help {
+  margin-top: 8px;
+}
+
+.shortcuts-help details {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.shortcuts-help summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shortcuts-help summary:hover {
+  background: #f3f4f6;
+}
+
+.shortcuts-help summary::marker {
+  color: #9ca3af;
+}
+
+.shortcuts-grid {
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  border-top: 1px solid #e5e7eb;
+}
+
+.shortcuts-grid div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcuts-grid strong {
+  color: #374151;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .game-time-input-container {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .time-input-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .game-time-input-field {
+    min-width: auto;
+  }
+  
+  .time-adjustments {
+    justify-content: center;
+  }
+  
+  .presets-grid {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  }
+  
+  .quarter-section {
+    justify-content: center;
+  }
+  
+  .mode-btn {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .preset-btn {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .quarter-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    min-width: 28px;
+  }
+  
+  .shortcuts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Legacy styles for backward compatibility */
+.game-time-quick-btn {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
 .game-time-quick-btn:hover {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+
+.game-time-quick-btn.selected {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
 } 

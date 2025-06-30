@@ -152,6 +152,273 @@ router.get('/team-tendencies/:teamId', async (req, res) => {
     }
 });
 
+// Get defensive scouting report for a player
+router.get('/defensive-scouting/:playerId', async (req, res) => {
+    try {
+        const { playerId } = req.params;
+        const { gameId } = req.query;
+
+        // Get all plays with sequences for this player
+        const playerPlays = await prisma.playTag.findMany({
+            where: {
+                playerId: playerId,
+                ...(gameId && { play: { gameId } })
+            },
+            include: {
+                tag: true,
+                play: {
+                    include: {
+                        tags: {
+                            include: {
+                                tag: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        // Group plays by their sequences
+        const playSequences = {};
+        playerPlays.forEach(playTag => {
+            const playId = playTag.playId;
+            if (!playSequences[playId]) {
+                playSequences[playId] = [];
+            }
+            playSequences[playId].push({
+                tag: playTag.tag.name,
+                sequence: playTag.context?.sequence || 1,
+                context: playTag.context
+            });
+        });
+
+        // Analyze offensive patterns
+        const offensivePatterns = {
+            mostFrequentSequences: {},
+            screenUsage: {},
+            isolationTendencies: {},
+            pressureResponses: {},
+            shotSelection: {},
+            timingPatterns: {}
+        };
+
+        // Count sequence frequencies
+        Object.values(playSequences).forEach(sequence => {
+            const sortedSequence = sequence.sort((a, b) => a.sequence - b.sequence);
+            const sequenceString = sortedSequence.map(s => s.tag).join(' → ');
+            
+            if (!offensivePatterns.mostFrequentSequences[sequenceString]) {
+                offensivePatterns.mostFrequentSequences[sequenceString] = 0;
+            }
+            offensivePatterns.mostFrequentSequences[sequenceString]++;
+        });
+
+        // Analyze specific patterns
+        Object.values(playSequences).forEach(sequence => {
+            const sortedSequence = sequence.sort((a, b) => a.sequence - b.sequence);
+            const tags = sortedSequence.map(s => s.tag);
+
+            // Screen usage analysis
+            if (tags.includes('Calling for Screen')) {
+                const screenIndex = tags.indexOf('Calling for Screen');
+                const nextAction = tags[screenIndex + 1];
+                if (nextAction) {
+                    if (!offensivePatterns.screenUsage[nextAction]) {
+                        offensivePatterns.screenUsage[nextAction] = 0;
+                    }
+                    offensivePatterns.screenUsage[nextAction]++;
+                }
+            }
+
+            // Isolation analysis
+            if (tags.includes('Isolation')) {
+                const isolationIndex = tags.indexOf('Isolation');
+                const nextAction = tags[isolationIndex + 1];
+                if (nextAction) {
+                    if (!offensivePatterns.isolationTendencies[nextAction]) {
+                        offensivePatterns.isolationTendencies[nextAction] = 0;
+                    }
+                    offensivePatterns.isolationTendencies[nextAction]++;
+                }
+            }
+
+            // Pressure response analysis
+            if (tags.includes('Double Teamed')) {
+                const pressureIndex = tags.indexOf('Double Teamed');
+                const nextAction = tags[pressureIndex + 1];
+                if (nextAction) {
+                    if (!offensivePatterns.pressureResponses[nextAction]) {
+                        offensivePatterns.pressureResponses[nextAction] = 0;
+                    }
+                    offensivePatterns.pressureResponses[nextAction]++;
+                }
+            }
+
+            // Shot selection analysis
+            const shotActions = ['Pull Up Shot', 'Step Back Shot', 'Fade Away', 'Layup/Dunk'];
+            shotActions.forEach(shotAction => {
+                if (tags.includes(shotAction)) {
+                    if (!offensivePatterns.shotSelection[shotAction]) {
+                        offensivePatterns.shotSelection[shotAction] = 0;
+                    }
+                    offensivePatterns.shotSelection[shotAction]++;
+                }
+            });
+        });
+
+        // Generate defensive strategies
+        const defensiveStrategies = {
+            primaryDefensiveFocus: [],
+            screenDefense: [],
+            isolationDefense: [],
+            pressureDefense: [],
+            shotContest: [],
+            gamePlan: []
+        };
+
+        // Analyze most frequent sequences and create counter-strategies
+        const sortedSequences = Object.entries(offensivePatterns.mostFrequentSequences)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 5);
+
+        sortedSequences.forEach(([sequence, count]) => {
+            const tags = sequence.split(' → ');
+            
+            // Counter-strategies based on sequence patterns
+            if (sequence.includes('Calling for Screen → Screen Mismatch')) {
+                defensiveStrategies.screenDefense.push({
+                    strategy: 'Switch Screens Early',
+                    reasoning: `Player used screen mismatch ${count} times - prevent mismatch creation`,
+                    execution: 'Switch on screen calls before mismatch develops',
+                    priority: 'High'
+                });
+            }
+
+            if (sequence.includes('Calling for Screen → Pick and Roll')) {
+                defensiveStrategies.screenDefense.push({
+                    strategy: 'Hedge and Recover',
+                    reasoning: `Player frequently uses pick and roll (${count} times)`,
+                    execution: 'Hedge the screen, then recover to prevent drive',
+                    priority: 'High'
+                });
+            }
+
+            if (sequence.includes('Isolation')) {
+                const isolationResponses = offensivePatterns.isolationTendencies;
+                const mostCommonResponse = Object.entries(isolationResponses)
+                    .sort(([,a], [,b]) => b - a)[0];
+                
+                if (mostCommonResponse) {
+                    defensiveStrategies.isolationDefense.push({
+                        strategy: `Force ${mostCommonResponse[0]}`,
+                        reasoning: `In isolation, player most often responds with ${mostCommonResponse[0]} (${mostCommonResponse[1]} times)`,
+                        execution: `Take away ${mostCommonResponse[0]} option, force counter`,
+                        priority: 'Medium'
+                    });
+                }
+            }
+
+            if (sequence.includes('Double Teamed')) {
+                const pressureResponses = offensivePatterns.pressureResponses;
+                const mostCommonResponse = Object.entries(pressureResponses)
+                    .sort(([,a], [,b]) => b - a)[0];
+                
+                if (mostCommonResponse) {
+                    defensiveStrategies.pressureDefense.push({
+                        strategy: `Prevent ${mostCommonResponse[0]}`,
+                        reasoning: `When pressured, player most often responds with ${mostCommonResponse[0]} (${mostCommonResponse[1]} times)`,
+                        execution: `Take away ${mostCommonResponse[0]} option, force different response`,
+                        priority: 'High'
+                    });
+                }
+            }
+        });
+
+        // Shot contest strategies
+        const shotPatterns = offensivePatterns.shotSelection;
+        Object.entries(shotPatterns).forEach(([shotType, count]) => {
+            if (shotType === 'Pull Up Shot' && count > 2) {
+                defensiveStrategies.shotContest.push({
+                    strategy: 'Contest Pull-Ups Aggressively',
+                    reasoning: `Player frequently uses pull-up shots (${count} times)`,
+                    execution: 'Close out hard, contest every pull-up attempt',
+                    priority: 'High'
+                });
+            }
+
+            if (shotType === 'Step Back Shot' && count > 2) {
+                defensiveStrategies.shotContest.push({
+                    strategy: 'Stay Attached on Step-Backs',
+                    reasoning: `Player uses step-back shots (${count} times)`,
+                    execution: 'Stay close, don\'t bite on step-back fakes',
+                    priority: 'Medium'
+                });
+            }
+        });
+
+        // Generate overall game plan
+        const totalPlays = Object.keys(playSequences).length;
+        const screenUsage = Object.values(offensivePatterns.screenUsage).reduce((sum, count) => sum + count, 0);
+        const screenPercentage = (screenUsage / totalPlays) * 100;
+
+        if (screenPercentage > 50) {
+            defensiveStrategies.gamePlan.push({
+                strategy: 'Disrupt Screen Actions',
+                reasoning: `Player heavily relies on screens (${screenPercentage.toFixed(1)}% of plays)`,
+                execution: 'Switch screens, hedge aggressively, prevent clean screen execution',
+                priority: 'Critical'
+            });
+        }
+
+        const isolationCount = Object.values(offensivePatterns.isolationTendencies).reduce((sum, count) => sum + count, 0);
+        if (isolationCount > 3) {
+            defensiveStrategies.gamePlan.push({
+                strategy: 'Force Isolation Decisions',
+                reasoning: `Player uses isolation frequently (${isolationCount} times)`,
+                execution: 'Force isolation but take away preferred counter-moves',
+                priority: 'High'
+            });
+        }
+
+        // Set primary defensive focus
+        if (screenPercentage > 50) {
+            defensiveStrategies.primaryDefensiveFocus.push('Screen Defense');
+        }
+        if (isolationCount > 3) {
+            defensiveStrategies.primaryDefensiveFocus.push('Isolation Defense');
+        }
+        if (Object.keys(offensivePatterns.pressureResponses).length > 0) {
+            defensiveStrategies.primaryDefensiveFocus.push('Pressure Defense');
+        }
+
+        res.json({
+            success: true,
+            data: {
+                playerId,
+                totalPlays,
+                offensivePatterns,
+                defensiveStrategies,
+                keyInsights: {
+                    mostFrequentSequence: sortedSequences[0] ? sortedSequences[0][0] : 'None',
+                    screenDependency: screenPercentage,
+                    isolationFrequency: isolationCount,
+                    pressureResponse: Object.keys(offensivePatterns.pressureResponses).length > 0 ? 
+                        Object.entries(offensivePatterns.pressureResponses).sort(([,a], [,b]) => b - a)[0] : null
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error generating defensive scouting report:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate defensive scouting report'
+        });
+    }
+});
+
 // Get game context and recent plays
 router.get('/game-context/:gameId', async (req, res) => {
     try {
@@ -188,7 +455,7 @@ router.get('/game-context/:gameId', async (req, res) => {
         }
 
         // Analyze recent plays (show last 10 for display, but analyze all)
-        const recentPlays = game.plays.slice(0, 10);
+        const recentPlays = game.plays.slice(0,0, 10);
         const playPatterns = recentPlays.map(play => ({
             id: play.id,
             quarter: play.quarter,
@@ -482,46 +749,200 @@ router.get('/decision-quality/:playerId', async (req, res) => {
             totalSequences: Object.keys(playSequences).length,
             defensiveResponses: {},
             offensiveDecisions: {},
+            poorDecisions: {}, // New category for tracking bad decisions
             overallQuality: {}
         };
 
-        // Define "good" vs "questionable" decisions
+        // Define "good" vs "questionable" decisions with enhanced basketball intelligence
         const decisionQuality = {
+            // INITIAL SITUATIONS
+            'Bringing Ball Up': {
+                'Calling for Screen': { quality: 'excellent', reason: 'Smart setup, creates advantage' },
+                'Isolation': { quality: 'good', reason: 'Direct attack, but could create better opportunities' },
+                'Quick Shot': { quality: 'questionable', reason: 'Rushes the offense, could be more patient' },
+                'Turnover': { quality: 'risky', reason: 'Poor ball control early in possession' }
+            },
+            'Off-Ball Movement': {
+                'Calling for Screen': { quality: 'excellent', reason: 'Good off-ball awareness' },
+                'Quick Shot': { quality: 'good', reason: 'Uses movement to create space' },
+                'Turnover': { quality: 'risky', reason: 'Poor off-ball execution' }
+            },
+
+            // SCREEN ACTIONS
+            'Calling for Screen': {
+                'Pick and Roll': { quality: 'excellent', reason: 'Perfect execution of screen call' },
+                'Pick and Pop': { quality: 'excellent', reason: 'Smart variation, creates spacing' },
+                'Screen Mismatch': { quality: 'excellent', reason: 'Identifies and exploits defensive weakness' },
+                'Screen Rejection': { quality: 'questionable', reason: 'Wastes screen opportunity' },
+                'Turnover': { quality: 'risky', reason: 'Poor screen execution' }
+            },
+            'Pick and Roll': {
+                'Drive to Basket': { quality: 'excellent', reason: 'Attacks the advantage created by screen' },
+                'Pull Up Shot': { quality: 'good', reason: 'Uses screen effectively for space' },
+                'Pass to Roller': { quality: 'excellent', reason: 'Makes the right play, finds open teammate' },
+                'Pass to Corner': { quality: 'good', reason: 'Good ball movement, creates open shot' },
+                'Double Teamed': { quality: 'neutral', reason: 'Defense responds well, but creates opportunity' },
+                'Step Back': { quality: 'questionable', reason: 'Gives up pick advantage' },
+                'Turnover': { quality: 'risky', reason: 'Poor pick and roll execution' }
+            },
+            'Pick and Pop': {
+                'Pull Up Shot': { quality: 'excellent', reason: 'Perfect execution of pick and pop' },
+                'Drive to Basket': { quality: 'good', reason: 'Attacks the advantage' },
+                'Pass to Popper': { quality: 'excellent', reason: 'Makes the right play, finds open shooter' },
+                'Double Teamed': { quality: 'neutral', reason: 'Defense responds, but creates opportunity' },
+                'Turnover': { quality: 'risky', reason: 'Poor pick and pop execution' }
+            },
+            'Screen Mismatch': {
+                'Drive to Basket': { quality: 'excellent', reason: 'Exploits the mismatch perfectly' },
+                'Pull Up Shot': { quality: 'good', reason: 'Uses mismatch advantage' },
+                'Post Up': { quality: 'excellent', reason: 'Smart to post up smaller defender' },
+                'Step Back': { quality: 'good', reason: 'Creates space against slower defender' },
+                'Pass Out': { quality: 'questionable', reason: 'Gives up mismatch advantage' },
+                'Turnover': { quality: 'risky', reason: 'Poor mismatch exploitation' }
+            },
+
+            // ISOLATION SCENARIOS
+            'Isolation': {
+                'Drive to Basket': { quality: 'good', reason: 'Direct attack, but could create better opportunities' },
+                'Pull Up Shot': { quality: 'good', reason: 'Uses space effectively' },
+                'Step Back': { quality: 'good', reason: 'Creates space for shot' },
+                'Fade Away': { quality: 'good', reason: 'Creates separation' },
+                'Double Teamed': { quality: 'neutral', reason: 'Defense responds, but creates opportunity' },
+                'Pass Out': { quality: 'questionable', reason: 'Gives up isolation opportunity' },
+                'Turnover': { quality: 'risky', reason: 'Poor isolation execution' }
+            },
+
+            // POST UP SCENARIOS
+            'Post Up': {
+                'Drive to Basket': { quality: 'good', reason: 'Attacks from post position' },
+                'Pull Up Shot': { quality: 'good', reason: 'Uses post advantage' },
+                'Fade Away': { quality: 'good', reason: 'Creates separation from post' },
+                'Pass Out': { quality: 'good', reason: 'Finds open teammate from post' },
+                'Step Back': { quality: 'questionable', reason: 'Gives up post advantage' },
+                'Double Teamed': { quality: 'neutral', reason: 'Defense responds, but creates opportunity' },
+                'Turnover': { quality: 'risky', reason: 'Poor post play execution' }
+            },
+
+            // DOUBLE TEAM RESPONSES (CRITICAL DECISION POINT)
             'Double Teamed': {
                 'Pass Out': { quality: 'excellent', reason: 'Makes the right play, finds open teammate' },
                 'Split Defense': { quality: 'good', reason: 'Aggressive but effective if successful' },
                 'Pull Up Shot': { quality: 'questionable', reason: 'Forces the issue against double team' },
                 'Drive to Basket': { quality: 'risky', reason: 'High difficulty against double team' },
                 'Step Back': { quality: 'questionable', reason: 'Forces the issue against double team' },
-                'Fade Away': { quality: 'risky', reason: 'High difficulty against double team' }
+                'Fade Away': { quality: 'risky', reason: 'High difficulty against double team' },
+                'Turnover': { quality: 'risky', reason: 'Poor decision under pressure' }
             },
-            'Isolation': {
-                'Step Back': { quality: 'good', reason: 'Creates space for shot' },
-                'Drive to Basket': { quality: 'good', reason: 'Attacks the rim' },
-                'Pull Up Shot': { quality: 'good', reason: 'Uses space effectively' },
-                'Pass Out': { quality: 'questionable', reason: 'Gives up isolation opportunity' },
-                'Fade Away': { quality: 'good', reason: 'Creates separation' }
+
+            // DRIVE SCENARIOS
+            'Drive to Basket': {
+                'Layup/Dunk': { quality: 'excellent', reason: 'Perfect finish at the rim' },
+                'Pull Up Shot': { quality: 'good', reason: 'Good mid-range option' },
+                'Pass Out': { quality: 'good', reason: 'Good court vision, finds open teammate' },
+                'Foul Drawn': { quality: 'good', reason: 'Gets to the line' },
+                'Turnover': { quality: 'risky', reason: 'Poor ball control or decision' },
+                'Missed Shot': { quality: 'questionable', reason: 'Inefficient drive finish' }
             },
-            'Pick and Roll': {
-                'Drive to Basket': { quality: 'excellent', reason: 'Attacks the advantage' },
-                'Pull Up Shot': { quality: 'good', reason: 'Uses screen effectively' },
-                'Pass Out': { quality: 'good', reason: 'Finds open teammate' },
-                'Step Back': { quality: 'questionable', reason: 'Gives up pick advantage' },
-                'Fade Away': { quality: 'questionable', reason: 'Gives up pick advantage' }
-            },
-            'Post Up': {
-                'Drive to Basket': { quality: 'good', reason: 'Attacks from post position' },
-                'Pull Up Shot': { quality: 'good', reason: 'Uses post advantage' },
-                'Fade Away': { quality: 'good', reason: 'Creates separation from post' },
-                'Pass Out': { quality: 'good', reason: 'Finds open teammate from post' },
-                'Step Back': { quality: 'questionable', reason: 'Gives up post advantage' }
-            },
+
+            // TRANSITION SCENARIOS
             'Transition': {
                 'Drive to Basket': { quality: 'excellent', reason: 'Attacks in transition' },
                 'Pull Up Shot': { quality: 'good', reason: 'Uses transition advantage' },
                 'Pass Out': { quality: 'good', reason: 'Finds open teammate in transition' },
-                'Step Back': { quality: 'questionable', reason: 'Slows down transition' }
+                'Layup/Dunk': { quality: 'excellent', reason: 'Perfect transition finish' },
+                'Step Back': { quality: 'questionable', reason: 'Slows down transition' },
+                'Turnover': { quality: 'risky', reason: 'Poor transition execution' },
+                'Missed Shot': { quality: 'questionable', reason: 'Inefficient transition' }
+            },
+
+            // DEFENSIVE SCENARIOS
+            'Defensive Play': {
+                'Steal': { quality: 'excellent', reason: 'Great defensive play' },
+                'Block': { quality: 'excellent', reason: 'Excellent rim protection' },
+                'Defensive Rebound': { quality: 'good', reason: 'Good defensive positioning' },
+                'Foul': { quality: 'questionable', reason: 'Could be cleaner defense' },
+                'Turnover': { quality: 'risky', reason: 'Poor defensive execution' }
+            },
+
+            // SHOT RESULT SCENARIOS
+            'Pull Up Shot': {
+                'Made Shot': { quality: 'excellent', reason: 'Perfect execution' },
+                'Missed Shot': { quality: 'questionable', reason: 'Inefficient shot selection' },
+                'Blocked': { quality: 'risky', reason: 'Poor shot selection' },
+                'Foul Drawn': { quality: 'good', reason: 'Gets to the line' }
+            },
+            'Step Back': {
+                'Made Shot': { quality: 'excellent', reason: 'Perfect execution' },
+                'Missed Shot': { quality: 'questionable', reason: 'Inefficient shot selection' },
+                'Blocked': { quality: 'risky', reason: 'Poor shot selection' },
+                'Foul Drawn': { quality: 'good', reason: 'Gets to the line' }
+            },
+            'Fade Away': {
+                'Made Shot': { quality: 'excellent', reason: 'Perfect execution' },
+                'Missed Shot': { quality: 'questionable', reason: 'Inefficient shot selection' },
+                'Blocked': { quality: 'risky', reason: 'Poor shot selection' },
+                'Foul Drawn': { quality: 'good', reason: 'Gets to the line' }
+            },
+
+            // PASS RESULT SCENARIOS
+            'Pass Out': {
+                'Assist': { quality: 'excellent', reason: 'Perfect pass execution' },
+                'Turnover': { quality: 'risky', reason: 'Poor pass execution' },
+                'Shot Attempt': { quality: 'good', reason: 'Good pass leads to shot' }
+            },
+            'Pass to Roller': {
+                'Assist': { quality: 'excellent', reason: 'Perfect pick and roll execution' },
+                'Turnover': { quality: 'risky', reason: 'Poor pick and roll execution' },
+                'Shot Attempt': { quality: 'good', reason: 'Good pick and roll execution' }
+            },
+            'Pass to Corner': {
+                'Assist': { quality: 'excellent', reason: 'Perfect ball movement' },
+                'Turnover': { quality: 'risky', reason: 'Poor ball movement' },
+                'Shot Attempt': { quality: 'good', reason: 'Good ball movement' }
             }
+        };
+
+        // Enhanced multi-step sequence analysis with negative sequences
+        const sequenceQuality = {
+            // EXCELLENT SEQUENCES (3+ steps)
+            'Calling for Screen → Pick and Roll → Drive to Basket': { quality: 'excellent', reason: 'Perfect execution of modern basketball' },
+            'Calling for Screen → Screen Mismatch → Drive to Basket': { quality: 'excellent', reason: 'Smart identification and exploitation of mismatch' },
+            'Post Up → Double Teamed → Pass Out': { quality: 'excellent', reason: 'Perfect response to defensive pressure' },
+            'Pick and Roll → Double Teamed → Pass Out': { quality: 'excellent', reason: 'Makes the right play under pressure' },
+            'Bringing Ball Up → Calling for Screen → Pick and Roll': { quality: 'excellent', reason: 'Smart offensive setup' },
+
+            // GOOD SEQUENCES
+            'Isolation → Drive to Basket': { quality: 'good', reason: 'Direct but effective' },
+            'Transition → Layup/Dunk': { quality: 'excellent', reason: 'Perfect transition execution' },
+            'Pick and Pop → Pull Up Shot': { quality: 'excellent', reason: 'Perfect pick and pop execution' },
+
+            // QUESTIONABLE SEQUENCES (Bad decisions)
+            'Calling for Screen → Screen Rejection': { quality: 'questionable', reason: 'Wastes screen opportunity' },
+            'Screen Mismatch → Pass Out': { quality: 'questionable', reason: 'Gives up mismatch advantage' },
+            'Isolation → Pass Out': { quality: 'questionable', reason: 'Gives up isolation opportunity' },
+            'Bringing Ball Up → Quick Shot': { quality: 'questionable', reason: 'Rushes the offense' },
+            'Post Up → Step Back': { quality: 'questionable', reason: 'Gives up post advantage' },
+            'Transition → Step Back': { quality: 'questionable', reason: 'Slows down transition' },
+            'Pick and Roll → Step Back': { quality: 'questionable', reason: 'Gives up pick advantage' },
+            'Screen Mismatch → Step Back': { quality: 'questionable', reason: 'Gives up mismatch advantage' },
+
+            // RISKY SEQUENCES (Very bad decisions)
+            'Double Teamed → Drive to Basket': { quality: 'risky', reason: 'Forces the issue against double team' },
+            'Double Teamed → Pull Up Shot': { quality: 'questionable', reason: 'Forces the issue against double team' },
+            'Double Teamed → Step Back': { quality: 'questionable', reason: 'Forces the issue against double team' },
+            'Double Teamed → Fade Away': { quality: 'risky', reason: 'High difficulty against double team' },
+            'Drive to Basket → Turnover': { quality: 'risky', reason: 'Poor ball control or decision' },
+            'Pick and Roll → Turnover': { quality: 'risky', reason: 'Poor execution of pick and roll' },
+            'Post Up → Turnover': { quality: 'risky', reason: 'Poor post play execution' },
+            'Isolation → Turnover': { quality: 'risky', reason: 'Poor isolation execution' },
+
+            // TERRIBLE SEQUENCES (Worst decisions)
+            'Calling for Screen → Screen Rejection → Turnover': { quality: 'risky', reason: 'Wastes screen and turns it over' },
+            'Screen Mismatch → Pass Out → Turnover': { quality: 'risky', reason: 'Gives up advantage and turns it over' },
+            'Double Teamed → Drive to Basket → Turnover': { quality: 'risky', reason: 'Forces the issue and turns it over' },
+            'Bringing Ball Up → Quick Shot → Missed Shot': { quality: 'questionable', reason: 'Rushes offense and misses' },
+            'Isolation → Pull Up Shot → Missed Shot': { quality: 'questionable', reason: 'Inefficient isolation' },
+            'Post Up → Fade Away → Missed Shot': { quality: 'questionable', reason: 'Inefficient post play' }
         };
 
         // Debug: Log what sequences we're finding
@@ -529,53 +950,115 @@ router.get('/decision-quality/:playerId', async (req, res) => {
             seq.sort((a, b) => a.sequence - b.sequence).map(s => s.tag)
         ));
 
-        // Analyze each sequence
+        // Enhanced sequence analysis with multi-step intelligence
         let analyzedCount = 0;
         Object.values(playSequences).forEach(sequence => {
             if (sequence.length >= 2) {
-                const initialAction = sequence.find(s => s.sequence === 1)?.tag;
-                const response = sequence.find(s => s.sequence === 2)?.tag;
+                const sortedSequence = sequence.sort((a, b) => a.sequence - b.sequence);
+                const sequenceTags = sortedSequence.map(s => s.tag);
+                const sequenceString = sequenceTags.join(' → ');
 
-                console.log(`Analyzing sequence: ${initialAction} → ${response}`);
+                console.log(`Analyzing sequence: ${sequenceString}`);
 
-                if (initialAction && response && decisionQuality[initialAction]?.[response]) {
-                    const quality = decisionQuality[initialAction][response];
+                // First, check for multi-step sequence quality
+                let sequenceQualityResult = null;
+                if (sequence.length >= 3) {
+                    // Check for 3+ step sequences
+                    sequenceQualityResult = sequenceQuality[sequenceString];
+                }
+
+                if (sequenceQualityResult) {
+                    // Multi-step sequence found
                     analyzedCount++;
+                    const quality = sequenceQualityResult;
                     
-                    // Track defensive responses
-                    if (initialAction === 'Double Teamed') {
-                        if (!decisionAnalysis.defensiveResponses[response]) {
-                            decisionAnalysis.defensiveResponses[response] = { count: 0, quality: quality.quality };
-                        }
-                        decisionAnalysis.defensiveResponses[response].count++;
+                    // Track as complex sequence
+                    if (!decisionAnalysis.complexSequences) {
+                        decisionAnalysis.complexSequences = {};
                     }
-
-                    // Track offensive decisions
-                    if (['Isolation', 'Pick and Roll', 'Post Up', 'Transition'].includes(initialAction)) {
-                        if (!decisionAnalysis.offensiveDecisions[response]) {
-                            decisionAnalysis.offensiveDecisions[response] = { count: 0, quality: quality.quality };
-                        }
-                        decisionAnalysis.offensiveDecisions[response].count++;
+                    if (!decisionAnalysis.complexSequences[sequenceString]) {
+                        decisionAnalysis.complexSequences[sequenceString] = { count: 0, quality: quality.quality, reason: quality.reason };
                     }
+                    decisionAnalysis.complexSequences[sequenceString].count++;
+                    
+                    console.log(`Multi-step sequence: ${sequenceString} - ${quality.quality}`);
                 } else {
-                    console.log(`No quality definition for: ${initialAction} → ${response}`);
-                    // Add fallback quality for undefined sequences
-                    if (initialAction && response) {
-                        const fallbackQuality = 'neutral'; // Default to neutral for undefined combinations
+                    // Analyze 2-step sequences
+                    const initialAction = sequenceTags[0];
+                    const response = sequenceTags[1];
+
+                    if (initialAction && response && decisionQuality[initialAction]?.[response]) {
+                        const quality = decisionQuality[initialAction][response];
                         analyzedCount++;
                         
+                        // Enhanced categorization based on basketball context
                         if (initialAction === 'Double Teamed') {
                             if (!decisionAnalysis.defensiveResponses[response]) {
-                                decisionAnalysis.defensiveResponses[response] = { count: 0, quality: fallbackQuality };
+                                decisionAnalysis.defensiveResponses[response] = { count: 0, quality: quality.quality, reason: quality.reason };
                             }
                             decisionAnalysis.defensiveResponses[response].count++;
-                        }
-
-                        if (['Isolation', 'Pick and Roll', 'Post Up', 'Transition'].includes(initialAction)) {
+                        } else if (['Calling for Screen', 'Screen Mismatch', 'Pick and Roll', 'Pick and Pop'].includes(initialAction)) {
+                            // Screen-based actions
+                            if (!decisionAnalysis.screenActions) {
+                                decisionAnalysis.screenActions = {};
+                            }
+                            if (!decisionAnalysis.screenActions[response]) {
+                                decisionAnalysis.screenActions[response] = { count: 0, quality: quality.quality, reason: quality.reason };
+                            }
+                            decisionAnalysis.screenActions[response].count++;
+                        } else if (['Isolation', 'Post Up', 'Transition'].includes(initialAction)) {
+                            // Offensive decisions
                             if (!decisionAnalysis.offensiveDecisions[response]) {
-                                decisionAnalysis.offensiveDecisions[response] = { count: 0, quality: fallbackQuality };
+                                decisionAnalysis.offensiveDecisions[response] = { count: 0, quality: quality.quality, reason: quality.reason };
                             }
                             decisionAnalysis.offensiveDecisions[response].count++;
+                        } else if (['Bringing Ball Up', 'Off-Ball Movement'].includes(initialAction)) {
+                            // Setup actions
+                            if (!decisionAnalysis.setupActions) {
+                                decisionAnalysis.setupActions = {};
+                            }
+                            if (!decisionAnalysis.setupActions[response]) {
+                                decisionAnalysis.setupActions[response] = { count: 0, quality: quality.quality, reason: quality.reason };
+                            }
+                            decisionAnalysis.setupActions[response].count++;
+                        } else if (['Drive to Basket', 'Defensive Play'].includes(initialAction)) {
+                            // Execution actions
+                            if (!decisionAnalysis.executionActions) {
+                                decisionAnalysis.executionActions = {};
+                            }
+                            if (!decisionAnalysis.executionActions[response]) {
+                                decisionAnalysis.executionActions[response] = { count: 0, quality: quality.quality, reason: quality.reason };
+                            }
+                            decisionAnalysis.executionActions[response].count++;
+                        }
+
+                        // Track poor decisions specifically (questionable and risky)
+                        if (quality.quality === 'questionable' || quality.quality === 'risky') {
+                            if (!decisionAnalysis.poorDecisions[response]) {
+                                decisionAnalysis.poorDecisions[response] = { count: 0, quality: quality.quality, reason: quality.reason, context: initialAction };
+                            }
+                            decisionAnalysis.poorDecisions[response].count++;
+                        }
+                    } else {
+                        console.log(`No quality definition for: ${initialAction} → ${response}`);
+                        // Add fallback quality for undefined sequences
+                        if (initialAction && response) {
+                            const fallbackQuality = 'neutral';
+                            analyzedCount++;
+                            
+                            // Categorize fallback sequences
+                            if (initialAction === 'Double Teamed') {
+                                if (!decisionAnalysis.defensiveResponses[response]) {
+                                    decisionAnalysis.defensiveResponses[response] = { count: 0, quality: fallbackQuality, reason: 'Undefined sequence' };
+                                }
+                                decisionAnalysis.defensiveResponses[response].count++;
+                            } else {
+                                // Add to offensive decisions as fallback
+                                if (!decisionAnalysis.offensiveDecisions[response]) {
+                                    decisionAnalysis.offensiveDecisions[response] = { count: 0, quality: fallbackQuality, reason: 'Undefined sequence' };
+                                }
+                                decisionAnalysis.offensiveDecisions[response].count++;
+                            }
                         }
                     }
                 }
@@ -596,13 +1079,42 @@ router.get('/decision-quality/:playerId', async (req, res) => {
         let totalScore = 0;
         let totalDecisions = 0;
 
-        Object.values(decisionAnalysis.defensiveResponses).forEach(decision => {
+        // Include all decision categories in scoring
+        Object.values(decisionAnalysis.defensiveResponses || {}).forEach(decision => {
             totalScore += qualityScores[decision.quality] * decision.count;
             totalDecisions += decision.count;
         });
 
-        Object.values(decisionAnalysis.offensiveDecisions).forEach(decision => {
+        Object.values(decisionAnalysis.offensiveDecisions || {}).forEach(decision => {
             totalScore += qualityScores[decision.quality] * decision.count;
+            totalDecisions += decision.count;
+        });
+
+        // Include new categories
+        Object.values(decisionAnalysis.screenActions || {}).forEach(decision => {
+            totalScore += qualityScores[decision.quality] * decision.count;
+            totalDecisions += decision.count;
+        });
+
+        Object.values(decisionAnalysis.setupActions || {}).forEach(decision => {
+            totalScore += qualityScores[decision.quality] * decision.count;
+            totalDecisions += decision.count;
+        });
+
+        Object.values(decisionAnalysis.executionActions || {}).forEach(decision => {
+            totalScore += qualityScores[decision.quality] * decision.count;
+            totalDecisions += decision.count;
+        });
+
+        // Include complex sequences (weighted higher for multi-step intelligence)
+        Object.values(decisionAnalysis.complexSequences || {}).forEach(decision => {
+            totalScore += qualityScores[decision.quality] * decision.count * 1.2; // 20% bonus for complex sequences
+            totalDecisions += decision.count;
+        });
+
+        // Include poor decisions (weighted to penalize bad decisions)
+        Object.values(decisionAnalysis.poorDecisions || {}).forEach(decision => {
+            totalScore += qualityScores[decision.quality] * decision.count * 0.8; // 20% penalty for poor decisions
             totalDecisions += decision.count;
         });
 
@@ -700,6 +1212,273 @@ router.get('/next-tag-suggestions', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to generate next tag suggestions'
+        });
+    }
+});
+
+// Get defensive scouting report for a player
+router.get('/defensive-scouting/:playerId', async (req, res) => {
+    try {
+        const { playerId } = req.params;
+        const { gameId } = req.query;
+
+        // Get all plays with sequences for this player
+        const playerPlays = await prisma.playTag.findMany({
+            where: {
+                playerId: playerId,
+                ...(gameId && { play: { gameId } })
+            },
+            include: {
+                tag: true,
+                play: {
+                    include: {
+                        tags: {
+                            include: {
+                                tag: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        // Group plays by their sequences
+        const playSequences = {};
+        playerPlays.forEach(playTag => {
+            const playId = playTag.playId;
+            if (!playSequences[playId]) {
+                playSequences[playId] = [];
+            }
+            playSequences[playId].push({
+                tag: playTag.tag.name,
+                sequence: playTag.context?.sequence || 1,
+                context: playTag.context
+            });
+        });
+
+        // Analyze offensive patterns
+        const offensivePatterns = {
+            mostFrequentSequences: {},
+            screenUsage: {},
+            isolationTendencies: {},
+            pressureResponses: {},
+            shotSelection: {},
+            timingPatterns: {}
+        };
+
+        // Count sequence frequencies
+        Object.values(playSequences).forEach(sequence => {
+            const sortedSequence = sequence.sort((a, b) => a.sequence - b.sequence);
+            const sequenceString = sortedSequence.map(s => s.tag).join(' → ');
+            
+            if (!offensivePatterns.mostFrequentSequences[sequenceString]) {
+                offensivePatterns.mostFrequentSequences[sequenceString] = 0;
+            }
+            offensivePatterns.mostFrequentSequences[sequenceString]++;
+        });
+
+        // Analyze specific patterns
+        Object.values(playSequences).forEach(sequence => {
+            const sortedSequence = sequence.sort((a, b) => a.sequence - b.sequence);
+            const tags = sortedSequence.map(s => s.tag);
+
+            // Screen usage analysis
+            if (tags.includes('Calling for Screen')) {
+                const screenIndex = tags.indexOf('Calling for Screen');
+                const nextAction = tags[screenIndex + 1];
+                if (nextAction) {
+                    if (!offensivePatterns.screenUsage[nextAction]) {
+                        offensivePatterns.screenUsage[nextAction] = 0;
+                    }
+                    offensivePatterns.screenUsage[nextAction]++;
+                }
+            }
+
+            // Isolation analysis
+            if (tags.includes('Isolation')) {
+                const isolationIndex = tags.indexOf('Isolation');
+                const nextAction = tags[isolationIndex + 1];
+                if (nextAction) {
+                    if (!offensivePatterns.isolationTendencies[nextAction]) {
+                        offensivePatterns.isolationTendencies[nextAction] = 0;
+                    }
+                    offensivePatterns.isolationTendencies[nextAction]++;
+                }
+            }
+
+            // Pressure response analysis
+            if (tags.includes('Double Teamed')) {
+                const pressureIndex = tags.indexOf('Double Teamed');
+                const nextAction = tags[pressureIndex + 1];
+                if (nextAction) {
+                    if (!offensivePatterns.pressureResponses[nextAction]) {
+                        offensivePatterns.pressureResponses[nextAction] = 0;
+                    }
+                    offensivePatterns.pressureResponses[nextAction]++;
+                }
+            }
+
+            // Shot selection analysis
+            const shotActions = ['Pull Up Shot', 'Step Back Shot', 'Fade Away', 'Layup/Dunk'];
+            shotActions.forEach(shotAction => {
+                if (tags.includes(shotAction)) {
+                    if (!offensivePatterns.shotSelection[shotAction]) {
+                        offensivePatterns.shotSelection[shotAction] = 0;
+                    }
+                    offensivePatterns.shotSelection[shotAction]++;
+                }
+            });
+        });
+
+        // Generate defensive strategies
+        const defensiveStrategies = {
+            primaryDefensiveFocus: [],
+            screenDefense: [],
+            isolationDefense: [],
+            pressureDefense: [],
+            shotContest: [],
+            gamePlan: []
+        };
+
+        // Analyze most frequent sequences and create counter-strategies
+        const sortedSequences = Object.entries(offensivePatterns.mostFrequentSequences)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 5);
+
+        sortedSequences.forEach(([sequence, count]) => {
+            const tags = sequence.split(' → ');
+            
+            // Counter-strategies based on sequence patterns
+            if (sequence.includes('Calling for Screen → Screen Mismatch')) {
+                defensiveStrategies.screenDefense.push({
+                    strategy: 'Switch Screens Early',
+                    reasoning: `Player used screen mismatch ${count} times - prevent mismatch creation`,
+                    execution: 'Switch on screen calls before mismatch develops',
+                    priority: 'High'
+                });
+            }
+
+            if (sequence.includes('Calling for Screen → Pick and Roll')) {
+                defensiveStrategies.screenDefense.push({
+                    strategy: 'Hedge and Recover',
+                    reasoning: `Player frequently uses pick and roll (${count} times)`,
+                    execution: 'Hedge the screen, then recover to prevent drive',
+                    priority: 'High'
+                });
+            }
+
+            if (sequence.includes('Isolation')) {
+                const isolationResponses = offensivePatterns.isolationTendencies;
+                const mostCommonResponse = Object.entries(isolationResponses)
+                    .sort(([,a], [,b]) => b - a)[0];
+                
+                if (mostCommonResponse) {
+                    defensiveStrategies.isolationDefense.push({
+                        strategy: `Force ${mostCommonResponse[0]}`,
+                        reasoning: `In isolation, player most often responds with ${mostCommonResponse[0]} (${mostCommonResponse[1]} times)`,
+                        execution: `Take away ${mostCommonResponse[0]} option, force counter`,
+                        priority: 'Medium'
+                    });
+                }
+            }
+
+            if (sequence.includes('Double Teamed')) {
+                const pressureResponses = offensivePatterns.pressureResponses;
+                const mostCommonResponse = Object.entries(pressureResponses)
+                    .sort(([,a], [,b]) => b - a)[0];
+                
+                if (mostCommonResponse) {
+                    defensiveStrategies.pressureDefense.push({
+                        strategy: `Prevent ${mostCommonResponse[0]}`,
+                        reasoning: `When pressured, player most often responds with ${mostCommonResponse[0]} (${mostCommonResponse[1]} times)`,
+                        execution: `Take away ${mostCommonResponse[0]} option, force different response`,
+                        priority: 'High'
+                    });
+                }
+            }
+        });
+
+        // Shot contest strategies
+        const shotPatterns = offensivePatterns.shotSelection;
+        Object.entries(shotPatterns).forEach(([shotType, count]) => {
+            if (shotType === 'Pull Up Shot' && count > 2) {
+                defensiveStrategies.shotContest.push({
+                    strategy: 'Contest Pull-Ups Aggressively',
+                    reasoning: `Player frequently uses pull-up shots (${count} times)`,
+                    execution: 'Close out hard, contest every pull-up attempt',
+                    priority: 'High'
+                });
+            }
+
+            if (shotType === 'Step Back Shot' && count > 2) {
+                defensiveStrategies.shotContest.push({
+                    strategy: 'Stay Attached on Step-Backs',
+                    reasoning: `Player uses step-back shots (${count} times)`,
+                    execution: 'Stay close, don\'t bite on step-back fakes',
+                    priority: 'Medium'
+                });
+            }
+        });
+
+        // Generate overall game plan
+        const totalPlays = Object.keys(playSequences).length;
+        const screenUsage = Object.values(offensivePatterns.screenUsage).reduce((sum, count) => sum + count, 0);
+        const screenPercentage = (screenUsage / totalPlays) * 100;
+
+        if (screenPercentage > 50) {
+            defensiveStrategies.gamePlan.push({
+                strategy: 'Disrupt Screen Actions',
+                reasoning: `Player heavily relies on screens (${screenPercentage.toFixed(1)}% of plays)`,
+                execution: 'Switch screens, hedge aggressively, prevent clean screen execution',
+                priority: 'Critical'
+            });
+        }
+
+        const isolationCount = Object.values(offensivePatterns.isolationTendencies).reduce((sum, count) => sum + count, 0);
+        if (isolationCount > 3) {
+            defensiveStrategies.gamePlan.push({
+                strategy: 'Force Isolation Decisions',
+                reasoning: `Player uses isolation frequently (${isolationCount} times)`,
+                execution: 'Force isolation but take away preferred counter-moves',
+                priority: 'High'
+            });
+        }
+
+        // Set primary defensive focus
+        if (screenPercentage > 50) {
+            defensiveStrategies.primaryDefensiveFocus.push('Screen Defense');
+        }
+        if (isolationCount > 3) {
+            defensiveStrategies.primaryDefensiveFocus.push('Isolation Defense');
+        }
+        if (Object.keys(offensivePatterns.pressureResponses).length > 0) {
+            defensiveStrategies.primaryDefensiveFocus.push('Pressure Defense');
+        }
+
+        res.json({
+            success: true,
+            data: {
+                playerId,
+                totalPlays,
+                offensivePatterns,
+                defensiveStrategies,
+                keyInsights: {
+                    mostFrequentSequence: sortedSequences[0] ? sortedSequences[0][0] : 'None',
+                    screenDependency: screenPercentage,
+                    isolationFrequency: isolationCount,
+                    pressureResponse: Object.keys(offensivePatterns.pressureResponses).length > 0 ? 
+                        Object.entries(offensivePatterns.pressureResponses).sort(([,a], [,b]) => b - a)[0] : null
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error generating defensive scouting report:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate defensive scouting report'
         });
     }
 });

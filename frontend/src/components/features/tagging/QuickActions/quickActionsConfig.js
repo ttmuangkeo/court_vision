@@ -1,4 +1,256 @@
-// Configuration for quick action buttons used in tagging interface
+// Flow-based tagging configuration for intuitive basketball analysis
+export const playFlows = {
+  // INITIAL SITUATION - What's happening when the player gets the ball?
+  'initial': {
+    label: '🎯 What is the player doing?',
+    description: 'Select the initial situation or action',
+    options: [
+      { name: 'Bringing Ball Up', icon: '🏀', color: '#4CAF50', nextFlow: 'ball_handler' },
+      { name: 'Off-Ball Movement', icon: '🏃', color: '#2196F3', nextFlow: 'off_ball' },
+      { name: 'Defensive Play', icon: '🛡️', color: '#F44336', nextFlow: 'defensive' },
+      { name: 'Transition', icon: '⚡', color: '#FF9800', nextFlow: 'transition' },
+      { name: 'Set Play', icon: '📋', color: '#9C27B0', nextFlow: 'set_play' }
+    ]
+  },
+
+  // BALL HANDLER FLOW - Player has the ball, what's the setup?
+  'ball_handler': {
+    label: '🏀 Ball Handler Setup',
+    description: 'How is the player setting up their attack?',
+    options: [
+      { name: 'Calling for Screen', icon: '📞', color: '#4CAF50', nextFlow: 'screen_action' },
+      { name: 'Isolation', icon: '👤', color: '#2196F3', nextFlow: 'isolation' },
+      { name: 'Post Up', icon: '📯', color: '#FF9800', nextFlow: 'post_up' },
+      { name: 'Quick Shot', icon: '🎯', color: '#9C27B0', nextFlow: 'shot_result' }
+    ]
+  },
+
+  // SCREEN ACTION FLOW - What happens with the screen?
+  'screen_action': {
+    label: '🔄 Screen Action',
+    description: 'What type of screen and how is it used?',
+    options: [
+      { name: 'Pick and Roll', icon: '🔄', color: '#4CAF50', nextFlow: 'pick_roll_result' },
+      { name: 'Pick and Pop', icon: '📤', color: '#2196F3', nextFlow: 'pick_pop_result' },
+      { name: 'Screen Mismatch', icon: '⚖️', color: '#FF9800', nextFlow: 'mismatch_action' },
+      { name: 'Screen Rejection', icon: '❌', color: '#F44336', nextFlow: 'isolation' }
+    ]
+  },
+
+  // PICK AND ROLL RESULT FLOW
+  'pick_roll_result': {
+    label: '🔄 Pick and Roll Result',
+    description: 'What happens after the pick and roll?',
+    options: [
+      { name: 'Drive to Basket', icon: '🏃', color: '#4CAF50', nextFlow: 'drive_result' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#2196F3', nextFlow: 'shot_result' },
+      { name: 'Pass to Roller', icon: '📤', color: '#FF9800', nextFlow: 'pass_result' },
+      { name: 'Pass to Corner', icon: '📤', color: '#9C27B0', nextFlow: 'pass_result' },
+      { name: 'Double Teamed', icon: '👥', color: '#F44336', nextFlow: 'double_team_response' }
+    ]
+  },
+
+  // PICK AND POP RESULT FLOW
+  'pick_pop_result': {
+    label: '📤 Pick and Pop Result',
+    description: 'What happens after the pick and pop?',
+    options: [
+      { name: 'Pull Up Shot', icon: '🎯', color: '#4CAF50', nextFlow: 'shot_result' },
+      { name: 'Drive to Basket', icon: '🏃', color: '#2196F3', nextFlow: 'drive_result' },
+      { name: 'Pass to Popper', icon: '📤', color: '#FF9800', nextFlow: 'pass_result' },
+      { name: 'Double Teamed', icon: '👥', color: '#F44336', nextFlow: 'double_team_response' }
+    ]
+  },
+
+  // MISMATCH ACTION FLOW - Player has a mismatch, what do they do?
+  'mismatch_action': {
+    label: '⚖️ Mismatch Action',
+    description: 'How does the player exploit the mismatch?',
+    options: [
+      { name: 'Drive to Basket', icon: '🏃', color: '#4CAF50', nextFlow: 'drive_result' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#2196F3', nextFlow: 'shot_result' },
+      { name: 'Post Up', icon: '📯', color: '#FF9800', nextFlow: 'post_up' },
+      { name: 'Step Back', icon: '↩️', color: '#9C27B0', nextFlow: 'shot_result' },
+      { name: 'Pass Out', icon: '📤', color: '#607D8B', nextFlow: 'pass_result' }
+    ]
+  },
+
+  // ISOLATION FLOW - Player is isolated, what happens?
+  'isolation': {
+    label: '👤 Isolation Action',
+    description: 'What does the player do in isolation?',
+    options: [
+      { name: 'Drive to Basket', icon: '🏃', color: '#4CAF50', nextFlow: 'drive_result' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#2196F3', nextFlow: 'shot_result' },
+      { name: 'Step Back', icon: '↩️', color: '#FF9800', nextFlow: 'shot_result' },
+      { name: 'Fade Away', icon: '🌊', color: '#9C27B0', nextFlow: 'shot_result' },
+      { name: 'Double Teamed', icon: '👥', color: '#F44336', nextFlow: 'double_team_response' }
+    ]
+  },
+
+  // POST UP FLOW
+  'post_up': {
+    label: '📯 Post Up Action',
+    description: 'What happens in the post?',
+    options: [
+      { name: 'Drive to Basket', icon: '🏃', color: '#4CAF50', nextFlow: 'drive_result' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#2196F3', nextFlow: 'shot_result' },
+      { name: 'Fade Away', icon: '🌊', color: '#FF9800', nextFlow: 'shot_result' },
+      { name: 'Pass Out', icon: '📤', color: '#9C27B0', nextFlow: 'pass_result' },
+      { name: 'Double Teamed', icon: '👥', color: '#F44336', nextFlow: 'double_team_response' }
+    ]
+  },
+
+  // DOUBLE TEAM RESPONSE FLOW
+  'double_team_response': {
+    label: '👥 Double Team Response',
+    description: 'How does the player respond to double team?',
+    options: [
+      { name: 'Pass Out', icon: '📤', color: '#4CAF50', nextFlow: 'pass_result' },
+      { name: 'Split Defense', icon: '✂️', color: '#2196F3', nextFlow: 'drive_result' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#FF9800', nextFlow: 'shot_result' },
+      { name: 'Step Back', icon: '↩️', color: '#9C27B0', nextFlow: 'shot_result' }
+    ]
+  },
+
+  // DRIVE RESULT FLOW
+  'drive_result': {
+    label: '🏃 Drive Result',
+    description: 'What happens on the drive?',
+    options: [
+      { name: 'Layup/Dunk', icon: '🏀', color: '#4CAF50', nextFlow: 'shot_result' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#2196F3', nextFlow: 'shot_result' },
+      { name: 'Pass Out', icon: '📤', color: '#FF9800', nextFlow: 'pass_result' },
+      { name: 'Foul Drawn', icon: '🚨', color: '#F44336', nextFlow: 'foul_result' },
+      { name: 'Turnover', icon: '❌', color: '#9C27B0', nextFlow: 'turnover_result' }
+    ]
+  },
+
+  // SHOT RESULT FLOW
+  'shot_result': {
+    label: '🎯 Shot Result',
+    description: 'What was the result of the shot?',
+    options: [
+      { name: 'Made Shot', icon: '✅', color: '#4CAF50', nextFlow: 'end' },
+      { name: 'Missed Shot', icon: '❌', color: '#F44336', nextFlow: 'rebound_result' },
+      { name: 'Blocked', icon: '🛡️', color: '#FF9800', nextFlow: 'rebound_result' },
+      { name: 'Foul Drawn', icon: '🚨', color: '#9C27B0', nextFlow: 'foul_result' }
+    ]
+  },
+
+  // PASS RESULT FLOW
+  'pass_result': {
+    label: '📤 Pass Result',
+    description: 'What happens after the pass?',
+    options: [
+      { name: 'Assist', icon: '✅', color: '#4CAF50', nextFlow: 'end' },
+      { name: 'Turnover', icon: '❌', color: '#F44336', nextFlow: 'turnover_result' },
+      { name: 'Shot Attempt', icon: '🎯', color: '#2196F3', nextFlow: 'shot_result' }
+    ]
+  },
+
+  // REBOUND RESULT FLOW
+  'rebound_result': {
+    label: '🏀 Rebound Result',
+    description: 'What happens with the rebound?',
+    options: [
+      { name: 'Offensive Rebound', icon: '🔄', color: '#4CAF50', nextFlow: 'end' },
+      { name: 'Defensive Rebound', icon: '🛡️', color: '#2196F3', nextFlow: 'end' },
+      { name: 'Out of Bounds', icon: '📤', color: '#FF9800', nextFlow: 'end' }
+    ]
+  },
+
+  // FOUL RESULT FLOW
+  'foul_result': {
+    label: '🚨 Foul Result',
+    description: 'What happens with the foul?',
+    options: [
+      { name: 'Free Throws', icon: '🎯', color: '#4CAF50', nextFlow: 'end' },
+      { name: 'And One', icon: '➕', color: '#2196F3', nextFlow: 'end' },
+      { name: 'Offensive Foul', icon: '❌', color: '#F44336', nextFlow: 'turnover_result' }
+    ]
+  },
+
+  // TURNOVER RESULT FLOW
+  'turnover_result': {
+    label: '❌ Turnover Result',
+    description: 'What type of turnover?',
+    options: [
+      { name: 'Bad Pass', icon: '📤', color: '#F44336', nextFlow: 'end' },
+      { name: 'Traveling', icon: '🚶', color: '#FF9800', nextFlow: 'end' },
+      { name: 'Offensive Foul', icon: '🚨', color: '#9C27B0', nextFlow: 'end' },
+      { name: 'Shot Clock Violation', icon: '⏰', color: '#607D8B', nextFlow: 'end' }
+    ]
+  },
+
+  // TRANSITION FLOW
+  'transition': {
+    label: '⚡ Transition Action',
+    description: 'What happens in transition?',
+    options: [
+      { name: 'Drive to Basket', icon: '🏃', color: '#4CAF50', nextFlow: 'drive_result' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#2196F3', nextFlow: 'shot_result' },
+      { name: 'Pass Out', icon: '📤', color: '#FF9800', nextFlow: 'pass_result' },
+      { name: 'Layup/Dunk', icon: '🏀', color: '#9C27B0', nextFlow: 'shot_result' }
+    ]
+  },
+
+  // DEFENSIVE FLOW
+  'defensive': {
+    label: '🛡️ Defensive Action',
+    description: 'What defensive play was made?',
+    options: [
+      { name: 'Block', icon: '🛡️', color: '#4CAF50', nextFlow: 'end' },
+      { name: 'Steal', icon: '🤲', color: '#2196F3', nextFlow: 'end' },
+      { name: 'Defensive Rebound', icon: '🏀', color: '#FF9800', nextFlow: 'end' },
+      { name: 'Charge Taken', icon: '🚨', color: '#9C27B0', nextFlow: 'end' },
+      { name: 'Good Defense', icon: '✅', color: '#607D8B', nextFlow: 'end' }
+    ]
+  },
+
+  // OFF BALL FLOW
+  'off_ball': {
+    label: '🏃 Off-Ball Action',
+    description: 'What off-ball movement or action?',
+    options: [
+      { name: 'Off-Ball Cut', icon: '🏃', color: '#4CAF50', nextFlow: 'end' },
+      { name: 'Screen Set', icon: '📞', color: '#2196F3', nextFlow: 'end' },
+      { name: 'Spacing', icon: '📏', color: '#FF9800', nextFlow: 'end' },
+      { name: 'Backdoor Cut', icon: '🚪', color: '#9C27B0', nextFlow: 'end' }
+    ]
+  },
+
+  // SET PLAY FLOW
+  'set_play': {
+    label: '📋 Set Play Action',
+    description: 'What type of set play?',
+    options: [
+      { name: 'Pick and Roll', icon: '🔄', color: '#4CAF50', nextFlow: 'pick_roll_result' },
+      { name: 'Pick and Pop', icon: '📤', color: '#2196F3', nextFlow: 'pick_pop_result' },
+      { name: 'Post Up', icon: '📯', color: '#FF9800', nextFlow: 'post_up' },
+      { name: 'Isolation', icon: '👤', color: '#9C27B0', nextFlow: 'isolation' }
+    ]
+  },
+
+  // END FLOW - Play is complete
+  'end': {
+    label: '✅ Play Complete',
+    description: 'The play sequence is complete',
+    options: []
+  }
+};
+
+// Quick shortcuts for common sequences
+export const quickSequences = {
+  'Screen Mismatch Drive': ['Bringing Ball Up', 'Calling for Screen', 'Screen Mismatch', 'Drive to Basket', 'Layup/Dunk'],
+  'Screen Mismatch Shot': ['Bringing Ball Up', 'Calling for Screen', 'Screen Mismatch', 'Pull Up Shot', 'Made Shot'],
+  'Pick and Roll Drive': ['Bringing Ball Up', 'Calling for Screen', 'Pick and Roll', 'Drive to Basket', 'Layup/Dunk'],
+  'Pick and Roll Pass': ['Bringing Ball Up', 'Calling for Screen', 'Pick and Roll', 'Pass to Roller', 'Assist'],
+  'Isolation Step Back': ['Bringing Ball Up', 'Isolation', 'Step Back', 'Made Shot'],
+  'Double Team Pass': ['Bringing Ball Up', 'Isolation', 'Double Teamed', 'Pass Out', 'Assist']
+};
+
+// Legacy support for existing tag system
 export const quickActions = [
   // Offensive Actions (when player has the ball or is on offense)
   { name: 'Isolation', color: '#4ECDC4', icon: '🏀', category: 'offensive' },

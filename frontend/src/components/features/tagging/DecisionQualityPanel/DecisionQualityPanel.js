@@ -113,6 +113,156 @@ function DecisionQualityPanel({ gameId, selectedPlayer, refreshTrigger }) {
                 </div>
             </div>
 
+            {/* Screen Actions */}
+            {decisionData.decisionAnalysis?.screenActions && Object.keys(decisionData.decisionAnalysis.screenActions).length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                    <h4 className="decision-panel-section-title">
+                        🎯 Screen Actions
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {Object.entries(decisionData.decisionAnalysis.screenActions).map(([action, data]) => (
+                            <div key={action} className="decision-panel-response-card">
+                                <div>
+                                    <div style={{ fontWeight: '600', color: '#1e293b' }}>
+                                        {action}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        {data.count} times • {data.reason}
+                                    </div>
+                                </div>
+                                <div
+                                    className="decision-panel-quality-label"
+                                    style={{ backgroundColor: getQualityColor(data.quality) }}
+                                >
+                                    {data.quality}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Setup Actions */}
+            {decisionData.decisionAnalysis?.setupActions && Object.keys(decisionData.decisionAnalysis.setupActions).length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                    <h4 className="decision-panel-section-title">
+                        🏀 Setup Actions
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {Object.entries(decisionData.decisionAnalysis.setupActions).map(([action, data]) => (
+                            <div key={action} className="decision-panel-response-card">
+                                <div>
+                                    <div style={{ fontWeight: '600', color: '#1e293b' }}>
+                                        {action}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        {data.count} times • {data.reason}
+                                    </div>
+                                </div>
+                                <div
+                                    className="decision-panel-quality-label"
+                                    style={{ backgroundColor: getQualityColor(data.quality) }}
+                                >
+                                    {data.quality}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Execution Actions */}
+            {decisionData.decisionAnalysis?.executionActions && Object.keys(decisionData.decisionAnalysis.executionActions).length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                    <h4 className="decision-panel-section-title">
+                        ⚡ Execution Actions
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {Object.entries(decisionData.decisionAnalysis.executionActions).map(([action, data]) => (
+                            <div key={action} className="decision-panel-response-card">
+                                <div>
+                                    <div style={{ fontWeight: '600', color: '#1e293b' }}>
+                                        {action}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        {data.count} times • {data.reason}
+                                    </div>
+                                </div>
+                                <div
+                                    className="decision-panel-quality-label"
+                                    style={{ backgroundColor: getQualityColor(data.quality) }}
+                                >
+                                    {data.quality}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Complex Sequences */}
+            {decisionData.decisionAnalysis?.complexSequences && Object.keys(decisionData.decisionAnalysis.complexSequences).length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                    <h4 className="decision-panel-section-title">
+                        🧠 Complex Sequences
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {Object.entries(decisionData.decisionAnalysis.complexSequences).map(([sequence, data]) => (
+                            <div key={sequence} className="decision-panel-response-card">
+                                <div>
+                                    <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>
+                                        {sequence}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        {data.count} times • {data.reason}
+                                    </div>
+                                </div>
+                                <div
+                                    className="decision-panel-quality-label"
+                                    style={{ backgroundColor: getQualityColor(data.quality) }}
+                                >
+                                    {data.quality}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Poor Decisions */}
+            {decisionData.decisionAnalysis?.poorDecisions && Object.keys(decisionData.decisionAnalysis.poorDecisions).length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                    <h4 className="decision-panel-section-title">
+                        ⚠️ Areas for Improvement
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {Object.entries(decisionData.decisionAnalysis.poorDecisions).map(([action, data]) => (
+                            <div key={action} className="decision-panel-response-card">
+                                <div>
+                                    <div style={{ fontWeight: '600', color: '#1e293b' }}>
+                                        {action}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        {data.count} times • {data.reason}
+                                    </div>
+                                    {data.context && (
+                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                                            After: {data.context}
+                                        </div>
+                                    )}
+                                </div>
+                                <div
+                                    className="decision-panel-quality-label"
+                                    style={{ backgroundColor: getQualityColor(data.quality) }}
+                                >
+                                    {data.quality}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Defensive Responses */}
             {Object.keys(decisionData.decisionAnalysis.defensiveResponses).length > 0 && (
                 <div style={{ marginBottom: '24px' }}>

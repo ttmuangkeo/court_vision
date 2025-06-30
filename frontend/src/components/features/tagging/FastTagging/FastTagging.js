@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import GameHeader from '../GameHeader';
 import PlayerSelector from '../PlayerSelector';
-import GameTimeInput from '../GameTimeInput';
+import GameTimeInput from '../GameTimeInput/GameTimeInput';
 import QuickActions from '../QuickActions';
 import PredictionPanel from '../PredictionPanel';
 import DecisionQualityPanel from '../DecisionQualityPanel';
@@ -98,6 +98,33 @@ function FastTagging() {
     setCurrentPlayTags(prev => [...prev, { tag, actionName }]);
   };
 
+  const handleTimeIncrement = () => {
+    if (!gameTime) return;
+    
+    const [minutes, seconds] = gameTime.split(':').map(Number);
+    let newMinutes = minutes;
+    let newSeconds = seconds - 20; // Assume 20 seconds between plays
+
+    if (newSeconds < 0) {
+      newMinutes -= 1;
+      newSeconds = 60 + newSeconds;
+    }
+
+    if (newMinutes < 0) {
+      if (currentQuarter > 1) {
+        setCurrentQuarter(currentQuarter - 1);
+        newMinutes = 11;
+        newSeconds = 40;
+      } else {
+        newMinutes = 0;
+        newSeconds = 0;
+      }
+    }
+
+    const newTime = `${newMinutes.toString().padStart(2, '0')}:${newSeconds.toString().padStart(2, '0')}`;
+    setGameTime(newTime);
+  };
+
   const handleSavePlay = async () => {
     if (currentPlayTags.length === 0) {
       alert('Please add at least one tag to the play');
@@ -124,7 +151,7 @@ function FastTagging() {
       };
       await axios.post(`${API_BASE}/plays`, playData);
       setCurrentPlayTags([]);
-      setGameTime('');
+      handleTimeIncrement();
       setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       console.error('Error tagging play:', err);
@@ -188,6 +215,7 @@ function FastTagging() {
               setGameTime={setGameTime}
               currentQuarter={currentQuarter}
               setCurrentQuarter={setCurrentQuarter}
+              onTimeChange={refreshTrigger}
             />
           </div>
           {/* Main Row: Sequence | Quick Actions | Prediction | Decision Quality */}
@@ -229,6 +257,7 @@ function FastTagging() {
             <div className="fast-tagging-quickactions-panel">
               <QuickActions
                 onQuickTag={handleQuickTag}
+                onAutoSave={handleSavePlay}
                 selectedPlayer={selectedPlayer}
                 gameTime={gameTime}
                 compact={true}
