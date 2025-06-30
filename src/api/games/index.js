@@ -66,14 +66,14 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /api/games/:id - Get game by ID
-router.get('/:id', async (req, res) => {
+// GET /api/games/:espnId - Get game by ESPN ID
+router.get('/:espnId', async (req, res) => {
     try {
-        const {id} = req.params;
+        const {espnId} = req.params;
         const {include} = req.query;
 
         const game = await prisma.game.findUnique({
-            where: {id},
+            where: {espnId},
             include: include === 'teams' ? {
                 homeTeam: true,
                 awayTeam: true
