@@ -23,23 +23,27 @@ function PlayerDetail() {
                 
                 // Fetch player details with team
                 const playerRes = await axios.get(`${API_BASE}/players/${playerId}?include=team`);
-                setPlayer(playerRes.data.data);
+                const playerData = playerRes.data.data;
+                setPlayer(playerData);
                 
                 // Fetch teams for branding
                 const teamsRes = await axios.get(`${API_BASE}/teams`);
                 setTeams(teamsRes.data.data);
                 
-                // Fetch player patterns and analytics
-                const patternsRes = await axios.get(`${API_BASE}/analytics/player-patterns/${playerId}`);
-                setPlayerPatterns(patternsRes.data.data);
-                
-                // Fetch decision quality analysis
-                const decisionRes = await axios.get(`${API_BASE}/analytics/decision-quality/${playerId}`);
-                setDecisionQuality(decisionRes.data.data);
-                
-                // Fetch recent plays for this player
-                const playsRes = await axios.get(`${API_BASE}/plays?playerId=${playerId}&limit=20&include=tags`);
-                setRecentPlays(playsRes.data.data || []);
+                // Use player.espnId for analytics calls
+                if (playerData && playerData.espnId) {
+                    // Fetch player patterns and analytics
+                    const patternsRes = await axios.get(`${API_BASE}/analytics/player-patterns/${playerData.espnId}`);
+                    setPlayerPatterns(patternsRes.data.data);
+                    
+                    // Fetch decision quality analysis
+                    const decisionRes = await axios.get(`${API_BASE}/analytics/decision-quality/${playerData.espnId}`);
+                    setDecisionQuality(decisionRes.data.data);
+                    
+                    // Fetch recent plays for this player
+                    const playsRes = await axios.get(`${API_BASE}/plays?playerId=${playerData.espnId}&limit=20&include=tags`);
+                    setRecentPlays(playsRes.data.data || []);
+                }
                 
                 setLoading(false);
             } catch (err) {
@@ -676,71 +680,522 @@ function PlayerDetail() {
                         )}
 
                         {activeTab === 'patterns' && (
-                            <div style={{ 
-                                textAlign: 'center', 
-                                padding: '60px 40px',
-                                color: '#64748b'
-                            }}>
-                                <h3 style={{ 
-                                    fontSize: '1.5rem', 
-                                    fontWeight: '600', 
+                            <div>
+                                <h2 style={{ 
+                                    fontSize: '1.75rem', 
+                                    fontWeight: '700', 
                                     color: '#1e293b',
-                                    marginBottom: '16px'
+                                    marginBottom: '24px',
+                                    letterSpacing: '-0.01em'
                                 }}>
-                                    Play Patterns
-                                </h3>
-                                <p style={{ 
-                                    fontSize: '1rem',
-                                    color: '#64748b'
-                                }}>
-                                    Coming soon! Play pattern analysis will be available here.
-                                </p>
+                                    Play Patterns Analysis
+                                </h2>
+                                
+                                {playerPatterns ? (
+                                    <div style={{ 
+                                        display: 'grid', 
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                                        gap: '20px'
+                                    }}>
+                                        {/* Most Common Actions */}
+                                        <div style={{
+                                            backgroundColor: 'white',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                                        }}>
+                                            <h3 style={{ 
+                                                fontSize: '1.1rem', 
+                                                fontWeight: '700', 
+                                                color: '#1e293b',
+                                                marginBottom: '16px'
+                                            }}>
+                                                🎯 Most Common Actions
+                                            </h3>
+                                            
+                                            {playerPatterns.mostCommonActions && playerPatterns.mostCommonActions.length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                    {playerPatterns.mostCommonActions.map((action, index) => (
+                                                        <div key={index} style={{ 
+                                                            display: 'flex', 
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center',
+                                                            padding: '12px',
+                                                            backgroundColor: '#f8fafc',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid #e2e8f0'
+                                                        }}>
+                                                            <div>
+                                                                <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1e293b' }}>
+                                                                    {action.tag}
+                                                                </div>
+                                                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                                                    {action.count} times
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ 
+                                                                fontSize: '1rem', 
+                                                                fontWeight: '700', 
+                                                                color: primaryColor,
+                                                                backgroundColor: `${primaryColor}10`,
+                                                                padding: '4px 8px',
+                                                                borderRadius: '6px'
+                                                            }}>
+                                                                {action.percentage}%
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                                                    No pattern data available yet.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Quarter Patterns */}
+                                        <div style={{
+                                            backgroundColor: 'white',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                                        }}>
+                                            <h3 style={{ 
+                                                fontSize: '1.1rem', 
+                                                fontWeight: '700', 
+                                                color: '#1e293b',
+                                                marginBottom: '16px'
+                                            }}>
+                                                ⏰ Quarter Patterns
+                                            </h3>
+                                            
+                                            {playerPatterns.quarterPatterns && Object.keys(playerPatterns.quarterPatterns).length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                    {Object.entries(playerPatterns.quarterPatterns).map(([quarter, patterns]) => (
+                                                        <div key={quarter} style={{ 
+                                                            padding: '12px',
+                                                            backgroundColor: '#f8fafc',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid #e2e8f0'
+                                                        }}>
+                                                            <div style={{ 
+                                                                fontSize: '0.9rem', 
+                                                                fontWeight: '600', 
+                                                                color: '#1e293b',
+                                                                marginBottom: '8px'
+                                                            }}>
+                                                                Quarter {quarter}
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                                {Object.entries(patterns).map(([action, count]) => (
+                                                                    <span key={action} style={{
+                                                                        fontSize: '0.75rem',
+                                                                        padding: '4px 8px',
+                                                                        backgroundColor: `${primaryColor}20`,
+                                                                        color: primaryColor,
+                                                                        borderRadius: '4px',
+                                                                        fontWeight: '500'
+                                                                    }}>
+                                                                        {action} ({count})
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                                                    No quarter pattern data available yet.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Recent Plays */}
+                                        <div style={{
+                                            backgroundColor: 'white',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                                        }}>
+                                            <h3 style={{ 
+                                                fontSize: '1.1rem', 
+                                                fontWeight: '700', 
+                                                color: '#1e293b',
+                                                marginBottom: '16px'
+                                            }}>
+                                                📊 Recent Plays
+                                            </h3>
+                                            
+                                            {playerPatterns.recentPlays && playerPatterns.recentPlays.length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {playerPatterns.recentPlays.slice(0, 5).map((play, index) => (
+                                                        <div key={index} style={{ 
+                                                            padding: '10px',
+                                                            backgroundColor: '#f8fafc',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid #e2e8f0'
+                                                        }}>
+                                                            <div style={{ 
+                                                                fontSize: '0.8rem', 
+                                                                fontWeight: '600', 
+                                                                color: primaryColor,
+                                                                marginBottom: '4px'
+                                                            }}>
+                                                                {play.tag}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '2px' }}>
+                                                                Q{play.quarter} • {play.gameTime}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                                                {new Date(play.createdAt).toLocaleDateString()}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                                                    No recent plays available yet.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        textAlign: 'center', 
+                                        padding: '60px 40px',
+                                        color: '#64748b'
+                                    }}>
+                                        <p style={{ fontSize: '1rem' }}>
+                                            Loading pattern data...
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {activeTab === 'decisions' && (
-                            <div style={{ 
-                                textAlign: 'center', 
-                                padding: '60px 40px',
-                                color: '#64748b'
-                            }}>
-                                <h3 style={{ 
-                                    fontSize: '1.5rem', 
-                                    fontWeight: '600', 
+                            <div>
+                                <h2 style={{ 
+                                    fontSize: '1.75rem', 
+                                    fontWeight: '700', 
                                     color: '#1e293b',
-                                    marginBottom: '16px'
+                                    marginBottom: '24px',
+                                    letterSpacing: '-0.01em'
                                 }}>
                                     Decision Quality Analysis
-                                </h3>
-                                <p style={{ 
-                                    fontSize: '1rem',
-                                    color: '#64748b'
-                                }}>
-                                    Coming soon! Decision quality analysis will be available here.
-                                </p>
+                                </h2>
+                                
+                                {decisionQuality ? (
+                                    <div style={{ 
+                                        display: 'grid', 
+                                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                                        gap: '20px'
+                                    }}>
+                                        {/* Overall Quality Score */}
+                                        <div style={{
+                                            backgroundColor: 'white',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                                        }}>
+                                            <h3 style={{ 
+                                                fontSize: '1.1rem', 
+                                                fontWeight: '700', 
+                                                color: '#1e293b',
+                                                marginBottom: '16px'
+                                            }}>
+                                                📊 Overall Decision Quality
+                                            </h3>
+                                            
+                                            {decisionQuality.decisionAnalysis?.overallQuality ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        padding: '16px',
+                                                        backgroundColor: '#f8fafc',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid #e2e8f0'
+                                                    }}>
+                                                        <div>
+                                                            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1e293b' }}>
+                                                                Average Score
+                                                            </div>
+                                                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                                                {decisionQuality.decisionAnalysis.overallQuality.totalDecisions} decisions analyzed
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ 
+                                                            fontSize: '1.5rem', 
+                                                            fontWeight: '700', 
+                                                            color: getQualityColor(decisionQuality.decisionAnalysis.overallQuality.grade),
+                                                            backgroundColor: `${getQualityColor(decisionQuality.decisionAnalysis.overallQuality.grade)}10`,
+                                                            padding: '8px 12px',
+                                                            borderRadius: '8px'
+                                                        }}>
+                                                            {decisionQuality.decisionAnalysis.overallQuality.averageScore}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        padding: '12px',
+                                                        backgroundColor: '#f8fafc',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid #e2e8f0'
+                                                    }}>
+                                                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1e293b' }}>
+                                                            Grade
+                                                        </div>
+                                                        <div style={{ 
+                                                            fontSize: '1.2rem', 
+                                                            fontWeight: '700', 
+                                                            color: getQualityColor(decisionQuality.decisionAnalysis.overallQuality.grade),
+                                                            backgroundColor: `${getQualityColor(decisionQuality.decisionAnalysis.overallQuality.grade)}20`,
+                                                            padding: '6px 10px',
+                                                            borderRadius: '6px',
+                                                            minWidth: '40px',
+                                                            textAlign: 'center'
+                                                        }}>
+                                                            {decisionQuality.decisionAnalysis.overallQuality.grade}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                                                    No decision quality data available yet.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Offensive Decisions */}
+                                        <div style={{
+                                            backgroundColor: 'white',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                                        }}>
+                                            <h3 style={{ 
+                                                fontSize: '1.1rem', 
+                                                fontWeight: '700', 
+                                                color: '#1e293b',
+                                                marginBottom: '16px'
+                                            }}>
+                                                ⚡ Offensive Decisions
+                                            </h3>
+                                            
+                                            {decisionQuality.decisionAnalysis?.offensiveDecisions && Object.keys(decisionQuality.decisionAnalysis.offensiveDecisions).length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {Object.entries(decisionQuality.decisionAnalysis.offensiveDecisions).map(([action, data]) => (
+                                                        <div key={action} style={{ 
+                                                            padding: '10px',
+                                                            backgroundColor: '#f8fafc',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid #e2e8f0'
+                                                        }}>
+                                                            <div style={{ 
+                                                                display: 'flex', 
+                                                                justifyContent: 'space-between',
+                                                                alignItems: 'center',
+                                                                marginBottom: '4px'
+                                                            }}>
+                                                                <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#1e293b' }}>
+                                                                    {action}
+                                                                </div>
+                                                                <div style={{ 
+                                                                    fontSize: '0.7rem',
+                                                                    padding: '2px 6px',
+                                                                    backgroundColor: `${getQualityColor(data.quality)}20`,
+                                                                    color: getQualityColor(data.quality),
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: '600'
+                                                                }}>
+                                                                    {data.quality}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                                                {data.count} times
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                                                    No offensive decision data available yet.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Defensive Responses */}
+                                        <div style={{
+                                            backgroundColor: 'white',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                                        }}>
+                                            <h3 style={{ 
+                                                fontSize: '1.1rem', 
+                                                fontWeight: '700', 
+                                                color: '#1e293b',
+                                                marginBottom: '16px'
+                                            }}>
+                                                🛡️ Defensive Responses
+                                            </h3>
+                                            
+                                            {decisionQuality.decisionAnalysis?.defensiveResponses && Object.keys(decisionQuality.decisionAnalysis.defensiveResponses).length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    {Object.entries(decisionQuality.decisionAnalysis.defensiveResponses).map(([action, data]) => (
+                                                        <div key={action} style={{ 
+                                                            padding: '10px',
+                                                            backgroundColor: '#f8fafc',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid #e2e8f0'
+                                                        }}>
+                                                            <div style={{ 
+                                                                display: 'flex', 
+                                                                justifyContent: 'space-between',
+                                                                alignItems: 'center',
+                                                                marginBottom: '4px'
+                                                            }}>
+                                                                <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#1e293b' }}>
+                                                                    {action}
+                                                                </div>
+                                                                <div style={{ 
+                                                                    fontSize: '0.7rem',
+                                                                    padding: '2px 6px',
+                                                                    backgroundColor: `${getQualityColor(data.quality)}20`,
+                                                                    color: getQualityColor(data.quality),
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: '600'
+                                                                }}>
+                                                                    {data.quality}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                                                {data.count} times
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                                                    No defensive response data available yet.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        textAlign: 'center', 
+                                        padding: '60px 40px',
+                                        color: '#64748b'
+                                    }}>
+                                        <p style={{ fontSize: '1rem' }}>
+                                            Loading decision quality data...
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {activeTab === 'recent' && (
-                            <div style={{ 
-                                textAlign: 'center', 
-                                padding: '60px 40px',
-                                color: '#64748b'
-                            }}>
-                                <h3 style={{ 
-                                    fontSize: '1.5rem', 
-                                    fontWeight: '600', 
+                            <div>
+                                <h2 style={{ 
+                                    fontSize: '1.75rem', 
+                                    fontWeight: '700', 
                                     color: '#1e293b',
-                                    marginBottom: '16px'
+                                    marginBottom: '24px',
+                                    letterSpacing: '-0.01em'
                                 }}>
                                     Recent Plays
-                                </h3>
-                                <p style={{ 
-                                    fontSize: '1rem',
-                                    color: '#64748b'
-                                }}>
-                                    Coming soon! Recent plays will be available here.
-                                </p>
+                                </h2>
+                                
+                                {recentPlays && recentPlays.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {recentPlays.map((play, index) => (
+                                            <div key={play.id || index} style={{
+                                                backgroundColor: 'white',
+                                                padding: '20px',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                                border: '1px solid rgba(0, 0, 0, 0.05)'
+                                            }}>
+                                                <div style={{ 
+                                                    display: 'flex', 
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-start',
+                                                    marginBottom: '12px'
+                                                }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ 
+                                                            fontSize: '1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b',
+                                                            marginBottom: '6px'
+                                                        }}>
+                                                            {play.description || 'Play Description'}
+                                                        </div>
+                                                        <div style={{ 
+                                                            fontSize: '0.85rem', 
+                                                            color: '#64748b',
+                                                            marginBottom: '8px'
+                                                        }}>
+                                                            Quarter {play.quarter} • {play.gameTime}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ 
+                                                        fontSize: '0.75rem', 
+                                                        color: '#64748b',
+                                                        textAlign: 'right'
+                                                    }}>
+                                                        {new Date(play.createdAt).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                                
+                                                {play.tags && play.tags.length > 0 && (
+                                                    <div style={{ 
+                                                        display: 'flex', 
+                                                        flexWrap: 'wrap', 
+                                                        gap: '6px',
+                                                        marginTop: '8px'
+                                                    }}>
+                                                        {play.tags.map((tag, tagIndex) => (
+                                                            <span key={tagIndex} style={{
+                                                                fontSize: '0.75rem',
+                                                                padding: '4px 8px',
+                                                                backgroundColor: `${primaryColor}20`,
+                                                                color: primaryColor,
+                                                                borderRadius: '6px',
+                                                                fontWeight: '500'
+                                                            }}>
+                                                                {tag.tag?.name || tag.name || 'Unknown Tag'}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        textAlign: 'center', 
+                                        padding: '60px 40px',
+                                        color: '#64748b'
+                                    }}>
+                                        <p style={{ fontSize: '1rem' }}>
+                                            No recent plays available for this player.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
