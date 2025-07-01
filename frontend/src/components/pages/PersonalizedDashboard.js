@@ -46,13 +46,16 @@ const PersonalizedDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
-        // Wait for user object to be fully loaded
         if (!user) {
           setLoading(false);
           return;
         }
-        
+        // If user has no favorite teams, skip enrichment and load dashboard
+        if (!user.favoriteTeams || user.favoriteTeams.length === 0) {
+          setPrimaryTeam(null);
+          setLoading(false);
+          return;
+        }
         // Use enriched favorite teams for branding
         if (enrichedFavoriteTeams.length > 0) {
           setPrimaryTeam(enrichedFavoriteTeams[activeTeamIndex] || enrichedFavoriteTeams[0]);
@@ -108,11 +111,14 @@ const PersonalizedDashboard = () => {
         setLoading(false);
       }
     };
-
-    if (user && enrichedFavoriteTeams.length > 0) {
+    // Always run when user and allTeams are loaded
+    if (user && allTeams.length > 0) {
       fetchDashboardData();
+    } else if (user && (!user.favoriteTeams || user.favoriteTeams.length === 0)) {
+      // Failsafe: if user has no favorite teams, stop loading
+      setLoading(false);
     }
-  }, [user, activeTeamIndex, enrichedFavoriteTeams]);
+  }, [user, activeTeamIndex, enrichedFavoriteTeams, allTeams]);
 
   const getTeamBranding = (team) => {
     if (!team) return {};
