@@ -239,4 +239,341 @@ router.post('/complete-onboarding', authenticateJWT, async (req, res) => {
     }
 });
 
+// GET /api/auth/profile - Get user profile with preferences
+router.get('/profile', authenticateJWT, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            include: {
+                favoriteTeams: {
+                    select: {
+                        espnId: true,
+                        name: true,
+                        abbreviation: true,
+                        logoUrl: true,
+                        primaryColor: true,
+                        alternateColor: true
+                    }
+                },
+                favoritePlayers: {
+                    select: {
+                        espnId: true,
+                        fullName: true,
+                        position: true,
+                        headshot: true,
+                        teamEspnId: true,
+                        team: {
+                            select: {
+                                abbreviation: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch profile'
+        });
+    }
+});
+
+// PUT /api/auth/profile - Update user profile
+router.put('/profile', authenticateJWT, async (req, res) => {
+    try {
+        const {
+            firstName,
+            lastName,
+            username,
+            bio,
+            experienceLevel,
+            coachingRole,
+            teamLevel,
+            avatar,
+            favoriteTeams,
+            favoritePlayers
+        } = req.body;
+
+        // Check if username is already taken by another user
+        if (username) {
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    username,
+                    NOT: { id: req.user.id }
+                }
+            });
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    error: 'Username already taken'
+                });
+            }
+        }
+
+        // Update user profile
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                firstName,
+                lastName,
+                username,
+                bio,
+                experienceLevel,
+                coachingRole,
+                teamLevel,
+                avatar
+            }
+        });
+
+        // Update favorite teams
+        if (favoriteTeams !== undefined) {
+            await prisma.user.update({
+                where: { id: req.user.id },
+                data: {
+                    favoriteTeams: {
+                        set: favoriteTeams.map(teamId => ({ espnId: teamId }))
+                    }
+                }
+            });
+        }
+
+        // Update favorite players
+        if (favoritePlayers !== undefined) {
+            await prisma.user.update({
+                where: { id: req.user.id },
+                data: {
+                    favoritePlayers: {
+                        set: favoritePlayers.map(playerId => ({ espnId: playerId }))
+                    }
+                }
+            });
+        }
+
+        // Fetch updated user with all relations
+        const finalUser = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            include: {
+                favoriteTeams: {
+                    select: {
+                        espnId: true,
+                        name: true,
+                        abbreviation: true,
+                        logoUrl: true,
+                        primaryColor: true,
+                        alternateColor: true
+                    }
+                },
+                favoritePlayers: {
+                    select: {
+                        espnId: true,
+                        fullName: true,
+                        position: true,
+                        headshot: true,
+                        teamEspnId: true,
+                        team: {
+                            select: {
+                                abbreviation: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        res.json({
+            success: true,
+            user: finalUser
+        });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update profile'
+        });
+    }
+});
+
 module.exports = router;
+
+// GET /api/auth/profile - Get user profile with preferences
+router.get('/profile', authenticateJWT, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            include: {
+                favoriteTeams: {
+                    select: {
+                        espnId: true,
+                        name: true,
+                        abbreviation: true,
+                        logoUrl: true,
+                        primaryColor: true,
+                        alternateColor: true
+                    }
+                },
+                favoritePlayers: {
+                    select: {
+                        espnId: true,
+                        fullName: true,
+                        position: true,
+                        headshot: true,
+                        teamEspnId: true,
+                        team: {
+                            select: {
+                                abbreviation: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch profile'
+        });
+    }
+});
+
+// PUT /api/auth/profile - Update user profile
+router.put('/profile', authenticateJWT, async (req, res) => {
+    try {
+        const {
+            firstName,
+            lastName,
+            username,
+            bio,
+            experienceLevel,
+            coachingRole,
+            teamLevel,
+            avatar,
+            favoriteTeams,
+            favoritePlayers
+        } = req.body;
+
+        // Check if username is already taken by another user
+        if (username) {
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    username,
+                    NOT: { id: req.user.id }
+                }
+            });
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    error: 'Username already taken'
+                });
+            }
+        }
+
+        // Update user profile
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                firstName,
+                lastName,
+                username,
+                bio,
+                experienceLevel,
+                coachingRole,
+                teamLevel,
+                avatar
+            }
+        });
+
+        // Update favorite teams
+        if (favoriteTeams !== undefined) {
+            await prisma.user.update({
+                where: { id: req.user.id },
+                data: {
+                    favoriteTeams: {
+                        set: favoriteTeams.map(teamId => ({ espnId: teamId }))
+                    }
+                }
+            });
+        }
+
+        // Update favorite players
+        if (favoritePlayers !== undefined) {
+            await prisma.user.update({
+                where: { id: req.user.id },
+                data: {
+                    favoritePlayers: {
+                        set: favoritePlayers.map(playerId => ({ espnId: playerId }))
+                    }
+                }
+            });
+        }
+
+        // Fetch updated user with all relations
+        const finalUser = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            include: {
+                favoriteTeams: {
+                    select: {
+                        espnId: true,
+                        name: true,
+                        abbreviation: true,
+                        logoUrl: true,
+                        primaryColor: true,
+                        alternateColor: true
+                    }
+                },
+                favoritePlayers: {
+                    select: {
+                        espnId: true,
+                        fullName: true,
+                        position: true,
+                        headshot: true,
+                        teamEspnId: true,
+                        team: {
+                            select: {
+                                abbreviation: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        res.json({
+            success: true,
+            user: finalUser
+        });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update profile'
+        });
+    }
+});
+

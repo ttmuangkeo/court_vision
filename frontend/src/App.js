@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import LandingPage from './components/pages/LandingPage';
+import PersonalizedDashboard from './components/pages/PersonalizedDashboard';
+import UserProfile from './components/pages/UserProfile';
 import GamesDashboard from './components/pages/Games/GamesDashboard';
 import GamesList from './components/pages/Games/GamesList';
 import GameDetail from './components/pages/Games/GameDetail';
@@ -38,7 +40,15 @@ function App() {
             <ProtectedRoute requireAuth={true}>
               <>
                 <Navbar />
-                <GamesDashboard />
+                <PersonalizedDashboard />
+              </>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute requireAuth={true}>
+              <>
+                <Navbar />
+                <UserProfile />
               </>
             </ProtectedRoute>
           } />

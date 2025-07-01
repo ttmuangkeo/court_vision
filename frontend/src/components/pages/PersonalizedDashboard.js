@@ -1,0 +1,311 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../common/AuthContext';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import './PersonalizedDashboard.css';
+
+const PersonalizedDashboard = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    recentGames: [],
+    favoriteTeamStats: null,
+    favoritePlayerStats: [],
+    recentPlays: [],
+    upcomingGames: []
+  });
+  const [primaryTeam, setPrimaryTeam] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get user's primary favorite team (first one)
+        if (user?.favoriteTeams?.length > 0) {
+          setPrimaryTeam(user.favoriteTeams[0]);
+        }
+
+        // Fetch dashboard data
+        const [gamesRes, playsRes] = await Promise.all([
+          axios.get('/api/games?limit=10'),
+          axios.get('/api/plays?limit=20')
+        ]);
+
+        // Filter data based on user preferences
+        const recentGames = gamesRes.data.filter(game => {
+          if (!user?.favoriteTeams?.length) return true;
+          return user.favoriteTeams.some(team => 
+            team.espnId === game.homeTeamId || team.espnId === game.awayTeamId
+          );
+        });
+
+        const recentPlays = playsRes.data.filter(play => {
+          if (!user?.favoritePlayers?.length) return true;
+          return user.favoritePlayers.some(player => 
+            player.espnId === play.ballHandlerId || 
+            player.espnId === play.primaryPlayerId || 
+            player.espnId === play.secondaryPlayerId
+          );
+        });
+
+        setDashboardData({
+          recentGames: recentGames.slice(0, 5),
+          recentPlays: recentPlays.slice(0, 10),
+          upcomingGames: gamesRes.data.filter(game => game.status === 'SCHEDULED').slice(0, 3)
+        });
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  const getTeamBranding = (team) => {
+    if (!team) return {};
+    
+    return {
+      '--primary-color': team.primaryColor ? `#${team.primaryColor}` : '#007bff',
+      '--secondary-color': team.alternateColor ? `#${team.alternateColor}` : '#ffffff',
+      '--gradient-start': team.primaryColor ? `#${team.primaryColor}` : '#007bff',
+      '--gradient-end': team.alternateColor ? `#${team.alternateColor}` : '#0056b3'
+    };
+  };
+
+  const getWelcomeMessage = () => {
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+    
+    if (hour < 12) timeGreeting = 'Good morning';
+    else if (hour < 17) timeGreeting = 'Good afternoon';
+    else timeGreeting = 'Good evening';
+
+    const name = user?.firstName || user?.username || 'there';
+    const teamName = primaryTeam?.name || 'basketball';
+
+    return `${timeGreeting}, ${name}! Ready to analyze some ${teamName}?`;
+  };
+
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your personalized dashboard...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="personalized-dashboard"
+      style={getTeamBranding(primaryTeam)}
+    >
+      {/* Header with team branding */}
+      <div className="dashboard-header">
+        <div className="welcome-section">
+          <h1>{getWelcomeMessage()}</h1>
+          <p className="dashboard-subtitle">
+            Your personalized basketball analytics dashboard
+            {primaryTeam && ` • ${primaryTeam.name} focus`}
+          </p>
+        </div>
+        
+        {primaryTeam && (
+          <div className="team-branding">
+            <div className="team-logo">
+              {primaryTeam.logoUrl ? (
+                <img src={primaryTeam.logoUrl} alt={primaryTeam.name} />
+              ) : (
+                <div className="team-initial">{primaryTeam.abbreviation}</div>
+              )}
+            </div>
+            <div className="team-info">
+              <h2>{primaryTeam.name}</h2>
+              <p>{primaryTeam.conference} • {primaryTeam.division}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="quick-actions">
+        <Link to="/games" className="action-card">
+          <div className="action-icon">🏀</div>
+          <h3>Live Games</h3>
+          <p>Tag plays in real-time</p>
+        </Link>
+        
+        <Link to="/analytics" className="action-card">
+          <div className="action-icon">📊</div>
+          <h3>Analytics</h3>
+          <p>View insights & trends</p>
+        </Link>
+        
+        <Link to="/teams" className="action-card">
+          <div className="action-icon">🏆</div>
+          <h3>Teams</h3>
+          <p>Explore team data</p>
+        </Link>
+        
+        <Link to="/players" className="action-card">
+          <div className="action-icon">👤</div>
+          <h3>Players</h3>
+          <p>Player analysis</p>
+        </Link>
+      </div>
+
+      {/* Dashboard Content */}
+      <div className="dashboard-content">
+        {/* Recent Games */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2>Recent Games</h2>
+            <Link to="/games" className="view-all">View All</Link>
+          </div>
+          
+          <div className="games-grid">
+            {dashboardData.recentGames.map(game => (
+              <div key={game.espnId} className="game-card">
+                <div className="game-teams">
+                  <div className="team">
+                    <span className="team-name">{game.homeTeam?.abbreviation}</span>
+                    <span className="score">{game.homeScore || 0}</span>
+                  </div>
+                  <div className="vs">vs</div>
+                  <div className="team">
+                    <span className="team-name">{game.awayTeam?.abbreviation}</span>
+                    <span className="score">{game.awayScore || 0}</span>
+                  </div>
+                </div>
+                <div className="game-info">
+                  <span className="game-date">
+                    {new Date(game.date).toLocaleDateString()}
+                  </span>
+                  <span className={`game-status ${game.status.toLowerCase()}`}>
+                    {game.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Favorite Players Activity */}
+        {user?.favoritePlayers?.length > 0 && (
+          <div className="dashboard-section">
+            <div className="section-header">
+              <h2>Your Favorite Players</h2>
+              <Link to="/players" className="view-all">View All</Link>
+            </div>
+            
+            <div className="players-grid">
+              {user.favoritePlayers.slice(0, 4).map(player => (
+                <div key={player.espnId} className="player-card">
+                  <div className="player-avatar">
+                    {player.headshot ? (
+                      <img src={player.headshot} alt={player.fullName} />
+                    ) : (
+                      <div className="player-initial">
+                        {player.fullName?.split(' ').map(n => n[0]).join('')}
+                      </div>
+                    )}
+                  </div>
+                  <div className="player-info">
+                    <h3>{player.fullName}</h3>
+                    <p>{player.position} • {player.team?.abbreviation || 'FA'}</p>
+                  </div>
+                  <Link to={`/players/${player.espnId}`} className="player-link">
+                    View Stats →
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Plays */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2>Recent Plays</h2>
+            <Link to="/plays" className="view-all">View All</Link>
+          </div>
+          
+          <div className="plays-list">
+            {dashboardData.recentPlays.map(play => (
+              <div key={play.id} className="play-item">
+                <div className="play-time">
+                  {play.gameTime} Q{play.quarter}
+                </div>
+                <div className="play-description">
+                  {play.description || 'Play tagged'}
+                </div>
+                <div className="play-players">
+                  {play.ballHandler?.fullName && (
+                    <span className="player-tag">{play.ballHandler.fullName}</span>
+                  )}
+                  {play.primaryPlayer?.fullName && (
+                    <span className="player-tag">{play.primaryPlayer.fullName}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Upcoming Games */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2>Upcoming Games</h2>
+            <Link to="/games" className="view-all">View All</Link>
+          </div>
+          
+          <div className="upcoming-games">
+            {dashboardData.upcomingGames.map(game => (
+              <div key={game.espnId} className="upcoming-game">
+                <div className="game-teams">
+                  <span>{game.homeTeam?.abbreviation}</span>
+                  <span className="vs">vs</span>
+                  <span>{game.awayTeam?.abbreviation}</span>
+                </div>
+                <div className="game-date">
+                  {new Date(game.date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Quick Access */}
+      <div className="profile-quick-access">
+        <Link to="/profile" className="profile-link">
+          <div className="profile-avatar">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="Profile" />
+            ) : (
+              <div className="avatar-placeholder">
+                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+              </div>
+            )}
+          </div>
+          <div className="profile-info">
+            <h3>Update Profile</h3>
+            <p>Manage preferences & favorites</p>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default PersonalizedDashboard; 
