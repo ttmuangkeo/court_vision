@@ -13,6 +13,7 @@ const playsRouter = require('./src/api/plays');
 const analyticsRouter = require('./src/api/analytics');
 const patternsRouter = require('./src/api/patterns');
 const authRouter = require('./src/api/auth');
+const imagesRouter = require('./src/api/images');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRouter);
 app.use('/api/teams', teamsRouter);
 app.use('/api/players', playersRouter);
 app.use('/api/tags', tagsRouter);
@@ -39,6 +41,7 @@ app.use('/api/games', gamesRouter);
 app.use('/api/plays', playsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/patterns', patternsRouter);
+app.use('/api/images', imagesRouter);
 
 // API Docs
 app.get('/api', (req, res) => {
@@ -46,6 +49,7 @@ app.get('/api', (req, res) => {
        message: 'Court vision nba api',
        version: '1.0.0',
        endpoints: {
+           auth: '/api/auth',
            teams: '/api/teams',
            players: '/api/players',
            games: '/api/games',
@@ -53,6 +57,7 @@ app.get('/api', (req, res) => {
            plays: '/api/plays',
            analytics: '/api/analytics',
            patterns: '/api/patterns',
+           images: '/api/images',
        }
    });
 });

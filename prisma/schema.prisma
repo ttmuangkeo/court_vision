@@ -372,30 +372,37 @@ enum ContextType {
 }
 
 model User {
-  id              String       @id @default(cuid())
-  email           String       @unique
-  username        String       @unique
-  password        String       // Hashed password
-  firstName       String?
-  lastName        String?
-  avatar          String?      // Profile picture URL
-  bio             String?      // User bio
-  isActive        Boolean      @default(true)
-  role            UserRole     @default(USER)
-  emailVerified   Boolean      @default(false)
-  lastLoginAt     DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id                  String       @id @default(cuid())
+  email               String       @unique
+  username            String       @unique
+  password            String       // Hashed password
+  firstName           String?
+  lastName            String?
+  avatar              String?      // Profile picture URL
+  bio                 String?      // User bio
+  isActive            Boolean      @default(true)
+  role                UserRole     @default(USER)
+  emailVerified       Boolean      @default(false)
+  onboardingComplete  Boolean      @default(false) // Track if user completed onboarding
+  
+  // Onboarding fields
+  experienceLevel     String?      // "beginner", "intermediate", "advanced", "expert"
+  coachingRole        String?      // "head", "assistant", "volunteer", "player"
+  teamLevel           String?      // "youth", "high-school", "college", "pro"
+  
+  lastLoginAt         DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   // User Preferences
-  favoriteTeams   Team[]       @relation("UserFavoriteTeams")
-  favoritePlayers Player[]     @relation("UserFavoritePlayers")
+  favoriteTeams       Team[]       @relation("UserFavoriteTeams")
+  favoritePlayers     Player[]     @relation("UserFavoritePlayers")
   
   // User Activity
-  plays           Play[]       @relation("UserPlays")
-  playTags        PlayTag[]    @relation("UserPlayTags")
-  predictions     Prediction[] @relation("UserPredictions")
-  gameViewers     GameViewer[]
+  plays               Play[]       @relation("UserPlays")
+  playTags            PlayTag[]    @relation("UserPlayTags")
+  predictions         Prediction[] @relation("UserPredictions")
+  gameViewers         GameViewer[]
 
   @@map("users")
 }
