@@ -156,236 +156,156 @@ const PersonalizedDashboard = () => {
 
   return (
     <div 
-      className="personalized-dashboard"
-      style={getTeamBranding(primaryTeam)}
+      className="personalized-dashboard-modern"
     >
-      {/* Header with team branding */}
-      <div className="dashboard-header">
-        <div className="welcome-section">
-          <h1>{getWelcomeMessage()}</h1>
-          <p className="dashboard-subtitle">
-            Your personalized basketball analytics dashboard
-            {enrichedFavoriteTeams.length > 1
-              ? ` • Favorites: ${enrichedFavoriteTeams.map(t => t.abbreviation || t.name).join(', ')}`
-              : primaryTeam && ` • ${primaryTeam.name} focus`}
-          </p>
-        </div>
-        {/* Favorite Teams Chips/Logos */}
-        {enrichedFavoriteTeams.length > 1 && (
-          <div className="favorite-teams-chips">
-            {enrichedFavoriteTeams.map((team, idx) => (
-              <div
-                key={team.espnId}
-                className={`team-chip${idx === activeTeamIndex ? ' active' : ''}`}
-                onClick={() => setActiveTeamIndex(idx)}
-                style={{
-                  border: idx === activeTeamIndex ? '2px solid #222' : '1px solid #ccc',
-                  borderRadius: 20,
-                  padding: '4px 12px',
-                  marginRight: 8,
-                  cursor: 'pointer',
-                  background: idx === activeTeamIndex ? '#f0f4ff' : '#fff',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }}
-              >
-                {team.logoUrl ? (
-                  <img src={team.logoUrl} alt={team.abbreviation} style={{ width: 24, height: 24, marginRight: 6, borderRadius: '50%' }} />
-                ) : (
-                  <span style={{ fontWeight: 'bold', marginRight: 6 }}>{team.abbreviation}</span>
-                )}
-                <span>{team.name}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {primaryTeam && (
-          <div className="team-branding">
-            <div className="team-logo">
-              {primaryTeam.logoUrl ? (
-                <img src={primaryTeam.logoUrl} alt={primaryTeam.name} />
+      {/* Soft background gradient */}
+      <div className="dashboard-bg-gradient" />
+      <div className="dashboard-glass-card">
+        {/* Header with avatar, welcome, and favorite teams chips */}
+        <div className="dashboard-header-modern">
+          <div className="dashboard-header-left">
+            <div className="dashboard-avatar">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="avatar" />
               ) : (
-                <div className="team-initial">{primaryTeam.abbreviation}</div>
+                <div className="avatar-placeholder">
+                  {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                </div>
               )}
             </div>
-            <div className="team-info">
-              <h2>{primaryTeam.name}</h2>
-              <p>{primaryTeam.conference} • {primaryTeam.division}</p>
+            <div className="dashboard-welcome">
+              <h1>Welcome back, {user?.firstName || user?.username || 'there'}!</h1>
+              <div className="dashboard-streak">🔥 Streak: {user?.streak || 1} day{user?.streak === 1 ? '' : 's'}</div>
+              <div className="dashboard-fav-teams-chips">
+                {enrichedFavoriteTeams.map((team, idx) => (
+                  <div
+                    key={team.espnId}
+                    className={`team-chip-modern${idx === activeTeamIndex ? ' active' : ''}`}
+                    onClick={() => setActiveTeamIndex(idx)}
+                  >
+                    {team.logoUrl ? (
+                      <img src={team.logoUrl} alt={team.abbreviation} />
+                    ) : (
+                      <span>{team.abbreviation}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <Link to="/games" className="action-card">
-          <div className="action-icon">🏀</div>
-          <h3>Live Games</h3>
-          <p>Tag plays in real-time</p>
-        </Link>
-        
-        <Link to="/analytics" className="action-card">
-          <div className="action-icon">📊</div>
-          <h3>Analytics</h3>
-          <p>View insights & trends</p>
-        </Link>
-        
-        <Link to="/teams" className="action-card">
-          <div className="action-icon">🏆</div>
-          <h3>Teams</h3>
-          <p>Explore team data</p>
-        </Link>
-        
-        <Link to="/players" className="action-card">
-          <div className="action-icon">👤</div>
-          <h3>Players</h3>
-          <p>Player analysis</p>
-        </Link>
-      </div>
-
-      {/* Dashboard Content */}
-      <div className="dashboard-content">
-        {/* Recent Games */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Recent Games</h2>
-            <Link to="/games" className="view-all">View All</Link>
-          </div>
-          
-          <div className="games-grid">
-            {dashboardData.recentGames.map(game => (
-              <div key={game.espnId} className="game-card">
-                <div className="game-teams">
-                  <div className="team">
-                    <span className="team-name">{game.homeTeam?.abbreviation}</span>
-                    <span className="score">{game.homeScore || 0}</span>
-                  </div>
-                  <div className="vs">vs</div>
-                  <div className="team">
-                    <span className="team-name">{game.awayTeam?.abbreviation}</span>
-                    <span className="score">{game.awayScore || 0}</span>
-                  </div>
-                </div>
-                <div className="game-info">
-                  <span className="game-date">
-                    {new Date(game.date).toLocaleDateString()}
-                  </span>
-                  <span className={`game-status ${game.status.toLowerCase()}`}>
-                    {game.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="dashboard-header-right">
+            <div className="dashboard-tip">
+              <span role="img" aria-label="tip">💡</span> Tip: Tag plays live for better insights!
+            </div>
           </div>
         </div>
 
-        {/* Favorite Players Activity */}
-        {user?.favoritePlayers?.length > 0 && (
-          <div className="dashboard-section">
-            <div className="section-header">
-              <h2>Your Favorite Players</h2>
-              <Link to="/players" className="view-all">View All</Link>
+        {/* Quick Actions Modern */}
+        <div className="dashboard-quick-actions-modern">
+          <Link to="/games" className="quick-action-modern">
+            <span className="quick-action-icon">🏀</span>
+            <span>Tag a Game</span>
+          </Link>
+          <Link to="/analytics" className="quick-action-modern">
+            <span className="quick-action-icon">📊</span>
+            <span>View Analytics</span>
+          </Link>
+          <Link to="/teams" className="quick-action-modern">
+            <span className="quick-action-icon">🏆</span>
+            <span>Teams</span>
+          </Link>
+          <Link to="/players" className="quick-action-modern">
+            <span className="quick-action-icon">👤</span>
+            <span>Players</span>
+          </Link>
+        </div>
+
+        {/* Dashboard Content Modern */}
+        <div className="dashboard-content-modern">
+          {/* Recent Games - horizontally scrollable */}
+          <div className="dashboard-section-modern">
+            <div className="section-header-modern">
+              <h2>Recent Games</h2>
+              <Link to="/games" className="view-all-modern">View All</Link>
             </div>
-            
-            <div className="players-grid">
-              {user.favoritePlayers.slice(0, 4).map(player => (
-                <div key={player.espnId} className="player-card">
-                  <div className="player-avatar">
-                    {player.headshot ? (
-                      <img src={player.headshot} alt={player.fullName} />
-                    ) : (
-                      <div className="player-initial">
-                        {player.fullName?.split(' ').map(n => n[0]).join('')}
-                      </div>
-                    )}
+            <div className="games-scroll-row">
+              {dashboardData.recentGames.map(game => (
+                <div key={game.espnId} className="game-card-modern">
+                  <div className="game-teams-modern">
+                    <div className="team-modern">
+                      <span className="team-name-modern">{game.homeTeam?.abbreviation}</span>
+                      <span className="score-modern">{game.homeScore || 0}</span>
+                    </div>
+                    <div className="vs-modern">vs</div>
+                    <div className="team-modern">
+                      <span className="team-name-modern">{game.awayTeam?.abbreviation}</span>
+                      <span className="score-modern">{game.awayScore || 0}</span>
+                    </div>
                   </div>
-                  <div className="player-info">
-                    <h3>{player.fullName}</h3>
-                    <p>{player.position} • {player.team?.abbreviation || 'FA'}</p>
+                  <div className="game-info-modern">
+                    <span className="game-date-modern">
+                      {new Date(game.date).toLocaleDateString()}
+                    </span>
+                    <span className={`game-status-modern ${game.status.toLowerCase()}`}>
+                      {game.status}
+                    </span>
                   </div>
-                  <Link to={`/players/${player.espnId}`} className="player-link">
-                    View Stats →
-                  </Link>
                 </div>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Recent Plays */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Recent Plays</h2>
-            <Link to="/plays" className="view-all">View All</Link>
-          </div>
-          
-          <div className="plays-list">
-            {dashboardData.recentPlays.map(play => (
-              <div key={play.id} className="play-item">
-                <div className="play-time">
-                  {play.gameTime} Q{play.quarter}
-                </div>
-                <div className="play-description">
-                  {play.description || 'Play tagged'}
-                </div>
-                <div className="play-players">
-                  {play.ballHandler?.fullName && (
-                    <span className="player-tag">{play.ballHandler.fullName}</span>
-                  )}
-                  {play.primaryPlayer?.fullName && (
-                    <span className="player-tag">{play.primaryPlayer.fullName}</span>
-                  )}
-                </div>
+          {/* Favorite Players Activity - horizontally scrollable */}
+          {user?.favoritePlayers?.length > 0 && (
+            <div className="dashboard-section-modern">
+              <div className="section-header-modern">
+                <h2>Your Favorite Players</h2>
+                <Link to="/players" className="view-all-modern">View All</Link>
               </div>
-            ))}
+              <div className="players-scroll-row">
+                {user.favoritePlayers.slice(0, 8).map(player => (
+                  <div key={player.espnId} className="player-card-modern">
+                    <img src={player.headshot || '/default-player.png'} alt={player.fullName} className="player-avatar-modern" />
+                    <div className="player-info-modern">
+                      <h3>{player.fullName}</h3>
+                      <p>{player.position} • {player.teamAbbreviation || player.team?.abbreviation || 'FA'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Games */}
+          <div className="dashboard-section-modern">
+            <div className="section-header-modern">
+              <h2>Upcoming Games</h2>
+            </div>
+            <div className="games-scroll-row">
+              {dashboardData.upcomingGames.map(game => (
+                <div key={game.espnId} className="game-card-modern upcoming">
+                  <div className="game-teams-modern">
+                    <div className="team-modern">
+                      <span className="team-name-modern">{game.homeTeam?.abbreviation}</span>
+                    </div>
+                    <div className="vs-modern">vs</div>
+                    <div className="team-modern">
+                      <span className="team-name-modern">{game.awayTeam?.abbreviation}</span>
+                    </div>
+                  </div>
+                  <div className="game-info-modern">
+                    <span className="game-date-modern">
+                      {new Date(game.date).toLocaleDateString()}
+                    </span>
+                    <span className={`game-status-modern ${game.status.toLowerCase()}`}>
+                      {game.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-
-        {/* Upcoming Games */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Upcoming Games</h2>
-            <Link to="/games" className="view-all">View All</Link>
-          </div>
-          
-          <div className="upcoming-games">
-            {dashboardData.upcomingGames.map(game => (
-              <div key={game.espnId} className="upcoming-game">
-                <div className="game-teams">
-                  <span>{game.homeTeam?.abbreviation}</span>
-                  <span className="vs">vs</span>
-                  <span>{game.awayTeam?.abbreviation}</span>
-                </div>
-                <div className="game-date">
-                  {new Date(game.date).toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Quick Access */}
-      <div className="profile-quick-access">
-        <Link to="/profile" className="profile-link">
-          <div className="profile-avatar">
-            {user?.avatar ? (
-              <img src={user.avatar} alt="Profile" />
-            ) : (
-              <div className="avatar-placeholder">
-                {user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U'}
-              </div>
-            )}
-          </div>
-          <div className="profile-info">
-            <h3>Update Profile</h3>
-            <p>Manage preferences & favorites</p>
-          </div>
-        </Link>
       </div>
     </div>
   );

@@ -508,4 +508,377 @@
   .dashboard-section {
     padding: 1.5rem;
   }
+}
+
+/* Modern Dashboard Background */
+.personalized-dashboard-modern {
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  background: #f6f8fa;
+  overflow-x: hidden;
+}
+
+.dashboard-bg-gradient {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  background: linear-gradient(120deg, #e0e7ff 0%, #f6f8fa 60%, #f0f4ff 100%);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.dashboard-glass-card {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 40px auto 0 auto;
+  background: rgba(255,255,255,0.85);
+  border-radius: 32px;
+  box-shadow: 0 8px 32px rgba(60,80,180,0.08), 0 1.5px 8px rgba(0,0,0,0.04);
+  padding: 36px 32px 32px 32px;
+  backdrop-filter: blur(8px);
+  min-height: 80vh;
+}
+
+/* Header Modern */
+.dashboard-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+.dashboard-header-left {
+  display: flex;
+  align-items: center;
+}
+.dashboard-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24px;
+  box-shadow: 0 2px 8px rgba(60,80,180,0.08);
+  overflow: hidden;
+}
+.dashboard-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.avatar-placeholder {
+  font-size: 2.2rem;
+  color: #7b88a8;
+  font-weight: 600;
+}
+.dashboard-welcome h1 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: #1a1a2a;
+  letter-spacing: -1px;
+}
+.dashboard-streak {
+  font-size: 1.1rem;
+  color: #ff7e5f;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.dashboard-fav-teams-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.team-chip-modern {
+  display: flex;
+  align-items: center;
+  background: #f0f4ff;
+  border-radius: 20px;
+  padding: 4px 12px 4px 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border 0.2s, background 0.2s;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(60,80,180,0.06);
+}
+.team-chip-modern.active {
+  border: 2px solid #6366f1;
+  background: #e0e7ff;
+}
+.team-chip-modern img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin-right: 7px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(60,80,180,0.08);
+}
+
+.dashboard-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 180px;
+}
+.dashboard-tip {
+  background: #f0f4ff;
+  color: #6366f1;
+  border-radius: 16px;
+  padding: 8px 18px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(60,80,180,0.06);
+  margin-bottom: 8px;
+}
+
+/* Quick Actions Modern */
+.dashboard-quick-actions-modern {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  justify-content: center;
+}
+.quick-action-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f6f8fa;
+  border-radius: 18px;
+  padding: 18px 28px;
+  font-size: 1.1rem;
+  color: #222;
+  text-decoration: none;
+  box-shadow: 0 1.5px 8px rgba(60,80,180,0.06);
+  transition: background 0.18s, box-shadow 0.18s, color 0.18s;
+  font-weight: 600;
+}
+.quick-action-modern:hover {
+  background: #e0e7ff;
+  color: #6366f1;
+  box-shadow: 0 4px 16px rgba(60,80,180,0.10);
+}
+.quick-action-icon {
+  font-size: 2.1rem;
+  margin-bottom: 7px;
+}
+
+/* Dashboard Content Modern */
+.dashboard-content-modern {
+  margin-top: 18px;
+}
+.dashboard-section-modern {
+  margin-bottom: 32px;
+}
+.section-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.section-header-modern h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1a1a2a;
+  margin: 0;
+}
+.view-all-modern {
+  color: #6366f1;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.18s;
+}
+.view-all-modern:hover {
+  color: #3743b6;
+  text-decoration: underline;
+}
+
+/* Horizontally scrollable rows */
+.games-scroll-row, .players-scroll-row {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #e0e7ff #f6f8fa;
+}
+.games-scroll-row::-webkit-scrollbar, .players-scroll-row::-webkit-scrollbar {
+  height: 8px;
+  background: #f6f8fa;
+}
+.games-scroll-row::-webkit-scrollbar-thumb, .players-scroll-row::-webkit-scrollbar-thumb {
+  background: #e0e7ff;
+  border-radius: 8px;
+}
+
+/* Game Card Modern */
+.game-card-modern {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 1.5px 8px rgba(60,80,180,0.06);
+  padding: 18px 22px;
+  min-width: 220px;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.18s, background 0.18s;
+}
+.game-card-modern.upcoming {
+  border: 2px dashed #6366f1;
+  background: #f0f4ff;
+}
+.game-teams-modern {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.team-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.team-name-modern {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #3743b6;
+}
+.score-modern {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #222;
+}
+.vs-modern {
+  font-size: 1.1rem;
+  color: #7b88a8;
+  font-weight: 500;
+}
+.game-info-modern {
+  font-size: 0.98rem;
+  color: #7b88a8;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.game-date-modern {
+  font-size: 0.97rem;
+  color: #6366f1;
+  font-weight: 500;
+}
+.game-status-modern {
+  font-size: 0.95rem;
+  color: #7b88a8;
+  font-weight: 500;
+}
+.game-status-modern.scheduled {
+  color: #6366f1;
+}
+
+/* Player Card Modern */
+.player-card-modern {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 1.5px 8px rgba(60,80,180,0.06);
+  padding: 16px 18px;
+  min-width: 170px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.18s, background 0.18s;
+}
+.player-avatar-modern {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+  background: #e0e7ff;
+  box-shadow: 0 1px 4px rgba(60,80,180,0.08);
+}
+.player-info-modern h3 {
+  font-size: 1.08rem;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+  color: #1a1a2a;
+}
+.player-info-modern p {
+  font-size: 0.97rem;
+  color: #7b88a8;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .dashboard-glass-card {
+    padding: 18px 6px 18px 6px;
+    max-width: 98vw;
+  }
+  .dashboard-header-modern {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .dashboard-quick-actions-modern {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .games-scroll-row, .players-scroll-row {
+    gap: 10px;
+  }
+}
+@media (max-width: 600px) {
+  .dashboard-glass-card {
+    margin: 10px auto 0 auto;
+    min-height: 90vh;
+    border-radius: 16px;
+    padding: 8px 2px 8px 2px;
+  }
+  .dashboard-header-modern {
+    gap: 10px;
+  }
+  .dashboard-avatar {
+    width: 44px;
+    height: 44px;
+    margin-right: 12px;
+  }
+  .dashboard-welcome h1 {
+    font-size: 1.2rem;
+  }
+  .dashboard-streak {
+    font-size: 0.95rem;
+  }
+  .team-chip-modern {
+    font-size: 0.95rem;
+    padding: 2px 7px 2px 3px;
+  }
+  .team-chip-modern img {
+    width: 18px;
+    height: 18px;
+    margin-right: 3px;
+  }
+  .quick-action-modern {
+    padding: 10px 10px;
+    font-size: 0.98rem;
+  }
+  .quick-action-icon {
+    font-size: 1.3rem;
+  }
+  .game-card-modern, .player-card-modern {
+    min-width: 120px;
+    max-width: 140px;
+    padding: 8px 6px;
+  }
+  .player-avatar-modern {
+    width: 32px;
+    height: 32px;
+  }
 } 
