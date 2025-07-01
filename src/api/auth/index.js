@@ -48,7 +48,13 @@ router.get('/me', authenticateJWT, async (req, res) => {
                         espnId: true,
                         fullName: true,
                         position: true,
-                        teamEspnId: true
+                        headshot: true,
+                        teamEspnId: true,
+                        team: {
+                            select: {
+                                abbreviation: true
+                            }
+                        }
                     }
                 }
             }
@@ -169,23 +175,57 @@ router.post('/login', async (req, res) => {
             data: { lastLoginAt: new Date() }
         });
 
+        // Fetch user with favorite teams and players
+        const userWithFavorites = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+                id: true,
+                email: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+                bio: true,
+                isActive: true,
+                role: true,
+                emailVerified: true,
+                lastLoginAt: true,
+                createdAt: true,
+                updatedAt: true,
+                experienceLevel: true,
+                coachingRole: true,
+                teamLevel: true,
+                onboardingComplete: true,
+                favoriteTeams: {
+                    select: {
+                        espnId: true,
+                        name: true,
+                        abbreviation: true,
+                        logoUrl: true
+                    }
+                },
+                favoritePlayers: {
+                    select: {
+                        espnId: true,
+                        fullName: true,
+                        position: true,
+                        headshot: true,
+                        teamEspnId: true,
+                        team: {
+                            select: {
+                                abbreviation: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
         const token = generateToken(user);
         res.json({
             success: true,
             token,
-            user: {
-                id: user.id, 
-                email: user.email, 
-                username: user.username,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                experienceLevel: user.experienceLevel,
-                coachingRole: user.coachingRole,
-                teamLevel: user.teamLevel,
-                onboardingComplete: user.onboardingComplete,
-                favoriteTeams: [],
-                favoritePlayers: []
-            }
+            user: userWithFavorites
         });
     } catch (error) {
         console.error('Login error:', error);

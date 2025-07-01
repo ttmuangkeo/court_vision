@@ -1,6 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Axios interceptor: always attach token from localStorage
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -101,6 +113,16 @@ export const AuthProvider = ({ children }) => {
         setUser(prev => ({ ...prev, onboardingComplete: true }));
     };
 
+    const refreshUser = async () => {
+        try {
+            const response = await axios.get('/api/auth/me');
+            setUser(response.data.user);
+            setOnboardingComplete(response.data.user.onboardingComplete || false);
+        } catch (error) {
+            console.error('Failed to refresh user data:', error);
+        }
+    };
+
     const value = {
         user,
         loading,
@@ -109,7 +131,8 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateUser,
-        completeOnboarding
+        completeOnboarding,
+        refreshUser
     };
 
     return (

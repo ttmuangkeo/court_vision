@@ -4,7 +4,7 @@ import axios from 'axios';
 import './UserProfile.css';
 
 const UserProfile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [teams, setTeams] = useState([]);
@@ -122,7 +122,7 @@ const UserProfile = () => {
       });
 
       if (response.data.success) {
-        updateUser(response.data.user);
+        await refreshUser();
         alert('Profile updated successfully!');
       }
     } catch (error) {
@@ -357,7 +357,15 @@ const UserProfile = () => {
                     className={`player-card${selectedPlayers.includes(player.espnId) ? ' selected' : ''}`}
                     onClick={() => handlePlayerToggle(player.espnId)}
                   >
-                    <img src={player.headshot || '/default-player.png'} alt={player.fullName} className="player-avatar" />
+                    <div className="player-avatar">
+                      {player.headshot ? (
+                        <img src={player.headshot} alt={player.fullName} />
+                      ) : (
+                        <div className="player-initials">
+                          {(player.fullName || 'P').split(' ').map(n => n[0]).join('')}
+                        </div>
+                      )}
+                    </div>
                     <div className="player-info">
                       <h3>{player.fullName}</h3>
                       <p>{player.position} • {player.team?.abbreviation || (player.teamEspnId ? teams.find(t => t.espnId === player.teamEspnId)?.abbreviation : 'FA')}</p>

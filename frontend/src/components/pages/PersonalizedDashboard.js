@@ -5,7 +5,7 @@ import axios from 'axios';
 import './PersonalizedDashboard.css';
 
 const PersonalizedDashboard = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     recentGames: [],
@@ -18,6 +18,28 @@ const PersonalizedDashboard = () => {
   const [allTeams, setAllTeams] = useState([]);
   const [enrichedFavoriteTeams, setEnrichedFavoriteTeams] = useState([]);
   const [activeTeamIndex, setActiveTeamIndex] = useState(0);
+
+  // Refresh user data when dashboard loads to ensure we have latest data
+  useEffect(() => {
+    const refreshUserData = async () => {
+      if (user) {
+        console.log('Dashboard: Refreshing user data...');
+        await refreshUser();
+      }
+    };
+    refreshUserData();
+  }, []); // Only run once when component mounts
+
+  // Debug logging for user data
+  useEffect(() => {
+    if (user?.favoritePlayers) {
+      console.log('Dashboard: User favorite players:', user.favoritePlayers.map(p => ({
+        name: p.fullName,
+        headshot: p.headshot,
+        hasHeadshot: !!p.headshot
+      })));
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -40,6 +62,18 @@ const PersonalizedDashboard = () => {
       allTeams.find(t => t.espnId === fav.espnId) || fav
     );
     setEnrichedFavoriteTeams(enriched);
+    
+    // Debug logging
+    console.log('User favorite players:', user.favoritePlayers);
+    if (user.favoritePlayers && user.favoritePlayers.length > 0) {
+      user.favoritePlayers.forEach(player => {
+        console.log(`Player ${player.fullName}:`, {
+          espnId: player.espnId,
+          headshot: player.headshot,
+          hasHeadshot: !!player.headshot
+        });
+      });
+    }
   }, [user, allTeams]);
 
   useEffect(() => {
@@ -265,7 +299,15 @@ const PersonalizedDashboard = () => {
               <div className="players-scroll-row">
                 {user.favoritePlayers.slice(0, 8).map(player => (
                   <div key={player.espnId} className="player-card-modern">
-                    <img src={player.headshot || '/default-player.png'} alt={player.fullName} className="player-avatar-modern" />
+                    <div className="player-avatar-modern">
+                      {player.headshot ? (
+                        <img src={player.headshot} alt={player.fullName} />
+                      ) : (
+                        <div className="player-initials">
+                          {(player.fullName || 'P').split(' ').map(n => n[0]).join('')}
+                        </div>
+                      )}
+                    </div>
                     <div className="player-info-modern">
                       <h3>{player.fullName}</h3>
                       <p>{player.position} • {player.teamAbbreviation || player.team?.abbreviation || 'FA'}</p>

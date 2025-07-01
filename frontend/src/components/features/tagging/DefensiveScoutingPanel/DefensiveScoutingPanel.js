@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DefensiveScoutingPanel.css';
+import axios from 'axios';
 
 const DefensiveScoutingPanel = ({ playerId, playerName, gameId }) => {
     const [scoutingData, setScoutingData] = useState(null);
@@ -21,8 +22,8 @@ const DefensiveScoutingPanel = ({ playerId, playerName, gameId }) => {
                 ? `/api/analytics/defensive-scouting/${playerId}?gameId=${gameId}`
                 : `/api/analytics/defensive-scouting/${playerId}`;
             
-            const response = await fetch(url);
-            const data = await response.json();
+            const response = await axios.get(url);
+            const data = response.data;
             
             if (data.success) {
                 setScoutingData(data.data);
