@@ -15,6 +15,32 @@ const PersonalizedDashboard = () => {
     upcomingGames: []
   });
   const [primaryTeam, setPrimaryTeam] = useState(null);
+  const [allTeams, setAllTeams] = useState([]);
+  const [enrichedFavoriteTeams, setEnrichedFavoriteTeams] = useState([]);
+  const [activeTeamIndex, setActiveTeamIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const res = await axios.get('/api/teams');
+        setAllTeams(res.data.data || []);
+      } catch (err) {
+        setAllTeams([]);
+      }
+    };
+    fetchTeams();
+  }, []);
+
+  useEffect(() => {
+    if (!user?.favoriteTeams || allTeams.length === 0) {
+      setEnrichedFavoriteTeams([]);
+      return;
+    }
+    const enriched = user.favoriteTeams.map(fav =>
+      allTeams.find(t => t.espnId === fav.espnId) || fav
+    );
+    setEnrichedFavoriteTeams(enriched);
+  }, [user, allTeams]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -27,9 +53,9 @@ const PersonalizedDashboard = () => {
           return;
         }
         
-        // Get user's primary favorite team (first one)
-        if (user?.favoriteTeams?.length > 0) {
-          setPrimaryTeam(user.favoriteTeams[0]);
+        // Use enriched favorite teams for branding
+        if (enrichedFavoriteTeams.length > 0) {
+          setPrimaryTeam(enrichedFavoriteTeams[activeTeamIndex] || enrichedFavoriteTeams[0]);
         }
 
         // Fetch dashboard data
@@ -83,10 +109,10 @@ const PersonalizedDashboard = () => {
       }
     };
 
-    if (user) {
+    if (user && enrichedFavoriteTeams.length > 0) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, activeTeamIndex, enrichedFavoriteTeams]);
 
   const getTeamBranding = (team) => {
     if (!team) return {};
@@ -133,10 +159,40 @@ const PersonalizedDashboard = () => {
           <h1>{getWelcomeMessage()}</h1>
           <p className="dashboard-subtitle">
             Your personalized basketball analytics dashboard
-            {primaryTeam && ` • ${primaryTeam.name} focus`}
+            {enrichedFavoriteTeams.length > 1
+              ? ` • Favorites: ${enrichedFavoriteTeams.map(t => t.abbreviation || t.name).join(', ')}`
+              : primaryTeam && ` • ${primaryTeam.name} focus`}
           </p>
         </div>
-        
+        {/* Favorite Teams Chips/Logos */}
+        {enrichedFavoriteTeams.length > 1 && (
+          <div className="favorite-teams-chips">
+            {enrichedFavoriteTeams.map((team, idx) => (
+              <div
+                key={team.espnId}
+                className={`team-chip${idx === activeTeamIndex ? ' active' : ''}`}
+                onClick={() => setActiveTeamIndex(idx)}
+                style={{
+                  border: idx === activeTeamIndex ? '2px solid #222' : '1px solid #ccc',
+                  borderRadius: 20,
+                  padding: '4px 12px',
+                  marginRight: 8,
+                  cursor: 'pointer',
+                  background: idx === activeTeamIndex ? '#f0f4ff' : '#fff',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+              >
+                {team.logoUrl ? (
+                  <img src={team.logoUrl} alt={team.abbreviation} style={{ width: 24, height: 24, marginRight: 6, borderRadius: '50%' }} />
+                ) : (
+                  <span style={{ fontWeight: 'bold', marginRight: 6 }}>{team.abbreviation}</span>
+                )}
+                <span>{team.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {primaryTeam && (
           <div className="team-branding">
             <div className="team-logo">
