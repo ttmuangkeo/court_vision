@@ -131,7 +131,9 @@ router.post('/register', async (req, res) => {
                 experienceLevel: user.experienceLevel,
                 coachingRole: user.coachingRole,
                 teamLevel: user.teamLevel,
-                onboardingComplete: user.onboardingComplete
+                onboardingComplete: user.onboardingComplete,
+                favoriteTeams: [],
+                favoritePlayers: []
             }
         });
     } catch (error) {
@@ -180,7 +182,9 @@ router.post('/login', async (req, res) => {
                 experienceLevel: user.experienceLevel,
                 coachingRole: user.coachingRole,
                 teamLevel: user.teamLevel,
-                onboardingComplete: user.onboardingComplete
+                onboardingComplete: user.onboardingComplete,
+                favoriteTeams: [],
+                favoritePlayers: []
             }
         });
     } catch (error) {

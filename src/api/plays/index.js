@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../../db/client');
+const authenticateJWT = require('../../middleware/auth');
 
 // GET /api/plays - Get all plays (with optional filters)
 router.get('/', async (req, res) => {
@@ -123,7 +124,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/plays - Create a new play (and tags)
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const {
       gameId,
@@ -144,6 +145,9 @@ router.post('/', async (req, res) => {
       tags = [],
     } = req.body;
 
+    // Use authenticated user's ID instead of provided createdById
+    const userId = req.user.id;
+
     // Create the play
     const play = await prisma.play.create({
       data: {
@@ -161,7 +165,7 @@ router.post('/', async (req, res) => {
         secondaryPlayerId,
         result,
         points,
-        createdById,
+        createdById: userId, // Use authenticated user's ID
         tags: {
           create: tags.map((tag) => ({
             tagId: tag.tagId,
@@ -169,7 +173,7 @@ router.post('/', async (req, res) => {
             teamId: tag.teamId,
             context: tag.context,
             confidence: tag.confidence ?? 1.0,
-            createdById,
+            createdById: userId, // Use authenticated user's ID
           })),
         },
       },

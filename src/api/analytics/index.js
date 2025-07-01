@@ -1,17 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../../db/client');
+const authenticateJWT = require('../../middleware/auth');
 
 // Get player patterns and tendencies
-router.get('/player-patterns/:playerId', async (req, res) => {
+router.get('/player-patterns/:playerId', authenticateJWT, async (req, res) => {
     try {
         const { playerId } = req.params;
         const { gameId } = req.query;
+        const userId = req.user.id;
 
-        // Get all plays where this player was involved
+        // Get all plays where this player was involved (filtered by user)
         const playerPlays = await prisma.playTag.findMany({
             where: {
                 playerId: playerId,
+                createdById: userId, // Filter by authenticated user
                 ...(gameId && { play: { gameId } })
             },
             include: {
@@ -78,15 +81,17 @@ router.get('/player-patterns/:playerId', async (req, res) => {
 });
 
 // Get team tendencies
-router.get('/team-tendencies/:teamId', async (req, res) => {
+router.get('/team-tendencies/:teamId', authenticateJWT, async (req, res) => {
     try {
         const { teamId } = req.params;
         const { gameId } = req.query;
+        const userId = req.user.id;
 
-        // Get all plays for this team
+        // Get all plays for this team (filtered by user)
         const teamPlays = await prisma.playTag.findMany({
             where: {
                 teamId: teamId,
+                createdById: userId, // Filter by authenticated user
                 ...(gameId && { play: { gameId } })
             },
             include: {
@@ -153,15 +158,17 @@ router.get('/team-tendencies/:teamId', async (req, res) => {
 });
 
 // Get defensive scouting report for a player
-router.get('/defensive-scouting/:playerId', async (req, res) => {
+router.get('/defensive-scouting/:playerId', authenticateJWT, async (req, res) => {
     try {
         const { playerId } = req.params;
         const { gameId } = req.query;
+        const userId = req.user.id;
 
-        // Get all plays with sequences for this player
+        // Get all plays with sequences for this player (filtered by user)
         const playerPlays = await prisma.playTag.findMany({
             where: {
                 playerId: playerId,
+                createdById: userId, // Filter by authenticated user
                 ...(gameId && { play: { gameId } })
             },
             include: {
@@ -702,15 +709,17 @@ router.get('/suggestions', async (req, res) => {
 });
 
 // Get player decision quality analysis
-router.get('/decision-quality/:playerId', async (req, res) => {
+router.get('/decision-quality/:playerId', authenticateJWT, async (req, res) => {
     try {
         const { playerId } = req.params;
         const { gameId } = req.query;
+        const userId = req.user.id;
 
-        // Get all plays with sequences for this player
+        // Get all plays with sequences for this player (filtered by user)
         const playerPlays = await prisma.playTag.findMany({
             where: {
                 playerId: playerId,
+                createdById: userId, // Filter by authenticated user
                 ...(gameId && { play: { gameId } })
             },
             include: {
@@ -1212,273 +1221,6 @@ router.get('/next-tag-suggestions', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to generate next tag suggestions'
-        });
-    }
-});
-
-// Get defensive scouting report for a player
-router.get('/defensive-scouting/:playerId', async (req, res) => {
-    try {
-        const { playerId } = req.params;
-        const { gameId } = req.query;
-
-        // Get all plays with sequences for this player
-        const playerPlays = await prisma.playTag.findMany({
-            where: {
-                playerId: playerId,
-                ...(gameId && { play: { gameId } })
-            },
-            include: {
-                tag: true,
-                play: {
-                    include: {
-                        tags: {
-                            include: {
-                                tag: true
-                            }
-                        }
-                    }
-                }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
-
-        // Group plays by their sequences
-        const playSequences = {};
-        playerPlays.forEach(playTag => {
-            const playId = playTag.playId;
-            if (!playSequences[playId]) {
-                playSequences[playId] = [];
-            }
-            playSequences[playId].push({
-                tag: playTag.tag.name,
-                sequence: playTag.context?.sequence || 1,
-                context: playTag.context
-            });
-        });
-
-        // Analyze offensive patterns
-        const offensivePatterns = {
-            mostFrequentSequences: {},
-            screenUsage: {},
-            isolationTendencies: {},
-            pressureResponses: {},
-            shotSelection: {},
-            timingPatterns: {}
-        };
-
-        // Count sequence frequencies
-        Object.values(playSequences).forEach(sequence => {
-            const sortedSequence = sequence.sort((a, b) => a.sequence - b.sequence);
-            const sequenceString = sortedSequence.map(s => s.tag).join(' → ');
-            
-            if (!offensivePatterns.mostFrequentSequences[sequenceString]) {
-                offensivePatterns.mostFrequentSequences[sequenceString] = 0;
-            }
-            offensivePatterns.mostFrequentSequences[sequenceString]++;
-        });
-
-        // Analyze specific patterns
-        Object.values(playSequences).forEach(sequence => {
-            const sortedSequence = sequence.sort((a, b) => a.sequence - b.sequence);
-            const tags = sortedSequence.map(s => s.tag);
-
-            // Screen usage analysis
-            if (tags.includes('Calling for Screen')) {
-                const screenIndex = tags.indexOf('Calling for Screen');
-                const nextAction = tags[screenIndex + 1];
-                if (nextAction) {
-                    if (!offensivePatterns.screenUsage[nextAction]) {
-                        offensivePatterns.screenUsage[nextAction] = 0;
-                    }
-                    offensivePatterns.screenUsage[nextAction]++;
-                }
-            }
-
-            // Isolation analysis
-            if (tags.includes('Isolation')) {
-                const isolationIndex = tags.indexOf('Isolation');
-                const nextAction = tags[isolationIndex + 1];
-                if (nextAction) {
-                    if (!offensivePatterns.isolationTendencies[nextAction]) {
-                        offensivePatterns.isolationTendencies[nextAction] = 0;
-                    }
-                    offensivePatterns.isolationTendencies[nextAction]++;
-                }
-            }
-
-            // Pressure response analysis
-            if (tags.includes('Double Teamed')) {
-                const pressureIndex = tags.indexOf('Double Teamed');
-                const nextAction = tags[pressureIndex + 1];
-                if (nextAction) {
-                    if (!offensivePatterns.pressureResponses[nextAction]) {
-                        offensivePatterns.pressureResponses[nextAction] = 0;
-                    }
-                    offensivePatterns.pressureResponses[nextAction]++;
-                }
-            }
-
-            // Shot selection analysis
-            const shotActions = ['Pull Up Shot', 'Step Back Shot', 'Fade Away', 'Layup/Dunk'];
-            shotActions.forEach(shotAction => {
-                if (tags.includes(shotAction)) {
-                    if (!offensivePatterns.shotSelection[shotAction]) {
-                        offensivePatterns.shotSelection[shotAction] = 0;
-                    }
-                    offensivePatterns.shotSelection[shotAction]++;
-                }
-            });
-        });
-
-        // Generate defensive strategies
-        const defensiveStrategies = {
-            primaryDefensiveFocus: [],
-            screenDefense: [],
-            isolationDefense: [],
-            pressureDefense: [],
-            shotContest: [],
-            gamePlan: []
-        };
-
-        // Analyze most frequent sequences and create counter-strategies
-        const sortedSequences = Object.entries(offensivePatterns.mostFrequentSequences)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 5);
-
-        sortedSequences.forEach(([sequence, count]) => {
-            const tags = sequence.split(' → ');
-            
-            // Counter-strategies based on sequence patterns
-            if (sequence.includes('Calling for Screen → Screen Mismatch')) {
-                defensiveStrategies.screenDefense.push({
-                    strategy: 'Switch Screens Early',
-                    reasoning: `Player used screen mismatch ${count} times - prevent mismatch creation`,
-                    execution: 'Switch on screen calls before mismatch develops',
-                    priority: 'High'
-                });
-            }
-
-            if (sequence.includes('Calling for Screen → Pick and Roll')) {
-                defensiveStrategies.screenDefense.push({
-                    strategy: 'Hedge and Recover',
-                    reasoning: `Player frequently uses pick and roll (${count} times)`,
-                    execution: 'Hedge the screen, then recover to prevent drive',
-                    priority: 'High'
-                });
-            }
-
-            if (sequence.includes('Isolation')) {
-                const isolationResponses = offensivePatterns.isolationTendencies;
-                const mostCommonResponse = Object.entries(isolationResponses)
-                    .sort(([,a], [,b]) => b - a)[0];
-                
-                if (mostCommonResponse) {
-                    defensiveStrategies.isolationDefense.push({
-                        strategy: `Force ${mostCommonResponse[0]}`,
-                        reasoning: `In isolation, player most often responds with ${mostCommonResponse[0]} (${mostCommonResponse[1]} times)`,
-                        execution: `Take away ${mostCommonResponse[0]} option, force counter`,
-                        priority: 'Medium'
-                    });
-                }
-            }
-
-            if (sequence.includes('Double Teamed')) {
-                const pressureResponses = offensivePatterns.pressureResponses;
-                const mostCommonResponse = Object.entries(pressureResponses)
-                    .sort(([,a], [,b]) => b - a)[0];
-                
-                if (mostCommonResponse) {
-                    defensiveStrategies.pressureDefense.push({
-                        strategy: `Prevent ${mostCommonResponse[0]}`,
-                        reasoning: `When pressured, player most often responds with ${mostCommonResponse[0]} (${mostCommonResponse[1]} times)`,
-                        execution: `Take away ${mostCommonResponse[0]} option, force different response`,
-                        priority: 'High'
-                    });
-                }
-            }
-        });
-
-        // Shot contest strategies
-        const shotPatterns = offensivePatterns.shotSelection;
-        Object.entries(shotPatterns).forEach(([shotType, count]) => {
-            if (shotType === 'Pull Up Shot' && count > 2) {
-                defensiveStrategies.shotContest.push({
-                    strategy: 'Contest Pull-Ups Aggressively',
-                    reasoning: `Player frequently uses pull-up shots (${count} times)`,
-                    execution: 'Close out hard, contest every pull-up attempt',
-                    priority: 'High'
-                });
-            }
-
-            if (shotType === 'Step Back Shot' && count > 2) {
-                defensiveStrategies.shotContest.push({
-                    strategy: 'Stay Attached on Step-Backs',
-                    reasoning: `Player uses step-back shots (${count} times)`,
-                    execution: 'Stay close, don\'t bite on step-back fakes',
-                    priority: 'Medium'
-                });
-            }
-        });
-
-        // Generate overall game plan
-        const totalPlays = Object.keys(playSequences).length;
-        const screenUsage = Object.values(offensivePatterns.screenUsage).reduce((sum, count) => sum + count, 0);
-        const screenPercentage = (screenUsage / totalPlays) * 100;
-
-        if (screenPercentage > 50) {
-            defensiveStrategies.gamePlan.push({
-                strategy: 'Disrupt Screen Actions',
-                reasoning: `Player heavily relies on screens (${screenPercentage.toFixed(1)}% of plays)`,
-                execution: 'Switch screens, hedge aggressively, prevent clean screen execution',
-                priority: 'Critical'
-            });
-        }
-
-        const isolationCount = Object.values(offensivePatterns.isolationTendencies).reduce((sum, count) => sum + count, 0);
-        if (isolationCount > 3) {
-            defensiveStrategies.gamePlan.push({
-                strategy: 'Force Isolation Decisions',
-                reasoning: `Player uses isolation frequently (${isolationCount} times)`,
-                execution: 'Force isolation but take away preferred counter-moves',
-                priority: 'High'
-            });
-        }
-
-        // Set primary defensive focus
-        if (screenPercentage > 50) {
-            defensiveStrategies.primaryDefensiveFocus.push('Screen Defense');
-        }
-        if (isolationCount > 3) {
-            defensiveStrategies.primaryDefensiveFocus.push('Isolation Defense');
-        }
-        if (Object.keys(offensivePatterns.pressureResponses).length > 0) {
-            defensiveStrategies.primaryDefensiveFocus.push('Pressure Defense');
-        }
-
-        res.json({
-            success: true,
-            data: {
-                playerId,
-                totalPlays,
-                offensivePatterns,
-                defensiveStrategies,
-                keyInsights: {
-                    mostFrequentSequence: sortedSequences[0] ? sortedSequences[0][0] : 'None',
-                    screenDependency: screenPercentage,
-                    isolationFrequency: isolationCount,
-                    pressureResponse: Object.keys(offensivePatterns.pressureResponses).length > 0 ? 
-                        Object.entries(offensivePatterns.pressureResponses).sort(([,a], [,b]) => b - a)[0] : null
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error generating defensive scouting report:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to generate defensive scouting report'
         });
     }
 });

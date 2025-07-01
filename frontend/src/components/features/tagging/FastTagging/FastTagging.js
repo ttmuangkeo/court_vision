@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../../common/AuthContext';
 import GameHeader from '../GameHeader';
 import PlayerSelector from '../PlayerSelector';
 import GameTimeInput from '../GameTimeInput/GameTimeInput';
@@ -9,7 +10,7 @@ import PredictionPanel from '../PredictionPanel';
 import DecisionQualityPanel from '../DecisionQualityPanel';
 import './FastTagging.css';
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:3000/api';
 
 function useWindowWidth() {
   const [width, setWidth] = React.useState(window.innerWidth);
@@ -38,6 +39,8 @@ function FastTagging() {
 
   const width = useWindowWidth();
   const isVeryNarrow = width < 900;
+
+  const { user } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -131,7 +134,12 @@ function FastTagging() {
       return;
     }
     try {
-      const createdById = 'demo-user-1';
+      const createdById = user?.id; // Use authenticated user's ID
+      if (!createdById) {
+        alert('Please log in to tag plays');
+        return;
+      }
+      
       const playData = {
         gameId,
         description: `${currentPlayTags.map(t => t.actionName).join(' → ')} by ${selectedPlayer.fullName || selectedPlayer.name || 'Unknown Player'}`,

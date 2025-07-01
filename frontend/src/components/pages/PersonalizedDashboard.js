@@ -21,6 +21,12 @@ const PersonalizedDashboard = () => {
       try {
         setLoading(true);
         
+        // Wait for user object to be fully loaded
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        
         // Get user's primary favorite team (first one)
         if (user?.favoriteTeams?.length > 0) {
           setPrimaryTeam(user.favoriteTeams[0]);
@@ -32,27 +38,42 @@ const PersonalizedDashboard = () => {
           axios.get('/api/plays?limit=20')
         ]);
 
-        // Filter data based on user preferences
-        const recentGames = gamesRes.data.filter(game => {
-          if (!user?.favoriteTeams?.length) return true;
+        // Handle API response structure
+        const gamesData = gamesRes.data.data || gamesRes.data || [];
+        const playsData = playsRes.data.data || playsRes.data || [];
+
+        // Ensure we have arrays
+        const gamesArray = Array.isArray(gamesData) ? gamesData : [];
+        const playsArray = Array.isArray(playsData) ? playsData : [];
+
+        // Debug logging
+        console.log('User object:', user);
+        console.log('Games data:', gamesArray);
+        console.log('Plays data:', playsArray);
+
+        // Filter data based on user preferences (only if user exists)
+        const recentGames = gamesArray.filter(game => {
+          if (!user || !user.favoriteTeams || !Array.isArray(user.favoriteTeams) || user.favoriteTeams.length === 0) return true;
           return user.favoriteTeams.some(team => 
-            team.espnId === game.homeTeamId || team.espnId === game.awayTeamId
+            team && team.espnId && (team.espnId === game.homeTeamId || team.espnId === game.awayTeamId)
           );
         });
 
-        const recentPlays = playsRes.data.filter(play => {
-          if (!user?.favoritePlayers?.length) return true;
+        const recentPlays = playsArray.filter(play => {
+          if (!user || !user.favoritePlayers || !Array.isArray(user.favoritePlayers) || user.favoritePlayers.length === 0) return true;
           return user.favoritePlayers.some(player => 
-            player.espnId === play.ballHandlerId || 
-            player.espnId === play.primaryPlayerId || 
-            player.espnId === play.secondaryPlayerId
+            player && player.espnId && (
+              player.espnId === play.ballHandlerId || 
+              player.espnId === play.primaryPlayerId || 
+              player.espnId === play.secondaryPlayerId
+            )
           );
         });
 
         setDashboardData({
           recentGames: recentGames.slice(0, 5),
           recentPlays: recentPlays.slice(0, 10),
-          upcomingGames: gamesRes.data.filter(game => game.status === 'SCHEDULED').slice(0, 3)
+          upcomingGames: gamesArray.filter(game => game.status === 'SCHEDULED').slice(0, 3)
         });
 
       } catch (error) {
