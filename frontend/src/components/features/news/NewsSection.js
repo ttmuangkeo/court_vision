@@ -23,6 +23,21 @@ const NewsSection = ({ user }) => {
         }
       } catch (error) {
         console.error('Error fetching news:', error);
+        // Fallback to league news if dashboard fails
+        try {
+          const leagueResponse = await axios.get('/api/news/league?limit=10');
+          if (leagueResponse.data.success) {
+            setNews({
+              league: leagueResponse.data.data,
+              teams: [],
+              players: [],
+              featured: leagueResponse.data.data.slice(0, 4),
+              recent: leagueResponse.data.data
+            });
+          }
+        } catch (fallbackError) {
+          console.error('Error fetching fallback news:', fallbackError);
+        }
       } finally {
         setLoading(false);
       }
@@ -91,6 +106,43 @@ const NewsSection = ({ user }) => {
     }
   };
 
+  const getEmptyStateMessage = (tab) => {
+    switch (tab) {
+      case 'teams':
+        if (!user?.favoriteTeams || user.favoriteTeams.length === 0) {
+          return {
+            title: 'No Favorite Teams',
+            message: 'Add favorite teams to your profile to see team-specific news!',
+            action: 'Go to Profile'
+          };
+        }
+        return {
+          title: 'No Team News Available',
+          message: 'No recent news found for your favorite teams. Check back later!',
+          action: null
+        };
+      case 'players':
+        if (!user?.favoritePlayers || user.favoritePlayers.length === 0) {
+          return {
+            title: 'No Favorite Players',
+            message: 'Add favorite players to your profile to see player-specific news!',
+            action: 'Go to Profile'
+          };
+        }
+        return {
+          title: 'No Player News Available',
+          message: 'No recent news found for your favorite players. Check back later!',
+          action: null
+        };
+      default:
+        return {
+          title: 'No News Available',
+          message: 'No news found for this category. Check back later!',
+          action: null
+        };
+    }
+  };
+
   if (loading) {
     return (
       <div className="news-section-modern">
@@ -106,6 +158,7 @@ const NewsSection = ({ user }) => {
   }
 
   const currentNews = getNewsByTab();
+  const emptyState = getEmptyStateMessage(activeTab);
 
   return (
     <div className="news-section-modern">
@@ -128,12 +181,16 @@ const NewsSection = ({ user }) => {
       <div className="news-content">
         {currentNews.length === 0 ? (
           <div className="no-news">
-            <p>No news available for this category.</p>
-            {activeTab === 'teams' && user?.favoriteTeams?.length === 0 && (
-              <p>Add favorite teams to see team news!</p>
-            )}
-            {activeTab === 'players' && user?.favoritePlayers?.length === 0 && (
-              <p>Add favorite players to see player news!</p>
+            <div className="no-news-icon">📰</div>
+            <h3>{emptyState.title}</h3>
+            <p>{emptyState.message}</p>
+            {emptyState.action && (
+              <button 
+                className="no-news-action"
+                onClick={() => window.location.href = '/profile'}
+              >
+                {emptyState.action}
+              </button>
             )}
           </div>
         ) : (

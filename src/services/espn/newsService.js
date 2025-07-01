@@ -30,23 +30,26 @@ class NewsService {
   }
 
   /**
-   * Fetch news for a specific team
+   * Filter news by team - uses general news and filters by team categories
    * @param {string} teamId - ESPN team ID
    * @param {number} limit - Number of articles to fetch (default: 5)
    * @returns {Promise<Array>} Array of news articles
    */
   async getTeamNews(teamId, limit = 5) {
     try {
-      const response = await axios.get(`${this.baseUrl}/teams/${teamId}/news`, {
-        params: { limit },
-        timeout: 10000
+      // Get general news and filter by team
+      const allNews = await this.getLeagueNews(50); // Get more to filter from
+      const teamNews = allNews.filter(article => {
+        // Check if article has team categories that match the teamId
+        if (article.categories && Array.isArray(article.categories)) {
+          return article.categories.some(category => 
+            category.type === 'team' && category.teamId === parseInt(teamId)
+          );
+        }
+        return false;
       });
 
-      if (response.data && response.data.articles) {
-        return response.data.articles.map(article => this.transformArticle(article));
-      }
-
-      return [];
+      return teamNews.slice(0, limit);
     } catch (error) {
       console.error(`Error fetching team news for ${teamId}:`, error.message);
       return [];
@@ -54,23 +57,26 @@ class NewsService {
   }
 
   /**
-   * Fetch news for a specific player
+   * Filter news by player - uses general news and filters by player categories
    * @param {string} playerId - ESPN player ID
    * @param {number} limit - Number of articles to fetch (default: 5)
    * @returns {Promise<Array>} Array of news articles
    */
   async getPlayerNews(playerId, limit = 5) {
     try {
-      const response = await axios.get(`${this.baseUrl}/athletes/${playerId}/news`, {
-        params: { limit },
-        timeout: 10000
+      // Get general news and filter by player
+      const allNews = await this.getLeagueNews(50); // Get more to filter from
+      const playerNews = allNews.filter(article => {
+        // Check if article has athlete categories that match the playerId
+        if (article.categories && Array.isArray(article.categories)) {
+          return article.categories.some(category => 
+            category.type === 'athlete' && category.athleteId === parseInt(playerId)
+          );
+        }
+        return false;
       });
 
-      if (response.data && response.data.articles) {
-        return response.data.articles.map(article => this.transformArticle(article));
-      }
-
-      return [];
+      return playerNews.slice(0, limit);
     } catch (error) {
       console.error(`Error fetching player news for ${playerId}:`, error.message);
       return [];
@@ -106,6 +112,28 @@ class NewsService {
    * @returns {Object} Transformed article
    */
   transformArticle(article) {
+    // Extract team and player information from categories
+    const teams = [];
+    const players = [];
+    
+    if (article.categories && Array.isArray(article.categories)) {
+      article.categories.forEach(category => {
+        if (category.type === 'team' && category.team) {
+          teams.push({
+            id: category.teamId,
+            name: category.description,
+            abbreviation: category.team.description
+          });
+        }
+        if (category.type === 'athlete' && category.athlete) {
+          players.push({
+            id: category.athleteId,
+            name: category.description
+          });
+        }
+      });
+    }
+
     return {
       id: article.id || article.uid,
       title: article.headline,
@@ -115,10 +143,13 @@ class NewsService {
       image: article.images?.[0]?.url || null,
       publishedAt: article.published,
       updatedAt: article.lastModified,
-      author: article.authors?.[0]?.name || 'ESPN',
+      author: article.authors?.[0]?.name || article.byline || 'ESPN',
       category: article.categories?.[0]?.description || 'NBA',
-      tags: article.tags?.map(tag => tag.name) || [],
-      source: 'ESPN'
+      tags: article.categories?.map(cat => cat.description) || [],
+      source: 'ESPN',
+      teams,
+      players,
+      categories: article.categories || []
     };
   }
 
@@ -139,7 +170,7 @@ class NewsService {
       updatedAt: article.lastModified,
       author: article.authors?.[0]?.name || 'ESPN',
       category: article.categories?.[0]?.description || 'NBA',
-      tags: article.tags?.map(tag => tag.name) || [],
+      tags: article.categories?.map(cat => cat.description) || [],
       source: 'ESPN NOW'
     };
   }
@@ -152,19 +183,53 @@ class NewsService {
    */
   async getPersonalizedNews(favoriteTeams = [], favoritePlayers = []) {
     try {
-      const [leagueNews, teamNews, playerNews] = await Promise.all([
-        this.getLeagueNews(5),
-        this.getTeamNewsForMultiple(favoriteTeams, 3),
-        this.getPlayerNewsForMultiple(favoritePlayers, 3)
-      ]);
+      // Get all news first
+      const allNews = await this.getLeagueNews(30);
+      
+      // Filter news for favorite teams
+      const teamNews = [];
+      if (favoriteTeams.length > 0) {
+        favoriteTeams.forEach(team => {
+          const teamArticles = allNews.filter(article => 
+            article.teams && article.teams.some(t => t.id === parseInt(team.espnId))
+          );
+          teamArticles.forEach(article => {
+            teamNews.push({
+              ...article,
+              teamId: team.espnId,
+              teamName: team.name
+            });
+          });
+        });
+      }
+
+      // Filter news for favorite players
+      const playerNews = [];
+      if (favoritePlayers.length > 0) {
+        favoritePlayers.forEach(player => {
+          const playerArticles = allNews.filter(article => 
+            article.players && article.players.some(p => p.id === parseInt(player.espnId))
+          );
+          playerArticles.forEach(article => {
+            playerNews.push({
+              ...article,
+              playerId: player.espnId,
+              playerName: player.fullName
+            });
+          });
+        });
+      }
+
+      // Get some general league news
+      const leagueNews = allNews.slice(0, 10);
 
       return {
         league: leagueNews,
-        teams: teamNews,
-        players: playerNews,
+        teams: teamNews.slice(0, 10),
+        players: playerNews.slice(0, 10),
         all: [...leagueNews, ...teamNews, ...playerNews]
           .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
-          .slice(0, 10)
+          .slice(0, 15)
       };
     } catch (error) {
       console.error('Error fetching personalized news:', error.message);
@@ -187,13 +252,24 @@ class NewsService {
     if (!teams || teams.length === 0) return [];
 
     try {
-      const teamNewsPromises = teams.map(team => 
-        this.getTeamNews(team.espnId, limitPerTeam)
-          .then(news => news.map(article => ({ ...article, teamId: team.espnId, teamName: team.name })))
-      );
+      const allNews = await this.getLeagueNews(50);
+      const teamNews = [];
 
-      const allTeamNews = await Promise.all(teamNewsPromises);
-      return allTeamNews.flat();
+      teams.forEach(team => {
+        const teamArticles = allNews.filter(article => 
+          article.teams && article.teams.some(t => t.id === parseInt(team.espnId))
+        ).slice(0, limitPerTeam);
+
+        teamArticles.forEach(article => {
+          teamNews.push({
+            ...article,
+            teamId: team.espnId,
+            teamName: team.name
+          });
+        });
+      });
+
+      return teamNews;
     } catch (error) {
       console.error('Error fetching multiple team news:', error.message);
       return [];
@@ -210,13 +286,24 @@ class NewsService {
     if (!players || players.length === 0) return [];
 
     try {
-      const playerNewsPromises = players.map(player => 
-        this.getPlayerNews(player.espnId, limitPerPlayer)
-          .then(news => news.map(article => ({ ...article, playerId: player.espnId, playerName: player.fullName })))
-      );
+      const allNews = await this.getLeagueNews(50);
+      const playerNews = [];
 
-      const allPlayerNews = await Promise.all(playerNewsPromises);
-      return allPlayerNews.flat();
+      players.forEach(player => {
+        const playerArticles = allNews.filter(article => 
+          article.players && article.players.some(p => p.id === parseInt(player.espnId))
+        ).slice(0, limitPerPlayer);
+
+        playerArticles.forEach(article => {
+          playerNews.push({
+            ...article,
+            playerId: player.espnId,
+            playerName: player.fullName
+          });
+        });
+      });
+
+      return playerNews;
     } catch (error) {
       console.error('Error fetching multiple player news:', error.message);
       return [];
