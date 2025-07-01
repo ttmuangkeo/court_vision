@@ -649,4 +649,28 @@ router.get('/stats/team/:teamId', async (req, res) => {
     }
 });
 
+// GET /api/players/search?query=lebron
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || query.length < 2) {
+      return res.json({ success: true, data: [] });
+    }
+    const players = await prisma.player.findMany({
+      where: {
+        fullName: {
+          contains: query,
+          mode: 'insensitive'
+        }
+      },
+      take: 10, // limit results for performance
+      orderBy: { fullName: 'asc' }
+    });
+    res.json({ success: true, data: players });
+  } catch (error) {
+    console.error('Error searching players:', error);
+    res.status(500).json({ success: false, error: 'Failed to search players' });
+  }
+});
+
 module.exports = router;

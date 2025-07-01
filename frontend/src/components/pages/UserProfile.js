@@ -11,6 +11,11 @@ const UserProfile = () => {
   const [players, setPlayers] = useState([]);
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [selectedPlayers, setSelectedPlayers] = useState([]);
+  const [playerSearchTerm, setPlayerSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  
   
   // Form state
   const [formData, setFormData] = useState({
@@ -59,6 +64,27 @@ const UserProfile = () => {
 
     fetchData();
   }, []);
+
+  // Effect to search players from API
+  useEffect(() => {
+    if (!playerSearchTerm) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+    setSearchLoading(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const res = await axios.get(`/api/players?search=${encodeURIComponent(playerSearchTerm)}&limit=8`);
+        setSearchResults(res.data.data || []);
+      } catch (err) {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(delayDebounce);
+  }, [playerSearchTerm]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -314,31 +340,30 @@ const UserProfile = () => {
           <div className="form-section">
             <h2>Favorite Players</h2>
             <p className="section-description">Select your favorite NBA players to track their performance</p>
-            <div className="players-grid">
-              {players.slice(0, 50).map(player => (
-                <div
-                  key={player.espnId}
-                  className={`player-card ${selectedPlayers.includes(player.espnId) ? 'selected' : ''}`}
-                  onClick={() => handlePlayerToggle(player.espnId)}
-                >
-                  <div className="player-avatar">
-                    {player.headshot ? (
-                      <img src={player.headshot} alt={player.fullName} />
-                    ) : (
-                      <div className="player-initial">
-                        {player.firstName?.charAt(0)}{player.lastName?.charAt(0)}
-                      </div>
-                    )}
+            <input
+              type="text"
+              placeholder="Search players by name..."
+              value={playerSearchTerm}
+              onChange={e => setPlayerSearchTerm(e.target.value)}
+              className="profile-search-input"
+              style={{ marginBottom: 12, padding: 6, width: '100%' }}
+            />
+            {searchLoading && <div style={{marginBottom: 8}}>Searching...</div>}
+            <div className="players-list">
+              {(playerSearchTerm ? searchResults : players.slice(0, 8))
+                .map(player => (
+                  <div
+                    key={player.espnId}
+                    className={`player-card${selectedPlayers.includes(player.espnId) ? ' selected' : ''}`}
+                    onClick={() => handlePlayerToggle(player.espnId)}
+                  >
+                    <img src={player.headshot || '/default-player.png'} alt={player.fullName} className="player-avatar" />
+                    <div className="player-info">
+                      <h3>{player.fullName}</h3>
+                      <p>{player.position} • {player.team?.abbreviation || (player.teamEspnId ? teams.find(t => t.espnId === player.teamEspnId)?.abbreviation : 'FA')}</p>
+                    </div>
                   </div>
-                  <div className="player-info">
-                    <h3>{player.fullName}</h3>
-                    <p>{player.position} • {player.team?.abbreviation || (player.teamEspnId ? teams.find(t => t.espnId === player.teamEspnId)?.abbreviation : 'FA')}</p>
-                  </div>
-                  <div className="selection-indicator">
-                    {selectedPlayers.includes(player.espnId) && '✓'}
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>
