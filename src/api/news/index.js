@@ -177,17 +177,22 @@ router.get('/dashboard', authenticateJWT, async (req, res) => {
       newsService.getPlayerNewsForMultiple(user.favoritePlayers, 2)
     ]);
 
-    // Combine and sort by date
-    const allNews = [...leagueNews, ...teamNews, ...playerNews]
+    // Remove duplicates from each category
+    const uniqueLeagueNews = newsService.removeDuplicates(leagueNews);
+    const uniqueTeamNews = newsService.removeDuplicates(teamNews);
+    const uniquePlayerNews = newsService.removeDuplicates(playerNews);
+
+    // Combine and sort by date, ensuring no duplicates
+    const allNews = newsService.removeDuplicates([...uniqueLeagueNews, ...uniqueTeamNews, ...uniquePlayerNews])
       .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
       .slice(0, 8);
 
     res.json({
       success: true,
       data: {
-        league: leagueNews,
-        teams: teamNews,
-        players: playerNews,
+        league: uniqueLeagueNews,
+        teams: uniqueTeamNews,
+        players: uniquePlayerNews,
         featured: allNews.slice(0, 4),
         recent: allNews
       },

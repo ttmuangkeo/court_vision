@@ -7,6 +7,23 @@ class NewsService {
   }
 
   /**
+   * Remove duplicate articles based on ID
+   * @param {Array} articles - Array of articles
+   * @returns {Array} Array with duplicates removed
+   */
+  removeDuplicates(articles) {
+    if (!Array.isArray(articles)) return [];
+    const seen = new Set();
+    return articles.filter(article => {
+      if (seen.has(article.id)) {
+        return false;
+      }
+      seen.add(article.id);
+      return true;
+    });
+  }
+
+  /**
    * Fetch general NBA news
    * @param {number} limit - Number of articles to fetch (default: 10)
    * @returns {Promise<Array>} Array of news articles
@@ -19,7 +36,8 @@ class NewsService {
       });
 
       if (response.data && response.data.articles) {
-        return response.data.articles.map(article => this.transformArticle(article));
+        const articles = response.data.articles.map(article => this.transformArticle(article));
+        return this.removeDuplicates(articles);
       }
 
       return [];
@@ -49,7 +67,7 @@ class NewsService {
         return false;
       });
 
-      return teamNews.slice(0, limit);
+      return this.removeDuplicates(teamNews).slice(0, limit);
     } catch (error) {
       console.error(`Error fetching team news for ${teamId}:`, error.message);
       return [];
@@ -76,7 +94,7 @@ class NewsService {
         return false;
       });
 
-      return playerNews.slice(0, limit);
+      return this.removeDuplicates(playerNews).slice(0, limit);
     } catch (error) {
       console.error(`Error fetching player news for ${playerId}:`, error.message);
       return [];
@@ -96,7 +114,8 @@ class NewsService {
       });
 
       if (response.data && response.data.content) {
-        return response.data.content.map(article => this.transformNowArticle(article));
+        const articles = response.data.content.map(article => this.transformNowArticle(article));
+        return this.removeDuplicates(articles);
       }
 
       return [];
@@ -223,11 +242,15 @@ class NewsService {
       // Get some general league news
       const leagueNews = allNews.slice(0, 10);
 
+      // Remove duplicates from all categories
+      const uniqueTeamNews = this.removeDuplicates(teamNews);
+      const uniquePlayerNews = this.removeDuplicates(playerNews);
+
       return {
         league: leagueNews,
-        teams: teamNews.slice(0, 10),
-        players: playerNews.slice(0, 10),
-        all: [...leagueNews, ...teamNews, ...playerNews]
+        teams: uniqueTeamNews.slice(0, 10),
+        players: uniquePlayerNews.slice(0, 10),
+        all: this.removeDuplicates([...leagueNews, ...uniqueTeamNews, ...uniquePlayerNews])
           .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
           .slice(0, 15)
       };
@@ -269,7 +292,7 @@ class NewsService {
         });
       });
 
-      return teamNews;
+      return this.removeDuplicates(teamNews);
     } catch (error) {
       console.error('Error fetching multiple team news:', error.message);
       return [];
@@ -303,7 +326,7 @@ class NewsService {
         });
       });
 
-      return playerNews;
+      return this.removeDuplicates(playerNews);
     } catch (error) {
       console.error('Error fetching multiple player news:', error.message);
       return [];

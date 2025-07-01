@@ -19,7 +19,15 @@ const NewsSection = ({ user }) => {
         setLoading(true);
         const response = await axios.get('/api/news/dashboard');
         if (response.data.success) {
-          setNews(response.data.data);
+          // Remove duplicates from the news data
+          const deduplicatedNews = {
+            league: removeDuplicates(response.data.data.league),
+            teams: removeDuplicates(response.data.data.teams),
+            players: removeDuplicates(response.data.data.players),
+            featured: removeDuplicates(response.data.data.featured),
+            recent: removeDuplicates(response.data.data.recent)
+          };
+          setNews(deduplicatedNews);
         }
       } catch (error) {
         console.error('Error fetching news:', error);
@@ -27,12 +35,13 @@ const NewsSection = ({ user }) => {
         try {
           const leagueResponse = await axios.get('/api/news/league?limit=10');
           if (leagueResponse.data.success) {
+            const leagueNews = removeDuplicates(leagueResponse.data.data);
             setNews({
-              league: leagueResponse.data.data,
+              league: leagueNews,
               teams: [],
               players: [],
-              featured: leagueResponse.data.data.slice(0, 4),
-              recent: leagueResponse.data.data
+              featured: leagueNews.slice(0, 4),
+              recent: leagueNews
             });
           }
         } catch (fallbackError) {
@@ -47,6 +56,19 @@ const NewsSection = ({ user }) => {
       fetchNews();
     }
   }, [user]);
+
+  // Helper function to remove duplicates based on article ID
+  const removeDuplicates = (articles) => {
+    if (!Array.isArray(articles)) return [];
+    const seen = new Set();
+    return articles.filter(article => {
+      if (seen.has(article.id)) {
+        return false;
+      }
+      seen.add(article.id);
+      return true;
+    });
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -195,8 +217,8 @@ const NewsSection = ({ user }) => {
           </div>
         ) : (
           <div className="news-grid">
-            {currentNews.map(article => (
-              <div key={article.id} className="news-card-modern">
+            {currentNews.map((article, index) => (
+              <div key={`${article.id}-${activeTab}-${index}`} className="news-card-modern">
                 <div className="news-image">
                   {article.image ? (
                     <img src={article.image} alt={article.title} />
