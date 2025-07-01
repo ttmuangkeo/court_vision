@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../common/AuthContext';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import NewsSection from '../features/news/NewsSection';
 import './PersonalizedDashboard.css';
 
 const PersonalizedDashboard = () => {
@@ -252,6 +253,10 @@ const PersonalizedDashboard = () => {
             <span className="quick-action-icon">👤</span>
             <span>Players</span>
           </Link>
+          <Link to="/news" className="quick-action-modern">
+            <span className="quick-action-icon">📰</span>
+            <span>News</span>
+          </Link>
         </div>
 
         {/* Dashboard Content Modern */}
@@ -347,6 +352,9 @@ const PersonalizedDashboard = () => {
               ))}
             </div>
           </div>
+
+          {/* Personalized News Section */}
+          <NewsSection user={user} />
         </div>
       </div>
     </div>

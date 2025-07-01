@@ -12,7 +12,8 @@ function Navbar() {
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/teams', label: 'Teams' },
     { path: '/players', label: 'Players' },
-    { path: '/games', label: 'Games' }
+    { path: '/games', label: 'Games' },
+    { path: '/news', label: 'News' }
   ];
 
   const isActive = (path) => {

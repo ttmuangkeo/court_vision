@@ -13,6 +13,7 @@ import TeamsList from './components/pages/Teams/TeamsList';
 import TeamDetail from './components/pages/Teams/TeamDetail';
 import PlayersList from './components/pages/Players/PlayersList';
 import PlayerDetail from './components/pages/Players/PlayerDetail';
+import NewsPage from './components/pages/News/NewsPage';
 import AuthPage from './components/pages/Auth/AuthPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 // import TagsList from './components/TagsList'; // (create this next!)
@@ -113,6 +114,14 @@ function App() {
               <>
                 <Navbar />
                 <PlayerDetail />
+              </>
+            </ProtectedRoute>
+          } />
+          <Route path="/news" element={
+            <ProtectedRoute requireAuth={true}>
+              <>
+                <Navbar />
+                <NewsPage />
               </>
             </ProtectedRoute>
           } />

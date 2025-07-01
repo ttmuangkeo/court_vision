@@ -14,6 +14,7 @@ const analyticsRouter = require('./src/api/analytics');
 const patternsRouter = require('./src/api/patterns');
 const authRouter = require('./src/api/auth');
 const imagesRouter = require('./src/api/images');
+const newsRouter = require('./src/api/news');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,6 +43,7 @@ app.use('/api/plays', playsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/patterns', patternsRouter);
 app.use('/api/images', imagesRouter);
+app.use('/api/news', newsRouter);
 
 // API Docs
 app.get('/api', (req, res) => {
@@ -58,6 +60,7 @@ app.get('/api', (req, res) => {
            analytics: '/api/analytics',
            patterns: '/api/patterns',
            images: '/api/images',
+           news: '/api/news',
        }
    });
 });
