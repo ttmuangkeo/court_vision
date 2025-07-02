@@ -102,6 +102,7 @@ model Player {
   secondaryPlays   Play[]           @relation("SecondaryPlayer")
   predictions      Prediction[]
   favoriteBy       User[]           @relation("UserFavoritePlayers")
+  playerNews       PlayerNews[]     @relation("PlayerNews")
 
   @@map("players")
 }
@@ -381,6 +382,23 @@ model TeamStatistics {
 
   @@unique([teamId, season, seasonType, category, statName])
   @@map("team_statistics")
+}
+
+model PlayerNews {
+  id            String    @id @default(cuid())
+  espnId        String    @unique
+  headline      String
+  description   String?
+  published     DateTime?
+  type          String?
+  section       String?
+  playerEspnId  String
+  lastSynced    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  player        Player    @relation("PlayerNews", fields: [playerEspnId], references: [espnId])
+
+  @@map("player_news")
 }
 
 enum GameStatus {

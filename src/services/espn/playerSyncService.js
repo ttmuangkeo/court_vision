@@ -35,66 +35,78 @@ class PlayerSyncService {
 
   async fetchPlayerStats(espnId) {
     try {
-      const response = await axios.get(`${this.webApiBase}/athletes/${espnId}`, {
+      const response = await axios.get(`${this.webApiBase}/athletes/${espnId}/overview`, {
         timeout: 10000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
 
-      if (response.data.athlete && response.data.athlete.statsSummary) {
-        const statsSummary = response.data.athlete.statsSummary;
+      if (response.data.statistics) {
+        const statistics = response.data.statistics;
         const stats = {};
 
-        if (statsSummary.statistics && Array.isArray(statsSummary.statistics)) {
-          statsSummary.statistics.forEach(stat => {
-            switch (stat.name) {
-              case 'avgPoints':
-                stats.avgPoints = stat.value;
-                break;
-              case 'avgRebounds':
-                stats.avgRebounds = stat.value;
-                break;
-              case 'avgAssists':
-                stats.avgAssists = stat.value;
-                break;
-              case 'avgSteals':
-                stats.avgSteals = stat.value;
-                break;
-              case 'avgBlocks':
-                stats.avgBlocks = stat.value;
-                break;
-              case 'avgTurnovers':
-                stats.avgTurnovers = stat.value;
-                break;
-              case 'avgFouls':
-                stats.avgFouls = stat.value;
-                break;
-              case 'fieldGoalPct':
-                stats.fieldGoalPct = stat.value;
-                break;
-              case 'threePointPct':
-                stats.threePointPct = stat.value;
-                break;
-              case 'freeThrowPct':
-                stats.freeThrowPct = stat.value;
-                break;
-              case 'gamesPlayed':
-                stats.gamesPlayed = Math.round(stat.value);
-                break;
-              case 'gamesStarted':
-                stats.gamesStarted = Math.round(stat.value);
-                break;
-              case 'minutesPerGame':
-                stats.minutesPerGame = stat.value;
-                break;
-            }
-          });
+        // Parse statistics from the new format
+        if (statistics.names && statistics.splits && statistics.splits.length > 0) {
+          // Get Regular Season stats (first split) as primary stats
+          const regularSeasonSplit = statistics.splits.find(split => 
+            split.displayName === 'Regular Season'
+          ) || statistics.splits[0]; // Fallback to first split if no Regular Season
+
+          if (regularSeasonSplit && regularSeasonSplit.stats) {
+            // Map the stats array to our database fields
+            statistics.names.forEach((statName, index) => {
+              const statValue = regularSeasonSplit.stats[index];
+              if (statValue !== undefined && statValue !== null) {
+                switch (statName) {
+                  case 'avgPoints':
+                    stats.avgPoints = parseFloat(statValue);
+                    break;
+                  case 'avgRebounds':
+                    stats.avgRebounds = parseFloat(statValue);
+                    break;
+                  case 'avgAssists':
+                    stats.avgAssists = parseFloat(statValue);
+                    break;
+                  case 'avgSteals':
+                    stats.avgSteals = parseFloat(statValue);
+                    break;
+                  case 'avgBlocks':
+                    stats.avgBlocks = parseFloat(statValue);
+                    break;
+                  case 'avgTurnovers':
+                    stats.avgTurnovers = parseFloat(statValue);
+                    break;
+                  case 'avgFouls':
+                    stats.avgFouls = parseFloat(statValue);
+                    break;
+                  case 'fieldGoalPct':
+                    stats.fieldGoalPct = parseFloat(statValue);
+                    break;
+                  case 'threePointPct':
+                    stats.threePointPct = parseFloat(statValue);
+                    break;
+                  case 'freeThrowPct':
+                    stats.freeThrowPct = parseFloat(statValue);
+                    break;
+                  case 'gamesPlayed':
+                    stats.gamesPlayed = parseInt(statValue);
+                    break;
+                  case 'avgMinutes':
+                    stats.minutesPerGame = parseFloat(statValue);
+                    break;
+                }
+              }
+            });
+          }
+
+          // Store all splits data for potential future use
+          stats.statsSplits = statistics.splits;
         }
 
         return {
           ...stats,
-          statsSummary: statsSummary,
+          statsSummary: statistics,
           hasStatistics: Object.keys(stats).length > 0
         };
       }
@@ -103,6 +115,35 @@ class PlayerSyncService {
     } catch (error) {
       console.error(`Error fetching stats for player ${espnId}:`, error.message);
       return { hasStatistics: false };
+    }
+  }
+
+  async fetchPlayerNews(espnId) {
+    try {
+      const response = await axios.get(`${this.webApiBase}/athletes/${espnId}/overview`, {
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      if (response.data.news && Array.isArray(response.data.news)) {
+        return response.data.news.map(newsItem => ({
+          espnId: newsItem.id,
+          headline: newsItem.headline,
+          description: newsItem.description,
+          published: newsItem.published ? new Date(newsItem.published) : null,
+          type: newsItem.type,
+          section: newsItem.section,
+          playerEspnId: espnId,
+          lastSynced: new Date()
+        }));
+      }
+
+      return [];
+    } catch (error) {
+      console.error(`Error fetching news for player ${espnId}:`, error.message);
+      return [];
     }
   }
 
@@ -120,7 +161,6 @@ class PlayerSyncService {
       const playerData = {
         espnUid: espnPlayer.uid,
         espnSlug: espnPlayer.slug,
-        name: espnPlayer.displayName,
         firstName: espnPlayer.firstName,
         lastName: espnPlayer.lastName,
         shortName: espnPlayer.shortName,
@@ -275,6 +315,32 @@ class PlayerSyncService {
     } catch (error) {
       console.error('❌ Player sync failed:', error);
       throw error;
+    }
+  }
+
+  async syncPlayerNews(espnId) {
+    try {
+      const newsItems = await this.fetchPlayerNews(espnId);
+      let syncedCount = 0;
+
+      for (const newsItem of newsItems) {
+        try {
+          // Upsert news item
+          await prisma.playerNews.upsert({
+            where: { espnId: newsItem.espnId },
+            update: newsItem,
+            create: newsItem
+          });
+          syncedCount++;
+        } catch (error) {
+          console.error(`Error syncing news item ${newsItem.espnId}:`, error.message);
+        }
+      }
+
+      return { synced: syncedCount, total: newsItems.length };
+    } catch (error) {
+      console.error(`Error syncing news for player ${espnId}:`, error.message);
+      return { synced: 0, total: 0 };
     }
   }
 
