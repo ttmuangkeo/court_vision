@@ -123,6 +123,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Validation function for PlayTag context
+function validatePlayTagContext(context) {
+  if (!context) return false;
+  if (typeof context.action !== 'string' || !context.action) return false;
+  if (typeof context.sequence !== 'number' || context.sequence < 1) return false;
+  if (typeof context.totalActions !== 'number' || context.totalActions < 1) return false;
+  if (context.coverageType && typeof context.coverageType !== 'string') return false;
+  if (context.possessionType && typeof context.possessionType !== 'string') return false;
+  return true;
+}
+
 // POST /api/plays - Create a new play (and tags)
 router.post('/', authenticateJWT, async (req, res) => {
   try {
@@ -144,6 +155,16 @@ router.post('/', authenticateJWT, async (req, res) => {
       createdById,
       tags = [],
     } = req.body;
+
+    // Validate all tag contexts
+    for (const tag of tags) {
+      if (!validatePlayTagContext(tag.context)) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid context for tag: ${tag.tagId || tag.actionName || 'unknown'}`
+        });
+      }
+    }
 
     // Use authenticated user's ID instead of provided createdById
     const userId = req.user.id;

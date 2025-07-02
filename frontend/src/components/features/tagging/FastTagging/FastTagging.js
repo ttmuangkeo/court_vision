@@ -12,6 +12,25 @@ import './FastTagging.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:3000/api';
 
+// Example glossary for inference (replace with real glossary if available)
+const GLOSSARY = [
+  { tag: 'Pick and Roll', coverageType: 'switch', possessionType: 'half-court' },
+  { tag: 'Transition', possessionType: 'transition' },
+  // Add more rules as needed
+];
+
+function inferContextFields(tagSequence) {
+  let coverageType, possessionType;
+  for (const tagData of tagSequence) {
+    const glossaryEntry = GLOSSARY.find(g => g.tag === tagData.actionName);
+    if (glossaryEntry) {
+      if (glossaryEntry.coverageType) coverageType = glossaryEntry.coverageType;
+      if (glossaryEntry.possessionType) possessionType = glossaryEntry.possessionType;
+    }
+  }
+  return { coverageType, possessionType };
+}
+
 function useWindowWidth() {
   const [width, setWidth] = React.useState(window.innerWidth);
   React.useEffect(() => {
@@ -139,7 +158,10 @@ function FastTagging() {
         alert('Please log in to tag plays');
         return;
       }
-      
+
+      // Infer context fields for the sequence
+      const inferred = inferContextFields(currentPlayTags);
+
       const playData = {
         gameId,
         description: `${currentPlayTags.map(t => t.actionName).join(' → ')} by ${selectedPlayer.fullName || selectedPlayer.name || 'Unknown Player'}`,
@@ -153,7 +175,8 @@ function FastTagging() {
           context: {
             action: tagData.actionName,
             sequence: currentPlayTags.indexOf(tagData) + 1,
-            totalActions: currentPlayTags.length
+            totalActions: currentPlayTags.length,
+            ...inferred // Add inferred fields if present
           }
         }))
       };
