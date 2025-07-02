@@ -17,6 +17,25 @@ function PlayerDetail() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
 
+    // Helper function to format stats for display
+    const formatStat = (value, type = 'decimal') => {
+        if (value === null || value === undefined) return null;
+        
+        switch (type) {
+            case 'decimal':
+                // Round to 1 decimal place for per-game stats (24.5 ppg, 8.1 apg)
+                return Math.round(value * 10) / 10;
+            case 'percentage':
+                // Round to 1 decimal place for percentages (42.9%)
+                return Math.round(value * 10) / 10;
+            case 'integer':
+                // Round to whole numbers for games played, etc.
+                return Math.round(value);
+            default:
+                return value;
+        }
+    };
+
     useEffect(() => {
         const fetchPlayerData = async () => {
             try {
@@ -695,123 +714,222 @@ function PlayerDetail() {
                                     </div>
                                     )}
 
-                                    {/* Statistics Cards */}
-                                    {(player.avgPoints || player.avgRebounds || player.avgAssists) && (
-                                        <>
-                                            {/* Scoring Stats */}
-                                            <div style={{
-                                                backgroundColor: 'white',
-                                                padding: '24px',
-                                                borderRadius: '16px',
-                                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-                                                border: '1px solid rgba(0, 0, 0, 0.05)'
+                                    {/* Statistics Card */}
+                                    {(player.avgPoints || player.avgRebounds || player.avgAssists || player.avgSteals || player.avgBlocks || player.avgTurnovers || player.avgFouls || player.fieldGoalPct || player.threePointPct || player.freeThrowPct || player.minutesPerGame || player.gamesPlayed || player.gamesStarted) && (
+                                        <div style={{
+                                            backgroundColor: 'white',
+                                            padding: '24px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                                        }}>
+                                            <h3 style={{ 
+                                                fontSize: '1.1rem', 
+                                                fontWeight: '700', 
+                                                color: '#1e293b',
+                                                marginBottom: '16px'
                                             }}>
-                                                <h3 style={{ 
-                                                    fontSize: '1.1rem', 
-                                                    fontWeight: '700', 
-                                                    color: '#1e293b',
-                                                    marginBottom: '16px'
-                                                }}>
-                                                    🏀 Scoring Statistics
-                                                </h3>
+                                                📊 Season Statistics
+                                            </h3>
+                                            
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                {/* Scoring Stats */}
+                                                {player.avgPoints && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Points per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.2rem', 
+                                                            fontWeight: '700', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.avgPoints)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.avgRebounds && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Rebounds per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.2rem', 
+                                                            fontWeight: '700', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.avgRebounds)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.avgAssists && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Assists per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.2rem', 
+                                                            fontWeight: '700', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.avgAssists)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.avgSteals && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Steals per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.avgSteals)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.avgBlocks && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Blocks per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.avgBlocks)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.avgTurnovers && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Turnovers per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.avgTurnovers)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.avgFouls && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Fouls per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.avgFouls)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.minutesPerGame && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Minutes per Game:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.minutesPerGame)}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                    {player.avgPoints && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Points per Game:</span>
-                                                            <span style={{ 
-                                                                fontSize: '1.2rem', 
-                                                                fontWeight: '700', 
-                                                                color: '#1e293b'
-                                                            }}>
-                                                                {player.avgPoints}
-                                                            </span>
+                                                {/* Shooting Percentages */}
+                                                {(player.fieldGoalPct || player.threePointPct || player.freeThrowPct) && (
+                                                    <>
+                                                        <div style={{ 
+                                                            height: '1px', 
+                                                            backgroundColor: '#e2e8f0', 
+                                                            margin: '8px 0' 
+                                                        }}></div>
+                                                        <div style={{ 
+                                                            fontSize: '0.8rem', 
+                                                            color: '#64748b', 
+                                                            fontWeight: '600',
+                                                            marginBottom: '4px'
+                                                        }}>
+                                                            SHOOTING PERCENTAGES
                                                         </div>
-                                                    )}
-                                                    {player.avgFieldGoalPercentage && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Field Goal %:</span>
-                                                            <span style={{ 
-                                                                fontSize: '1.1rem', 
-                                                                fontWeight: '600', 
-                                                                color: '#1e293b'
-                                                            }}>
-                                                                {player.avgFieldGoalPercentage}%
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {player.avgThreePointPercentage && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}>3-Point %:</span>
-                                                            <span style={{ 
-                                                                fontSize: '1.1rem', 
-                                                                fontWeight: '600', 
-                                                                color: '#1e293b'
-                                                            }}>
-                                                                {player.avgThreePointPercentage}%
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Rebounding & Playmaking Stats */}
-                                            <div style={{
-                                                backgroundColor: 'white',
-                                                padding: '24px',
-                                                borderRadius: '16px',
-                                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-                                                border: '1px solid rgba(0, 0, 0, 0.05)'
-                                            }}>
-                                                <h3 style={{ 
-                                                    fontSize: '1.1rem', 
-                                                    fontWeight: '700', 
-                                                    color: '#1e293b',
-                                                    marginBottom: '16px'
-                                                }}>
-                                                    📊 Rebounding & Playmaking
-                                                </h3>
+                                                    </>
+                                                )}
+                                                {player.fieldGoalPct && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Field Goal %:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.fieldGoalPct, 'percentage')}%
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.threePointPct && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>3-Point %:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.threePointPct, 'percentage')}%
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.freeThrowPct && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Free Throw %:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.freeThrowPct, 'percentage')}%
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                    {player.avgRebounds && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Rebounds per Game:</span>
-                                                            <span style={{ 
-                                                                fontSize: '1.2rem', 
-                                                                fontWeight: '700', 
-                                                                color: '#1e293b'
-                                                            }}>
-                                                                {player.avgRebounds}
-                                                            </span>
+                                                {/* Games Information */}
+                                                {(player.gamesPlayed || player.gamesStarted) && (
+                                                    <>
+                                                        <div style={{ 
+                                                            height: '1px', 
+                                                            backgroundColor: '#e2e8f0', 
+                                                            margin: '8px 0' 
+                                                        }}></div>
+                                                        <div style={{ 
+                                                            fontSize: '0.8rem', 
+                                                            color: '#64748b', 
+                                                            fontWeight: '600',
+                                                            marginBottom: '4px'
+                                                        }}>
+                                                            GAMES
                                                         </div>
-                                                    )}
-                                                    {player.avgAssists && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Assists per Game:</span>
-                                                            <span style={{ 
-                                                                fontSize: '1.2rem', 
-                                                                fontWeight: '700', 
-                                                                color: '#1e293b'
-                                                            }}>
-                                                                {player.avgAssists}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {player.gamesPlayed && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Games Played:</span>
-                                                            <span style={{ 
-                                                                fontSize: '1.1rem', 
-                                                                fontWeight: '600', 
-                                                                color: '#1e293b'
-                                                            }}>
-                                                                {player.gamesPlayed}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                    </>
+                                                )}
+                                                {player.gamesPlayed && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Games Played:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.gamesPlayed, 'integer')}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {player.gamesStarted && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Games Started:</span>
+                                                        <span style={{ 
+                                                            fontSize: '1.1rem', 
+                                                            fontWeight: '600', 
+                                                            color: '#1e293b'
+                                                        }}>
+                                                            {formatStat(player.gamesStarted, 'integer')}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                             </div>
