@@ -2,10 +2,12 @@ const axios = require('axios');
 const prisma = require('../../db/client');
 
 const ESPN_API_BASE = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
+const ESPN_WEB_API_BASE = 'https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba';
 
 class PlayerSyncService {
   constructor() {
     this.apiBase = ESPN_API_BASE;
+    this.webApiBase = ESPN_WEB_API_BASE;
   }
 
   async fetchTeamsFromESPN() {
@@ -31,12 +33,88 @@ class PlayerSyncService {
     }
   }
 
+  async fetchPlayerStats(espnId) {
+    try {
+      const response = await axios.get(`${this.webApiBase}/athletes/${espnId}`, {
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      if (response.data.athlete && response.data.athlete.statsSummary) {
+        const statsSummary = response.data.athlete.statsSummary;
+        const stats = {};
+
+        if (statsSummary.statistics && Array.isArray(statsSummary.statistics)) {
+          statsSummary.statistics.forEach(stat => {
+            switch (stat.name) {
+              case 'avgPoints':
+                stats.avgPoints = stat.value;
+                break;
+              case 'avgRebounds':
+                stats.avgRebounds = stat.value;
+                break;
+              case 'avgAssists':
+                stats.avgAssists = stat.value;
+                break;
+              case 'avgSteals':
+                stats.avgSteals = stat.value;
+                break;
+              case 'avgBlocks':
+                stats.avgBlocks = stat.value;
+                break;
+              case 'avgTurnovers':
+                stats.avgTurnovers = stat.value;
+                break;
+              case 'avgFouls':
+                stats.avgFouls = stat.value;
+                break;
+              case 'fieldGoalPct':
+                stats.fieldGoalPct = stat.value;
+                break;
+              case 'threePointPct':
+                stats.threePointPct = stat.value;
+                break;
+              case 'freeThrowPct':
+                stats.freeThrowPct = stat.value;
+                break;
+              case 'gamesPlayed':
+                stats.gamesPlayed = Math.round(stat.value);
+                break;
+              case 'gamesStarted':
+                stats.gamesStarted = Math.round(stat.value);
+                break;
+              case 'minutesPerGame':
+                stats.minutesPerGame = stat.value;
+                break;
+            }
+          });
+        }
+
+        return {
+          ...stats,
+          statsSummary: statsSummary,
+          hasStatistics: Object.keys(stats).length > 0
+        };
+      }
+
+      return { hasStatistics: false };
+    } catch (error) {
+      console.error(`Error fetching stats for player ${espnId}:`, error.message);
+      return { hasStatistics: false };
+    }
+  }
+
   async syncPlayer(espnPlayer, teamEspnId) {
     try {
       // Find existing player by ESPN ID (now the primary key)
       const existingPlayer = await prisma.player.findUnique({
         where: { espnId: espnPlayer.id }
       });
+
+      // Fetch player stats
+      const statsData = await this.fetchPlayerStats(espnPlayer.id);
 
       // Convert ESPN data to match our schema
       const playerData = {
@@ -70,7 +148,11 @@ class PlayerSyncService {
         contracts: espnPlayer.contracts || null,
         alternateIds: espnPlayer.alternateIds || null,
         espnLinks: espnPlayer.links || null,
-        lastSynced: new Date()
+        lastSynced: new Date(),
+        
+        // Add stats data
+        ...statsData,
+        lastStatsSync: statsData.hasStatistics ? new Date() : null
       };
 
       if (existingPlayer) {
@@ -79,7 +161,11 @@ class PlayerSyncService {
           where: { espnId: espnPlayer.id },
           data: playerData
         });
-        return { action: 'updated', player: espnPlayer.displayName };
+        return { 
+          action: 'updated', 
+          player: espnPlayer.displayName,
+          hasStats: statsData.hasStatistics
+        };
       } else {
         // Create new player
         await prisma.player.create({
@@ -88,7 +174,11 @@ class PlayerSyncService {
             ...playerData
           }
         });
-        return { action: 'synced', player: espnPlayer.displayName };
+        return { 
+          action: 'synced', 
+          player: espnPlayer.displayName,
+          hasStats: statsData.hasStatistics
+        };
       }
     } catch (error) {
       console.error(`Error syncing player ${espnPlayer.displayName}:`, error.message);
@@ -106,6 +196,7 @@ class PlayerSyncService {
       let syncedCount = 0;
       let updatedCount = 0;
       let errorCount = 0;
+      let statsCount = 0;
 
       for (const player of roster) {
         try {
@@ -115,7 +206,10 @@ class PlayerSyncService {
           } else {
             updatedCount++;
           }
-          console.log(`  ${result.action}: ${result.player}`);
+          if (result.hasStats) {
+            statsCount++;
+          }
+          console.log(`  ${result.action}: ${result.player}${result.hasStats ? ' (with stats)' : ''}`);
         } catch (error) {
           errorCount++;
           console.error(`  ❌ Failed to sync ${player.displayName}:`, error.message);
@@ -127,6 +221,7 @@ class PlayerSyncService {
         synced: syncedCount,
         updated: updatedCount,
         errors: errorCount,
+        withStats: statsCount,
         total: roster.length
       };
     } catch (error) {
@@ -145,6 +240,7 @@ class PlayerSyncService {
       let totalSynced = 0;
       let totalUpdated = 0;
       let totalErrors = 0;
+      let totalWithStats = 0;
       const results = [];
 
       for (const team of teams) {
@@ -154,6 +250,7 @@ class PlayerSyncService {
           totalSynced += result.synced;
           totalUpdated += result.updated;
           totalErrors += result.errors;
+          totalWithStats += result.withStats;
         } catch (error) {
           console.error(`❌ Failed to sync team ${team.team.displayName}:`, error.message);
           totalErrors++;
@@ -163,6 +260,7 @@ class PlayerSyncService {
       console.log('\n📈 Player Sync Summary:');
       console.log(`✅ Total Synced: ${totalSynced}`);
       console.log(`🔄 Total Updated: ${totalUpdated}`);
+      console.log(`📊 Players with Stats: ${totalWithStats}`);
       console.log(`❌ Total Errors: ${totalErrors}`);
       console.log(`📊 Teams Processed: ${teams.length}`);
 
@@ -170,6 +268,7 @@ class PlayerSyncService {
         totalSynced,
         totalUpdated,
         totalErrors,
+        totalWithStats,
         teamsProcessed: teams.length,
         results
       };
@@ -189,12 +288,18 @@ class PlayerSyncService {
           }
         }
       });
+      const playersWithStats = await prisma.player.count({
+        where: {
+          hasStatistics: true
+        }
+      });
 
       return {
         status: {
           total: totalPlayers,
           withEspnId: totalPlayers, // All players now have espnId as primary key
           syncedToday: playersSyncedToday,
+          withStats: playersWithStats,
           missingEspnId: 0 // No players can be missing espnId since it's the primary key
         }
       };
@@ -205,4 +310,4 @@ class PlayerSyncService {
   }
 }
 
-module.exports = PlayerSyncService; 
+module.exports = new PlayerSyncService(); 

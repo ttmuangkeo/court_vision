@@ -11,9 +11,10 @@ router.get('/', async (req, res) => {
             position,
             limit = 20,
             page = 1,
-            sort = 'name', // name, team, position, recent_activity
+            sort = 'name', // name, team, position, recent_activity, stats
             order = 'asc',
-            search = '' // Add search parameter
+            search = '', // Add search parameter
+            with_stats = false // Include player stats
         } = req.query;
 
         const skip = (page - 1) * limit;
@@ -75,6 +76,11 @@ router.get('/', async (req, res) => {
         } else if (sort === 'position') {
             orderBy = {
                 position: order
+            };
+        } else if (sort === 'stats' && with_stats === 'true') {
+            // Sort by points per game
+            orderBy = {
+                avgPoints: order === 'desc' ? 'desc' : 'asc'
             };
         } else {
             // Default: sort by fullName
@@ -671,6 +677,133 @@ router.get('/search', async (req, res) => {
     console.error('Error searching players:', error);
     res.status(500).json({ success: false, error: 'Failed to search players' });
   }
+});
+
+// GET /api/players/with-stats - Get players with their season stats
+router.get('/with-stats', async (req, res) => {
+    try {
+        const {
+            team, 
+            team_ids, 
+            position,
+            limit = 50,
+            page = 1,
+            sort = 'avgPoints', // avgPoints, avgRebounds, avgAssists, name, team
+            order = 'desc',
+            search = '',
+            min_games = 0 // Minimum games played filter
+        } = req.query;
+
+        const skip = (page - 1) * limit;
+
+        const where = {
+            hasStatistics: true // Only players with stats
+        };
+        
+        if(team) where.teamEspnId = team;
+        if(team_ids) {
+            const teamIdArray = team_ids.split(',');
+            where.teamEspnId = { in: teamIdArray };
+        }
+        if(position) where.position = position;
+        if(min_games > 0) where.gamesPlayed = { gte: parseInt(min_games) };
+        
+        // Add search functionality
+        if (search && search.trim()) {
+            const searchTerm = search.trim();
+            where.OR = [
+                {
+                    fullName: {
+                        contains: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    fullName: {
+                        startsWith: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    firstName: {
+                        contains: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    lastName: {
+                        contains: searchTerm,
+                        mode: 'insensitive'
+                    }
+                }
+            ];
+        }
+
+        // Handle different sorting options
+        let orderBy = {};
+        if (sort === 'avgPoints') {
+            orderBy = { avgPoints: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'avgRebounds') {
+            orderBy = { avgRebounds: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'avgAssists') {
+            orderBy = { avgAssists: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'avgSteals') {
+            orderBy = { avgSteals: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'avgBlocks') {
+            orderBy = { avgBlocks: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'fieldGoalPct') {
+            orderBy = { fieldGoalPct: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'threePointPct') {
+            orderBy = { threePointPct: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'freeThrowPct') {
+            orderBy = { freeThrowPct: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'minutesPerGame') {
+            orderBy = { minutesPerGame: order === 'desc' ? 'desc' : 'asc' };
+        } else if (sort === 'team') {
+            orderBy = {
+                team: {
+                    name: order
+                }
+            };
+        } else {
+            // Default: sort by fullName
+            orderBy = { fullName: order };
+        }
+
+        const players = await prisma.player.findMany({
+            where,
+            include: {
+                team: true,
+                _count: {
+                    select: {
+                        playTags: true
+                    }
+                }
+            },
+            orderBy,
+            skip: parseInt(skip),
+            take: parseInt(limit)
+        });
+
+        const total = await prisma.player.count({ where });
+
+        res.json({
+            success: true,
+            data: players,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
+    } catch(error) {
+        console.error('Error fetching players with stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch players with stats'
+        });
+    }
 });
 
 module.exports = router;

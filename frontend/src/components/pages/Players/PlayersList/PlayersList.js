@@ -80,8 +80,8 @@ function PlayersList() {
         setPlayers(response.data.data);
         setPagination(prev => ({
           ...prev,
-          total: response.data.pagination.total,
-          pages: response.data.pagination.pages
+          total: response.data.count,
+          pages: Math.ceil(response.data.count / pagination.limit)
         }));
       } else {
         setPlayers(response.data.data);
@@ -600,6 +600,7 @@ function PlayersList() {
                 }}>
                   {player.team?.name}
                 </p>
+
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap' }}>
                   {player.displayHeight && (
                     <span style={{ 

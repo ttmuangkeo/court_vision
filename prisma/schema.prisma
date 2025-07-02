@@ -8,294 +8,381 @@ datasource db {
 }
 
 model Team {
-  espnId         String   @id // ESPN's team ID as primary key
-  abbreviation   String   @unique
-  name           String
-  city           String
-  conference     String
-  division       String
-  
-  // Branding fields
-  primaryColor    String?   // "008348" for Celtics green
-  alternateColor  String?   // "ffffff" for Celtics white
-  logoUrl         String?   // ESPN logo URL
-  logoDarkUrl     String?   // Dark version logo URL
-  logoScoreboardUrl String? // Scoreboard version logo URL
-  
-  // ESPN metadata
-  espnUid        String?   // ESPN's unique identifier
-  espnSlug       String?   // "boston-celtics"
-  displayName    String?   // "Boston Celtics"
-  shortDisplayName String? // "Celtics"
-  nickname       String?   // "Boston"
-  
-  // Team status
-  isActive       Boolean?  @default(true)
-  isAllStar      Boolean?  @default(false)
-  
-  // ESPN links (stored as JSON)
-  espnLinks      Json?     // Array of useful URLs
-  
-  // Sync tracking
-  lastSynced     DateTime  @default(now())
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relation
-  players      Player[] @relation("TeamPlayers")
-  homeGames    Game[]   @relation("HomeTeam")
-  awayGames    Game[]   @relation("AwayTeam")
-  playTags     PlayTag[]
-  favoriteBy   User[]   @relation("UserFavoriteTeams")
-  teamGameStats TeamGameStat[]
-  playerGameStats PlayerGameStat[]
-  offensivePlays Play[] @relation("OffensiveTeam")
-  defensivePlays Play[] @relation("DefensiveTeam")
-  teamContexts TeamContext[]
-  teamStatistics TeamStatistics[]
+  espnId            String           @id
+  abbreviation      String           @unique
+  name              String
+  city              String
+  conference        String
+  division          String
+  primaryColor      String?
+  alternateColor    String?
+  logoUrl           String?
+  logoDarkUrl       String?
+  logoScoreboardUrl String?
+  espnUid           String?
+  espnSlug          String?
+  displayName       String?
+  shortDisplayName  String?
+  nickname          String?
+  isActive          Boolean?         @default(true)
+  isAllStar         Boolean?         @default(false)
+  espnLinks         Json?
+  lastSynced        DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  awayGames         Game[]           @relation("AwayTeam")
+  homeGames         Game[]           @relation("HomeTeam")
+  playTags          PlayTag[]
+  playerGameStats   PlayerGameStat[]
+  players           Player[]         @relation("TeamPlayers")
+  defensivePlays    Play[]           @relation("DefensiveTeam")
+  offensivePlays    Play[]           @relation("OffensiveTeam")
+  teamContexts      TeamContext[]
+  teamGameStats     TeamGameStat[]
+  teamStatistics    TeamStatistics[]
+  favoriteBy        User[]           @relation("UserFavoriteTeams")
 
   @@map("teams")
-} 
+}
 
 model Player {
-  espnId           String   @id // ESPN's player ID as primary key
+  espnId           String           @id
   position         String
-  teamEspnId       String? // Foreign key to Team.espnId
+  teamEspnId       String?
   college          String?
   jerseyNumber     String?
-  
-  // ESPN metadata
-  espnUid          String?   // ESPN's unique identifier
-  espnSlug         String?   // "luka-doncic"
-  firstName        String?   // "Luka"
-  lastName         String?   // "Doncic"
-  shortName        String?   // "L. Doncic"
-  fullName         String?   // "Luka Doncic"
-  
-  // ESPN player details
-  displayHeight    String?   // "6'7\""
-  displayWeight    String?   // "230 lbs"
-  age              Int?      // 26
-  experience       Int?      // Years in league
-  dateOfBirth      DateTime? // Full birth date
-  birthPlace       String?   // "Ljubljana, Slovenia"
-  debutYear        Int?      // First year in league
-  headshot         String?   // ESPN headshot URL
-  status           String?   // "Active", "Injured", etc.
-  
-  // Core API specific fields
-  active           Boolean?  @default(true)  // Player active status
-  slug             String?   // URL slug
-  espnGuid         String?   // ESPN GUID
-  collegeAthlete   Boolean?  @default(false) // Is college athlete
-  hasStatistics    Boolean?  @default(false) // Has statistics available
-  
-  // ESPN data
-  injuries         Json?     // Injury information
-  contract         Json?     // Current contract details
-  contracts        Json?     // All contract history
-  alternateIds     Json?     // Other ID systems
-  espnLinks        Json?     // ESPN links and URLs
-  
-  // Sync tracking
-  lastSynced       DateTime  @default(now())
-  
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  // Relations
-  team             Team?    @relation("TeamPlayers", fields: [teamEspnId], references: [espnId])
+  espnUid          String?
+  espnSlug         String?
+  firstName        String?
+  lastName         String?
+  shortName        String?
+  fullName         String?
+  displayHeight    String?
+  displayWeight    String?
+  age              Int?
+  experience       Int?
+  dateOfBirth      DateTime?
+  birthPlace       String?
+  debutYear        Int?
+  headshot         String?
+  status           String?
+  injuries         Json?
+  contract         Json?
+  contracts        Json?
+  alternateIds     Json?
+  espnLinks        Json?
+  lastSynced       DateTime         @default(now())
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  active           Boolean?         @default(true)
+  collegeAthlete   Boolean?         @default(false)
+  espnGuid         String?
+  hasStatistics    Boolean?         @default(false)
+  slug             String?
+  avgAssists       Float?
+  avgBlocks        Float?
+  avgFouls         Float?
+  avgPoints        Float?
+  avgRebounds      Float?
+  avgSteals        Float?
+  avgTurnovers     Float?
+  fieldGoalPct     Float?
+  freeThrowPct     Float?
+  gamesPlayed      Int?
+  gamesStarted     Int?
+  lastStatsSync    DateTime?
+  minutesPerGame   Float?
+  statsSummary     Json?
+  threePointPct    Float?
   playTags         PlayTag[]
-  ballHandlerPlays Play[]  @relation("BallHandler")
-  primaryPlays     Play[]   @relation("PrimaryPlayer")
-  secondaryPlays   Play[]   @relation("SecondaryPlayer")
+  playerGameStats  PlayerGameStat[]
+  team             Team?            @relation("TeamPlayers", fields: [teamEspnId], references: [espnId])
+  ballHandlerPlays Play[]           @relation("BallHandler")
+  primaryPlays     Play[]           @relation("PrimaryPlayer")
+  secondaryPlays   Play[]           @relation("SecondaryPlayer")
   predictions      Prediction[]
-  favoriteBy       User[]   @relation("UserFavoritePlayers")
-  playerGameStats PlayerGameStat[]
+  favoriteBy       User[]           @relation("UserFavoritePlayers")
 
   @@map("players")
 }
 
 model Game {
-  espnId         String   @id // ESPN's game ID as primary key
-  date           DateTime
-  homeTeamId     String // ESPN team ID
-  awayTeamId     String // ESPN team ID
-  homeScore      Int?
-  awayScore      Int?
-  status         GameStatus
-  quarter        Int        @default(1)
-  timeRemaining  String?
-  attendance     Int?
-  arena          String?
-  season         String     // "2023-24"
-  lastSynced     DateTime   @default(now()) // Track when last synced from ESPN
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-
-  // Relations
-  homeTeam       Team       @relation("HomeTeam", fields: [homeTeamId], references: [espnId])
-  awayTeam       Team       @relation("AwayTeam", fields: [awayTeamId], references: [espnId])
-  plays          Play[]
-  viewers        GameViewer[]
+  espnId          String           @id
+  date            DateTime
+  homeTeamId      String
+  awayTeamId      String
+  homeScore       Int?
+  awayScore       Int?
+  status          GameStatus
+  quarter         Int              @default(1)
+  timeRemaining   String?
+  attendance      Int?
+  arena           String?
+  season          String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  lastSynced      DateTime         @default(now())
+  viewers         GameViewer[]
+  awayTeam        Team             @relation("AwayTeam", fields: [awayTeamId], references: [espnId])
+  homeTeam        Team             @relation("HomeTeam", fields: [homeTeamId], references: [espnId])
   playerGameStats PlayerGameStat[]
-  teamGameStats TeamGameStat[]
+  plays           Play[]
+  teamGameStats   TeamGameStat[]
 
   @@map("games")
 }
 
 model Play {
-  id              String       @id @default(cuid())
-  gameId          String       // ESPN game ID
-  timestamp       DateTime     @default(now())
-  gameTime        String
-  quarter         Int
-  description     String?
-  timeInQuarter   String?
-  possession      Possession?
-  playType        PlayType?
-  ballLocation    BallLocation?
-  ballHandlerId   String?       // ESPN player ID
-  primaryPlayerId String?       // ESPN player ID
-  secondaryPlayerId String?     // ESPN player ID
-  result          PlayResult?
-  points          Int?
-  createdById     String
-  
-  // Team Context Tracking (Phase 1B)
-  offensiveTeamId String?       // ESPN team ID for offensive team
-  defensiveTeamId String?       // ESPN team ID for defensive team
-  gameSituation   Json?         // Score, time, possession, momentum
-  teamContext     Json?         // Team patterns, tendencies, recent plays
-  
-  // Metadata
-  isVerified      Boolean      @default(false) // Multiple users tagged same play
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  // Relations
-  game            Game         @relation(fields: [gameId], references: [espnId])
-  ballHandler     Player?      @relation("BallHandler", fields: [ballHandlerId], references: [espnId])
-  primaryPlayer   Player?      @relation("PrimaryPlayer", fields: [primaryPlayerId], references: [espnId])
-  secondaryPlayer Player?      @relation("SecondaryPlayer", fields: [secondaryPlayerId], references: [espnId])
-  offensiveTeam   Team?        @relation("OffensiveTeam", fields: [offensiveTeamId], references: [espnId])
-  defensiveTeam   Team?        @relation("DefensiveTeam", fields: [defensiveTeamId], references: [espnId])
-  tags            PlayTag[]
-  predictions     Prediction[]
-  teamContexts    TeamContext[]
-  createdBy       User         @relation("UserPlays", fields: [createdById], references: [id])
+  id                String        @id @default(cuid())
+  gameId            String
+  timestamp         DateTime      @default(now())
+  gameTime          String
+  quarter           Int
+  description       String?
+  timeInQuarter     String?
+  possession        Possession?
+  playType          PlayType?
+  ballLocation      BallLocation?
+  ballHandlerId     String?
+  primaryPlayerId   String?
+  secondaryPlayerId String?
+  result            PlayResult?
+  points            Int?
+  createdById       String
+  isVerified        Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  defensiveTeamId   String?
+  gameSituation     Json?
+  offensiveTeamId   String?
+  teamContext       Json?
+  tags              PlayTag[]
+  ballHandler       Player?       @relation("BallHandler", fields: [ballHandlerId], references: [espnId])
+  createdBy         User          @relation("UserPlays", fields: [createdById], references: [id])
+  defensiveTeam     Team?         @relation("DefensiveTeam", fields: [defensiveTeamId], references: [espnId])
+  game              Game          @relation(fields: [gameId], references: [espnId])
+  offensiveTeam     Team?         @relation("OffensiveTeam", fields: [offensiveTeamId], references: [espnId])
+  primaryPlayer     Player?       @relation("PrimaryPlayer", fields: [primaryPlayerId], references: [espnId])
+  secondaryPlayer   Player?       @relation("SecondaryPlayer", fields: [secondaryPlayerId], references: [espnId])
+  predictions       Prediction[]
+  teamContexts      TeamContext[]
 
   @@map("plays")
 }
 
-// Team Context Tracking Model (Phase 1B)
 model TeamContext {
-  id              String       @id @default(cuid())
-  playId          String       // Play.id
-  teamId          String       // ESPN team ID
-  contextType     ContextType  // Defensive scheme, offensive pattern, etc.
-  contextData     Json         // Detailed context information
-  confidence      Float        @default(1.0)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  // Relations
-  play            Play         @relation(fields: [playId], references: [id])
-  team            Team         @relation(fields: [teamId], references: [espnId])
+  id          String      @id @default(cuid())
+  playId      String
+  teamId      String
+  contextType ContextType
+  contextData Json
+  confidence  Float       @default(1.0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  play        Play        @relation(fields: [playId], references: [id])
+  team        Team        @relation(fields: [teamId], references: [espnId])
 
   @@unique([playId, teamId])
   @@map("team_contexts")
 }
 
 model Tag {
-  id              String       @id @default(cuid())
-  name            String       @unique // "High Pick and Roll", "Drop Coverage"
-  category        TagCategory
-  subcategory     String?      // "PnR", "ISO", "Post", etc.
-  description     String?
-  icon            String?      // "🏀", ""
-  color           String?      // "#FF6B6B"
-  
-  // Basketball Glossary/Education
-  glossaryEntry   GlossaryEntry?
-  
-  // Predictive Properties
-  triggers        Json?        // What actions trigger this tag
-  suggestions     Json?        // What tags typically follow this
-  isActive        Boolean      @default(true)
-  usageCount      Int          @default(0)
-  
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  // Relations
-  playTags        PlayTag[]
-  predictions     Prediction[]
+  id            String         @id @default(cuid())
+  name          String         @unique
+  category      TagCategory
+  subcategory   String?
+  description   String?
+  icon          String?
+  color         String?
+  triggers      Json?
+  suggestions   Json?
+  isActive      Boolean        @default(true)
+  usageCount    Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  glossaryEntry GlossaryEntry?
+  playTags      PlayTag[]
+  predictions   Prediction[]
 
   @@map("tags")
 }
 
-// Basketball Glossary/Education System
 model GlossaryEntry {
-  id              String       @id @default(cuid())
-  tagId           String       @unique
-  title           String       // "Drop Coverage"
-  definition      String       // "A defensive strategy where..."
-  explanation     String       // Detailed explanation with examples
-  videoUrl        String?      // Link to video example
-  imageUrl        String?      // Diagram or screenshot
-  difficulty      Difficulty   @default(BEGINNER)
-  relatedTerms    String[]     // ["Switch", "Hedge", "Trap"]
-  examples        Json?        // Example plays/scenarios
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  // Relations
-  tag             Tag          @relation(fields: [tagId], references: [id])
+  id           String     @id @default(cuid())
+  tagId        String     @unique
+  title        String
+  definition   String
+  explanation  String
+  videoUrl     String?
+  imageUrl     String?
+  difficulty   Difficulty @default(BEGINNER)
+  relatedTerms String[]
+  examples     Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  tag          Tag        @relation(fields: [tagId], references: [id])
 
   @@map("glossary_entries")
 }
 
 model PlayTag {
-  id              String       @id @default(cuid())
-  playId          String       // Play.id
-  tagId           String
-  playerId        String?      // ESPN player ID
-  teamId          String?      // ESPN team ID
-  context         Json?
-  confidence      Float        @default(1.0)
-  createdById     String
-  createdAt       DateTime     @default(now())
-  // Relations
-  play            Play         @relation(fields: [playId], references: [id])
-  tag             Tag          @relation(fields: [tagId], references: [id])
-  player          Player?      @relation(fields: [playerId], references: [espnId])
-  team            Team?        @relation(fields: [teamId], references: [espnId])
-  createdBy       User         @relation("UserPlayTags", fields: [createdById], references: [id])
+  id          String   @id @default(cuid())
+  playId      String
+  tagId       String
+  playerId    String?
+  teamId      String?
+  context     Json?
+  confidence  Float    @default(1.0)
+  createdById String
+  createdAt   DateTime @default(now())
+  createdBy   User     @relation("UserPlayTags", fields: [createdById], references: [id])
+  play        Play     @relation(fields: [playId], references: [id])
+  player      Player?  @relation(fields: [playerId], references: [espnId])
+  tag         Tag      @relation(fields: [tagId], references: [id])
+  team        Team?    @relation(fields: [teamId], references: [espnId])
+
   @@unique([playId, tagId, playerId, createdById])
   @@map("play_tags")
 }
 
 model Prediction {
-  id              String       @id @default(cuid())
-  playId          String       // Play.id
-  tagId           String
-  playerId        String?      // ESPN player ID
-  confidence      Float        // 0.0 to 1.0
-  context         Json
-  isCorrect       Boolean?
-  createdById     String
-  createdAt       DateTime     @default(now())
-  // Relations
-  play            Play         @relation(fields: [playId], references: [id])
-  tag             Tag          @relation(fields: [tagId], references: [id])
-  player          Player?      @relation(fields: [playerId], references: [espnId])
-  createdBy       User         @relation("UserPredictions", fields: [createdById], references: [id])
+  id          String   @id @default(cuid())
+  playId      String
+  tagId       String
+  playerId    String?
+  confidence  Float
+  context     Json
+  isCorrect   Boolean?
+  createdById String
+  createdAt   DateTime @default(now())
+  createdBy   User     @relation("UserPredictions", fields: [createdById], references: [id])
+  play        Play     @relation(fields: [playId], references: [id])
+  player      Player?  @relation(fields: [playerId], references: [espnId])
+  tag         Tag      @relation(fields: [tagId], references: [id])
+
   @@map("predictions")
 }
 
-// Basketball-Specific Enums
+model User {
+  id                 String       @id @default(cuid())
+  email              String       @unique
+  username           String       @unique
+  password           String
+  firstName          String?
+  lastName           String?
+  avatar             String?
+  bio                String?
+  isActive           Boolean      @default(true)
+  role               UserRole     @default(USER)
+  emailVerified      Boolean      @default(false)
+  lastLoginAt        DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  onboardingComplete Boolean      @default(false)
+  coachingRole       String?
+  experienceLevel    String?
+  teamLevel          String?
+  gameViewers        GameViewer[]
+  playTags           PlayTag[]    @relation("UserPlayTags")
+  plays              Play[]       @relation("UserPlays")
+  predictions        Prediction[] @relation("UserPredictions")
+  favoritePlayers    Player[]     @relation("UserFavoritePlayers")
+  favoriteTeams      Team[]       @relation("UserFavoriteTeams")
+
+  @@map("users")
+}
+
+model GameViewer {
+  id       String   @id @default(cuid())
+  gameId   String
+  userId   String
+  joinedAt DateTime @default(now())
+  lastSeen DateTime @default(now())
+  isActive Boolean  @default(true)
+  game     Game     @relation(fields: [gameId], references: [espnId])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([gameId, userId])
+  @@map("game_viewers")
+}
+
+model PlayerGameStat {
+  id             String   @id @default(cuid())
+  gameId         String
+  playerId       String
+  teamId         String
+  minutes        Int?
+  points         Int?
+  rebounds       Int?
+  assists        Int?
+  steals         Int?
+  blocks         Int?
+  turnovers      Int?
+  fouls          Int?
+  threesMade     Int?
+  threesAtt      Int?
+  fieldGoalsMade Int?
+  fieldGoalsAtt  Int?
+  freeThrowsMade Int?
+  freeThrowsAtt  Int?
+  plusMinus      Int?
+  starter        Boolean?
+  statsJson      Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  game           Game     @relation(fields: [gameId], references: [espnId])
+  player         Player   @relation(fields: [playerId], references: [espnId])
+  team           Team     @relation(fields: [teamId], references: [espnId])
+
+  @@unique([gameId, playerId])
+  @@map("player_game_stats")
+}
+
+model TeamGameStat {
+  id                  String   @id @default(cuid())
+  gameId              String
+  teamId              String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  abbreviation        String?
+  description         String?
+  displayValue        String
+  perGameDisplayValue String?
+  perGameValue        Float?
+  statName            String
+  statType            String
+  value               Float
+  game                Game     @relation(fields: [gameId], references: [espnId])
+  team                Team     @relation(fields: [teamId], references: [espnId])
+
+  @@unique([gameId, teamId, statType, statName])
+  @@map("team_game_stats")
+}
+
+model TeamStatistics {
+  id                  String   @id @default(cuid())
+  teamId              String
+  season              String
+  seasonType          String
+  category            String
+  statName            String
+  displayName         String
+  shortDisplayName    String
+  description         String?
+  abbreviation        String
+  value               Float
+  displayValue        String
+  perGameValue        Float?
+  perGameDisplayValue String?
+  lastSynced          DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  team                Team     @relation(fields: [teamId], references: [espnId])
+
+  @@unique([teamId, season, seasonType, category, statName])
+  @@map("team_statistics")
+}
+
 enum GameStatus {
   SCHEDULED
   LIVE
@@ -371,142 +458,8 @@ enum ContextType {
   TENDENCY_RECOGNITION
 }
 
-model User {
-  id                  String       @id @default(cuid())
-  email               String       @unique
-  username            String       @unique
-  password            String       // Hashed password
-  firstName           String?
-  lastName            String?
-  avatar              String?      // Profile picture URL
-  bio                 String?      // User bio
-  isActive            Boolean      @default(true)
-  role                UserRole     @default(USER)
-  emailVerified       Boolean      @default(false)
-  onboardingComplete  Boolean      @default(false) // Track if user completed onboarding
-  
-  // Onboarding fields
-  experienceLevel     String?      // "beginner", "intermediate", "advanced", "expert"
-  coachingRole        String?      // "head", "assistant", "volunteer", "player"
-  teamLevel           String?      // "youth", "high-school", "college", "pro"
-  
-  lastLoginAt         DateTime?
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
-
-  // User Preferences
-  favoriteTeams       Team[]       @relation("UserFavoriteTeams")
-  favoritePlayers     Player[]     @relation("UserFavoritePlayers")
-  
-  // User Activity
-  plays               Play[]       @relation("UserPlays")
-  playTags            PlayTag[]    @relation("UserPlayTags")
-  predictions         Prediction[] @relation("UserPredictions")
-  gameViewers         GameViewer[]
-
-  @@map("users")
-}
-
-model GameViewer {
-  id              String       @id @default(cuid())
-  gameId          String       // Game.espnId
-  userId          String
-  joinedAt        DateTime     @default(now())
-  lastSeen        DateTime     @default(now())
-  isActive        Boolean      @default(true)
-  // Relations
-  game            Game         @relation(fields: [gameId], references: [espnId])
-  user            User         @relation(fields: [userId], references: [id])
-  @@unique([gameId, userId])
-  @@map("game_viewers")
-}
-
 enum UserRole {
   USER
   MODERATOR
   ADMIN
-}
-
-model PlayerGameStat {
-  id          String   @id @default(cuid())
-  gameId      String   // ESPN game ID
-  playerId    String   // ESPN player ID
-  teamId      String   // ESPN team ID
-  minutes     Int?
-  points      Int?
-  rebounds    Int?
-  assists     Int?
-  steals      Int?
-  blocks      Int?
-  turnovers   Int?
-  fouls       Int?
-  threesMade  Int?
-  threesAtt   Int?
-  fieldGoalsMade Int?
-  fieldGoalsAtt Int?
-  freeThrowsMade Int?
-  freeThrowsAtt Int?
-  plusMinus   Int?
-  starter     Boolean? // true if started
-  statsJson   Json?    // Raw ESPN stats for flexibility
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  game        Game     @relation(fields: [gameId], references: [espnId])
-  player      Player   @relation(fields: [playerId], references: [espnId])
-  team        Team     @relation(fields: [teamId], references: [espnId])
-
-  @@unique([gameId, playerId])
-  @@map("player_game_stats")
-}
-
-model TeamGameStat {
-  id              String   @id @default(cuid())
-  gameId          String   // ESPN game ID
-  teamId          String   // ESPN team ID
-  statType        String   // "offensive", "defensive", "general"
-  statName        String   // "points", "rebounds", etc.
-  value           Float
-  displayValue    String
-  description     String?
-  abbreviation    String?
-  perGameValue    Float?
-  perGameDisplayValue String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  game            Game     @relation(fields: [gameId], references: [espnId])
-  team            Team     @relation(fields: [teamId], references: [espnId])
-
-  @@unique([gameId, teamId, statType, statName])
-  @@map("team_game_stats")
-}
-
-// Team Statistics Model for ESPN API data
-model TeamStatistics {
-  id              String   @id @default(cuid())
-  teamId          String   // ESPN team ID
-  season          String   // "2024-25"
-  seasonType      String   // "regular", "postseason", "playoffs"
-  category        String   // "general", "offensive", "defensive"
-  statName        String   // "avgPoints", "rebounds", etc.
-  displayName     String   // "Points Per Game"
-  shortDisplayName String  // "PPG"
-  description     String?
-  abbreviation    String   // "PTS"
-  value           Float
-  displayValue    String
-  perGameValue    Float?
-  perGameDisplayValue String?
-  lastSynced      DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  team            Team     @relation(fields: [teamId], references: [espnId])
-
-  @@unique([teamId, season, seasonType, category, statName])
-  @@map("team_statistics")
 }

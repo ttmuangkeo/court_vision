@@ -32,7 +32,7 @@ class AthleteSyncService {
 
   async fetchAthleteStatistics(athleteId) {
     try {
-      const response = await axios.get(`${this.apiBase}/athletes/${athleteId}/statistics`);
+      const response = await axios.get(`https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${athleteId}`);
       return response.data;
     } catch (error) {
       // Statistics might not be available for all athletes
@@ -65,19 +65,74 @@ class AthleteSyncService {
       }
     }
 
+    // Extract statistics from statsData
+    let statsFields = {};
+    if (statsData && statsData.athlete && statsData.athlete.statsSummary && statsData.athlete.statsSummary.statistics) {
+      const statistics = statsData.athlete.statsSummary.statistics;
+      
+      // Extract stats from the statistics array
+      statistics.forEach(stat => {
+        switch (stat.name) {
+          case 'avgPoints':
+            statsFields.avgPoints = stat.value;
+            break;
+          case 'avgRebounds':
+            statsFields.avgRebounds = stat.value;
+            break;
+          case 'avgAssists':
+            statsFields.avgAssists = stat.value;
+            break;
+          case 'avgSteals':
+            statsFields.avgSteals = stat.value;
+            break;
+          case 'avgBlocks':
+            statsFields.avgBlocks = stat.value;
+            break;
+          case 'avgTurnovers':
+            statsFields.avgTurnovers = stat.value;
+            break;
+          case 'avgFouls':
+            statsFields.avgFouls = stat.value;
+            break;
+          case 'fieldGoalPct':
+            statsFields.fieldGoalPct = stat.value;
+            break;
+          case 'threePointPct':
+            statsFields.threePointPct = stat.value;
+            break;
+          case 'freeThrowPct':
+            statsFields.freeThrowPct = stat.value;
+            break;
+          case 'gamesPlayed':
+            statsFields.gamesPlayed = stat.value;
+            break;
+          case 'gamesStarted':
+            statsFields.gamesStarted = stat.value;
+            break;
+          case 'minutesPerGame':
+            statsFields.minutesPerGame = stat.value;
+            break;
+        }
+      });
+      
+      // Set flags if we found any stats
+      if (Object.keys(statsFields).length > 0) {
+        statsFields.hasStatistics = true;
+        statsFields.lastStatsSync = new Date();
+      }
+    }
+
     return {
       espnId: athleteData.id,
-      name: athleteData.displayName,
       firstName: athleteData.firstName,
       lastName: athleteData.lastName,
       fullName: athleteData.fullName,
       shortName: athleteData.shortName,
       position: athleteData.position?.abbreviation || null,
       teamEspnId: athleteData.team?.id || null,
-      height: athleteData.displayHeight || null,
-      weight: athleteData.weight || null,
+      displayHeight: athleteData.displayHeight || null,
       displayWeight: athleteData.displayWeight || null,
-      birthDate: athleteData.dateOfBirth ? new Date(athleteData.dateOfBirth) : null,
+      dateOfBirth: athleteData.dateOfBirth ? new Date(athleteData.dateOfBirth) : null,
       college: collegeName,
       jerseyNumber: athleteData.jersey || null,
       age: athleteData.age || null,
@@ -93,10 +148,21 @@ class AthleteSyncService {
       alternateIds: athleteData.alternateIds ? JSON.stringify(athleteData.alternateIds) : null,
       collegeAthlete: athleteData.collegeAthlete ? true : false,
       contracts: athleteData.contracts ? JSON.stringify(athleteData.contracts) : null,
-      // Statistics flag
-      hasStatistics: !!statsData,
+      // Statistics fields
+      ...statsFields,
       lastSynced: new Date()
     };
+  }
+
+  extractStatValue(stats, statName) {
+    if (!stats || !Array.isArray(stats)) return null;
+    
+    const stat = stats.find(s => s.name === statName);
+    if (!stat || stat.value === undefined || stat.value === null) return null;
+    
+    // Convert to number if possible
+    const numValue = parseFloat(stat.value);
+    return isNaN(numValue) ? null : numValue;
   }
 
   async syncAthlete(athleteRef, statsData = null) {
@@ -183,7 +249,7 @@ class AthleteSyncService {
             } else {
               inactiveAthletes++;
             }
-            console.log(`      ✅ Synced: ${result.athlete.name} (${result.athlete.active ? 'Active' : 'Inactive'})`);
+            console.log(`      ✅ Synced: ${result.athlete.fullName} (${result.athlete.active ? 'Active' : 'Inactive'})`);
           } else {
             failedAthletes++;
             console.log(`      ❌ Failed: ${result.error}`);
@@ -238,7 +304,7 @@ class AthleteSyncService {
         take: 5,
         orderBy: { lastSynced: 'desc' },
         select: {
-          name: true,
+          fullName: true,
           position: true,
           active: true,
           lastSynced: true
