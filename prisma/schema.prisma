@@ -8,180 +8,247 @@ datasource db {
 }
 
 model Team {
-  espnId            String           @id
-  abbreviation      String           @unique
-  name              String
-  city              String
-  conference        String
-  division          String
-  primaryColor      String?
-  alternateColor    String?
-  logoUrl           String?
-  logoDarkUrl       String?
-  logoScoreboardUrl String?
-  espnUid           String?
-  espnSlug          String?
-  displayName       String?
-  shortDisplayName  String?
-  nickname          String?
-  isActive          Boolean?         @default(true)
-  isAllStar         Boolean?         @default(false)
-  espnLinks         Json?
-  lastSynced        DateTime         @default(now())
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  awayGames         Game[]           @relation("AwayTeam")
-  homeGames         Game[]           @relation("HomeTeam")
-  playTags          PlayTag[]
-  playerGameStats   PlayerGameStat[]
-  players           Player[]         @relation("TeamPlayers")
-  defensivePlays    Play[]           @relation("DefensiveTeam")
-  offensivePlays    Play[]           @relation("OffensiveTeam")
-  teamContexts      TeamContext[]
-  teamGameStats     TeamGameStat[]
-  teamStatistics    TeamStatistics[]
-  favoriteBy        User[]           @relation("UserFavoriteTeams")
+  id                   Int              @id
+  key                  String           @unique
+  active               Boolean
+  city                 String
+  name                 String
+  leagueId             Int
+  stadiumId            Int?
+  conference           String
+  division             String
+  primaryColor         String?
+  secondaryColor       String?
+  tertiaryColor        String?
+  quaternaryColor      String?
+  wikipediaLogoUrl     String?
+  wikipediaWordMarkUrl String?
+  globalTeamId         Int?
+  nbaDotComTeamId      Int?
+  headCoach            String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  awayGames            Game[]           @relation("AwayTeam")
+  homeGames            Game[]           @relation("HomeTeam")
+  playTags             PlayTag[]
+  playerGameStats      PlayerGameStat[]
+  players              Player[]         @relation("TeamPlayers")
+  defensivePlays       Play[]           @relation("DefensiveTeam")
+  offensivePlays       Play[]           @relation("OffensiveTeam")
+  teamContexts         TeamContext[]
+  teamGameStats        TeamGameStat[]
+  teamStatistics       TeamStatistics[]
+  favoriteBy           User[]           @relation("UserFavoriteTeams")
+  playerNews           PlayerNews[]     @relation("TeamNews")
+  playerSeasonStats    PlayerSeasonStat[]
 
   @@map("teams")
 }
 
 model Player {
-  espnId           String           @id
+  id               Int              @id // PlayerID from sportsdata.io
+  status           String
+  teamId           Int?
+  team             Team?            @relation("TeamPlayers", fields: [teamId], references: [id])
+  jersey           Int?
   position         String
-  teamEspnId       String?
+  positionCategory String
+  firstName        String
+  lastName         String
+  birthDate        DateTime?
+  birthCity        String?
+  birthState       String?
+  birthCountry     String?
+  globalTeamId     Int?
+  height           Int?
+  weight           Int?
+  highSchool       String?
   college          String?
-  jerseyNumber     String?
-  espnUid          String?
-  espnSlug         String?
-  firstName        String?
-  lastName         String?
-  shortName        String?
-  fullName         String?
-  displayHeight    String?
-  displayWeight    String?
-  age              Int?
+  salary           Int?
+  photoUrl         String?
   experience       Int?
-  dateOfBirth      DateTime?
-  birthPlace       String?
-  debutYear        Int?
-  headshot         String?
-  status           String?
-  injuries         Json?
-  contract         Json?
-  contracts        Json?
-  alternateIds     Json?
-  espnLinks        Json?
-  lastSynced       DateTime         @default(now())
+  sportRadarPlayerId String?
+  rotoworldPlayerId Int?
+  rotoWirePlayerId  Int?
+  fantasyAlarmPlayerId Int?
+  statsPlayerId    Int?
+  sportsDirectPlayerId Int?
+  xmlTeamPlayerId  Int?
+  injuryStatus     String?
+  injuryBodyPart   String?
+  injuryStartDate  DateTime?
+  injuryNotes      String?
+  fanDuelPlayerId  Int?
+  draftKingsPlayerId Int?
+  yahooPlayerId    Int?
+  fanDuelName      String?
+  draftKingsName   String?
+  yahooName        String?
+  depthChartPosition String?
+  depthChartOrder  Int?
+  fantasyDraftName String?
+  fantasyDraftPlayerId Int?
+  usaTodayPlayerId Int?
+  usaTodayHeadshotUrl String?
+  usaTodayHeadshotNoBackgroundUrl String?
+  usaTodayHeadshotUpdated DateTime?
+  usaTodayHeadshotNoBackgroundUpdated DateTime?
+  nbaDotComPlayerId Int?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
-  active           Boolean?         @default(true)
-  collegeAthlete   Boolean?         @default(false)
-  espnGuid         String?
-  hasStatistics    Boolean?         @default(false)
-  slug             String?
-  avgAssists       Float?
-  avgBlocks        Float?
-  avgFouls         Float?
-  avgPoints        Float?
-  avgRebounds      Float?
-  avgSteals        Float?
-  avgTurnovers     Float?
-  fieldGoalPct     Float?
-  freeThrowPct     Float?
-  gamesPlayed      Int?
-  gamesStarted     Int?
-  lastStatsSync    DateTime?
-  minutesPerGame   Float?
-  statsSummary     Json?
-  threePointPct    Float?
+  // Relations to stats, plays, etc. (update as needed)
   playTags         PlayTag[]
   playerGameStats  PlayerGameStat[]
-  team             Team?            @relation("TeamPlayers", fields: [teamEspnId], references: [espnId])
   ballHandlerPlays Play[]           @relation("BallHandler")
   primaryPlays     Play[]           @relation("PrimaryPlayer")
   secondaryPlays   Play[]           @relation("SecondaryPlayer")
   predictions      Prediction[]
   favoriteBy       User[]           @relation("UserFavoritePlayers")
   playerNews       PlayerNews[]     @relation("PlayerNews")
+  playerSeasonStats PlayerSeasonStat[]
 
   @@map("players")
 }
 
 model Game {
-  espnId          String           @id
-  date            DateTime
-  homeTeamId      String
-  awayTeamId      String
-  homeScore       Int?
-  awayScore       Int?
-  status          GameStatus
-  quarter         Int              @default(1)
-  timeRemaining   String?
-  attendance      Int?
-  arena           String?
-  season          String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  lastSynced      DateTime         @default(now())
-  viewers         GameViewer[]
-  awayTeam        Team             @relation("AwayTeam", fields: [awayTeamId], references: [espnId])
-  homeTeam        Team             @relation("HomeTeam", fields: [homeTeamId], references: [espnId])
+  id                   Int       @id // GameID from sportsdata.io
+  season               Int
+  seasonType           Int
+  status               String
+  day                  DateTime
+  dateTime             DateTime
+  dateTimeUTC          DateTime?
+  homeTeamId           Int
+  awayTeamId           Int
+  homeTeam             Team      @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam             Team      @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  stadiumId            Int?
+  channel              String?
+  attendance           Int?
+  homeTeamScore        Int?
+  awayTeamScore        Int?
+  isClosed             Boolean?
+  gameEndDateTime      DateTime?
+  updated              DateTime?
+  quarter              Int?
+  timeRemainingMinutes Int?
+  timeRemainingSeconds Int?
+  pointSpread          Float?
+  overUnder            Float?
+  awayTeamMoneyLine    Int?
+  homeTeamMoneyLine    Int?
+  lastPlay             String?
+  globalGameId         Int?
+  globalAwayTeamId     Int?
+  globalHomeTeamId     Int?
+  homeRotationNumber   Int?
+  awayRotationNumber   Int?
+  neutralVenue         Boolean?
+  crewChiefId          Int?
+  umpireId             Int?
+  refereeId            Int?
+  inseasonTournament   Boolean?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
   playerGameStats PlayerGameStat[]
   plays           Play[]
   teamGameStats   TeamGameStat[]
+  viewers         GameViewer[]
 
   @@map("games")
 }
 
 model Play {
-  id                String        @id @default(cuid())
-  gameId            String
-  timestamp         DateTime      @default(now())
-  gameTime          String
-  quarter           Int
-  description       String?
-  timeInQuarter     String?
-  possession        Possession?
-  playType          PlayType?
-  ballLocation      BallLocation?
-  ballHandlerId     String?
-  primaryPlayerId   String?
-  secondaryPlayerId String?
-  result            PlayResult?
-  points            Int?
-  createdById       String
-  isVerified        Boolean       @default(false)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  defensiveTeamId   String?
-  gameSituation     Json?
-  offensiveTeamId   String?
-  teamContext       Json?
-  tags              PlayTag[]
-  ballHandler       Player?       @relation("BallHandler", fields: [ballHandlerId], references: [espnId])
-  createdBy         User          @relation("UserPlays", fields: [createdById], references: [id])
-  defensiveTeam     Team?         @relation("DefensiveTeam", fields: [defensiveTeamId], references: [espnId])
-  game              Game          @relation(fields: [gameId], references: [espnId])
-  offensiveTeam     Team?         @relation("OffensiveTeam", fields: [offensiveTeamId], references: [espnId])
-  primaryPlayer     Player?       @relation("PrimaryPlayer", fields: [primaryPlayerId], references: [espnId])
-  secondaryPlayer   Player?       @relation("SecondaryPlayer", fields: [secondaryPlayerId], references: [espnId])
-  predictions       Prediction[]
-  teamContexts      TeamContext[]
+  // Sportsdata.io API fields
+  playId               Int?           @unique // PlayID from sportsdata.io API
+  quarterId            Int?           // QuarterID from API
+  quarterName          String?        // QuarterName from API
+  sequence             Int?           // Sequence from API
+  season               Int?           // Season for partitioning
+  timeRemainingMinutes Int?           // TimeRemainingMinutes from API
+  timeRemainingSeconds Int?           // TimeRemainingSeconds from API
+  awayTeamScore        Int?           // AwayTeamScore from API
+  homeTeamScore        Int?           // HomeTeamScore from API
+  potentialPoints      Int?           // PotentialPoints from API
+  points               Int?           // Points from API
+  shotMade             Boolean?       // ShotMade from API
+  category             String?        // Category from API
+  type                 String?        // Type from API
+  teamId               Int?           // TeamID from API
+  team                 String?        // Team from API
+  opponentId           Int?           // OpponentID from API
+  opponent             String?        // Opponent from API
+  receivingTeamId      Int?           // ReceivingTeamID from API
+  receivingTeam        String?        // ReceivingTeam from API
+  description          String?        // Description from API
+  playerId             Int?           // PlayerID from API
+  assistedByPlayerId   Int?           // AssistedByPlayerID from API
+  blockedByPlayerId    Int?           // BlockedByPlayerID from API
+  fastBreak            Boolean?       // FastBreak from API
+  sideOfBasket         String?        // SideOfBasket from API
+  substituteInPlayerId Int?           // SubstituteInPlayerID from API
+  substituteOutPlayerId Int?          // SubstituteOutPlayerID from API
+  awayPlayerId         Int?           // AwayPlayerID from API
+  homePlayerId         Int?           // HomePlayerID from API
+  receivingPlayerId    Int?           // ReceivingPlayerID from API
+  baselineOffsetPercentage Float?     // BaselineOffsetPercentage from API
+  sidelineOffsetPercentage Float?     // SidelineOffsetPercentage from API
+  coordinates          String?        // Coordinates from API
+  stolenByPlayerId     Int?           // StolenByPlayerID from API
+  
+  // Existing custom fields for tagging and analytics
+  id                   String         @id @default(cuid())
+  gameId               Int
+  timestamp            DateTime       @default(now())
+  gameTime             String
+  quarter              Int
+  timeInQuarter        String?
+  possession           Possession?
+  playType             PlayType?
+  ballLocation         BallLocation?
+  ballHandlerId        Int?
+  primaryPlayerId      Int?
+  secondaryPlayerId    Int?
+  result               PlayResult?
+  createdById          String
+  isVerified           Boolean        @default(false)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  defensiveTeamId      Int?
+  gameSituation        Json?
+  offensiveTeamId      Int?
+  teamContext          Json?
+  
+  // Relations
+  tags                 PlayTag[]
+  ballHandler          Player?        @relation("BallHandler", fields: [ballHandlerId], references: [id])
+  createdBy            User           @relation("UserPlays", fields: [createdById], references: [id])
+  defensiveTeam        Team?          @relation("DefensiveTeam", fields: [defensiveTeamId], references: [id])
+  game                 Game           @relation(fields: [gameId], references: [id])
+  offensiveTeam        Team?          @relation("OffensiveTeam", fields: [offensiveTeamId], references: [id])
+  primaryPlayer        Player?        @relation("PrimaryPlayer", fields: [primaryPlayerId], references: [id])
+  secondaryPlayer      Player?        @relation("SecondaryPlayer", fields: [secondaryPlayerId], references: [id])
+  predictions          Prediction[]
+  teamContexts         TeamContext[]
 
   @@map("plays")
+  @@index([gameId, quarter, sequence])
+  @@index([playId])
+  @@index([season, gameId])
 }
 
 model TeamContext {
   id          String      @id @default(cuid())
   playId      String
-  teamId      String
+  teamId      Int
   contextType ContextType
   contextData Json
   confidence  Float       @default(1.0)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   play        Play        @relation(fields: [playId], references: [id])
-  team        Team        @relation(fields: [teamId], references: [espnId])
+  team        Team        @relation(fields: [teamId], references: [id])
 
   @@unique([playId, teamId])
   @@map("team_contexts")
@@ -230,17 +297,17 @@ model PlayTag {
   id          String   @id @default(cuid())
   playId      String
   tagId       String
-  playerId    String?
-  teamId      String?
+  playerId    Int?
+  teamId      Int?
   context     Json?
   confidence  Float    @default(1.0)
   createdById String
   createdAt   DateTime @default(now())
   createdBy   User     @relation("UserPlayTags", fields: [createdById], references: [id])
   play        Play     @relation(fields: [playId], references: [id])
-  player      Player?  @relation(fields: [playerId], references: [espnId])
+  player      Player?  @relation(fields: [playerId], references: [id])
   tag         Tag      @relation(fields: [tagId], references: [id])
-  team        Team?    @relation(fields: [teamId], references: [espnId])
+  team        Team?    @relation(fields: [teamId], references: [id])
 
   @@unique([playId, tagId, playerId, createdById])
   @@map("play_tags")
@@ -250,7 +317,7 @@ model Prediction {
   id          String   @id @default(cuid())
   playId      String
   tagId       String
-  playerId    String?
+  playerId    Int?
   confidence  Float
   context     Json
   isCorrect   Boolean?
@@ -258,7 +325,7 @@ model Prediction {
   createdAt   DateTime @default(now())
   createdBy   User     @relation("UserPredictions", fields: [createdById], references: [id])
   play        Play     @relation(fields: [playId], references: [id])
-  player      Player?  @relation(fields: [playerId], references: [espnId])
+  player      Player?  @relation(fields: [playerId], references: [id])
   tag         Tag      @relation(fields: [tagId], references: [id])
 
   @@map("predictions")
@@ -295,12 +362,12 @@ model User {
 
 model GameViewer {
   id       String   @id @default(cuid())
-  gameId   String
+  gameId   Int
   userId   String
   joinedAt DateTime @default(now())
   lastSeen DateTime @default(now())
   isActive Boolean  @default(true)
-  game     Game     @relation(fields: [gameId], references: [espnId])
+  game     Game     @relation(fields: [gameId], references: [id])
   user     User     @relation(fields: [userId], references: [id])
 
   @@unique([gameId, userId])
@@ -309,9 +376,9 @@ model GameViewer {
 
 model PlayerGameStat {
   id             String   @id @default(cuid())
-  gameId         String
-  playerId       String
-  teamId         String
+  gameId         Int
+  playerId       Int
+  teamId         Int
   minutes        Int?
   points         Int?
   rebounds       Int?
@@ -331,38 +398,74 @@ model PlayerGameStat {
   statsJson      Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  game           Game     @relation(fields: [gameId], references: [espnId])
-  player         Player   @relation(fields: [playerId], references: [espnId])
-  team           Team     @relation(fields: [teamId], references: [espnId])
+  game           Game     @relation(fields: [gameId], references: [id])
+  player         Player   @relation(fields: [playerId], references: [id])
+  team           Team     @relation(fields: [teamId], references: [id])
 
   @@unique([gameId, playerId])
   @@map("player_game_stats")
 }
 
 model TeamGameStat {
-  id                  String   @id @default(cuid())
-  gameId              String
-  teamId              String
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  abbreviation        String?
-  description         String?
-  displayValue        String
-  perGameDisplayValue String?
-  perGameValue        Float?
-  statName            String
-  statType            String
-  value               Float
-  game                Game     @relation(fields: [gameId], references: [espnId])
-  team                Team     @relation(fields: [teamId], references: [espnId])
+  statId                Int      @id // StatID from API
+  teamId                Int
+  team                  Team     @relation(fields: [teamId], references: [id])
+  gameId                Int
+  game                  Game     @relation(fields: [gameId], references: [id])
+  season                Int
+  seasonType            Int
+  name                  String
+  teamAbbreviation      String   @map("Team")
+  wins                  Int
+  losses                Int
+  possessions           Float?
+  opponentId            Int
+  opponentAbbreviation  String   @map("Opponent")
+  day                   DateTime
+  dateTime              DateTime
+  homeOrAway            String
+  isGameOver            Boolean
+  updated               DateTime
+  games                 Int
+  fantasyPoints         Float?
+  minutes               Int?
+  seconds               Int?
+  fieldGoalsMade        Float?
+  fieldGoalsAttempted   Float?
+  fieldGoalsPercentage  Float?
+  effectiveFieldGoalsPercentage Float?
+  twoPointersMade       Float?
+  twoPointersAttempted  Float?
+  twoPointersPercentage Float?
+  threePointersMade     Float?
+  threePointersAttempted Float?
+  threePointersPercentage Float?
+  freeThrowsMade        Float?
+  freeThrowsAttempted   Float?
+  freeThrowsPercentage  Float?
+  offensiveRebounds     Float?
+  defensiveRebounds     Float?
+  rebounds              Float?
+  assists               Float?
+  steals                Float?
+  blockedShots          Float?
+  turnovers             Float?
+  personalFouls         Float?
+  points                Float?
+  trueShootingAttempts  Float?
+  trueShootingPercentage Float?
+  plusMinus             Float?
+  doubleDoubles         Float?
+  tripleDoubles         Float?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  @@unique([gameId, teamId, statType, statName])
   @@map("team_game_stats")
 }
 
 model TeamStatistics {
   id                  String   @id @default(cuid())
-  teamId              String
+  teamId              Int
   season              String
   seasonType          String
   category            String
@@ -378,27 +481,95 @@ model TeamStatistics {
   lastSynced          DateTime @default(now())
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-  team                Team     @relation(fields: [teamId], references: [espnId])
+  team                Team     @relation(fields: [teamId], references: [id])
 
   @@unique([teamId, season, seasonType, category, statName])
   @@map("team_statistics")
 }
 
 model PlayerNews {
-  id            String    @id @default(cuid())
-  espnId        String    @unique
-  headline      String
-  description   String?
-  published     DateTime?
-  type          String?
-  section       String?
-  playerEspnId  String
-  lastSynced    DateTime  @default(now())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  player        Player    @relation("PlayerNews", fields: [playerEspnId], references: [espnId])
+  id                Int      @id // NewsID from sportsdata.io
+  source            String
+  updated           DateTime
+  title             String
+  content           String
+  url               String
+  author            String?
+  categories        String?
+  playerId          Int?
+  teamId            Int?
+  originalSource    String?
+  originalSourceUrl String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  player Player? @relation("PlayerNews", fields: [playerId], references: [id])
+  team   Team?   @relation("TeamNews", fields: [teamId], references: [id])
 
   @@map("player_news")
+}
+
+model PlayerSeasonStat {
+  id                        Int      @id // StatID from sportsdata.io
+  playerId                  Int
+  teamId                    Int
+  season                    Int
+  seasonType                Int
+  name                      String
+  position                  String
+  started                   Int?
+  games                     Int?
+  minutes                   Int?
+  seconds                   Int?
+  fieldGoalsMade            Float?
+  fieldGoalsAttempted       Float?
+  fieldGoalsPercentage      Float?
+  effectiveFieldGoalsPercentage Float?
+  twoPointersMade           Float?
+  twoPointersAttempted      Float?
+  twoPointersPercentage     Float?
+  threePointersMade         Float?
+  threePointersAttempted    Float?
+  threePointersPercentage   Float?
+  freeThrowsMade            Float?
+  freeThrowsAttempted       Float?
+  freeThrowsPercentage      Float?
+  offensiveRebounds         Float?
+  defensiveRebounds         Float?
+  rebounds                  Float?
+  offensiveReboundsPercentage Float?
+  defensiveReboundsPercentage Float?
+  totalReboundsPercentage   Float?
+  assists                   Float?
+  steals                    Float?
+  blockedShots              Float?
+  turnovers                 Float?
+  personalFouls             Float?
+  points                    Float?
+  trueShootingAttempts      Float?
+  trueShootingPercentage    Float?
+  playerEfficiencyRating    Float?
+  assistsPercentage         Float?
+  stealsPercentage          Float?
+  blocksPercentage          Float?
+  turnOversPercentage       Float?
+  usageRatePercentage       Float?
+  fantasyPoints             Float?
+  fantasyPointsFanDuel      Float?
+  fantasyPointsDraftKings   Float?
+  fantasyPointsYahoo        Float?
+  plusMinus                 Float?
+  doubleDoubles             Float?
+  tripleDoubles             Float?
+  fantasyPointsFantasyDraft Float?
+  isClosed                  Boolean?
+  lineupStatus              String?
+  updated                   DateTime?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  player                    Player   @relation(fields: [playerId], references: [id])
+  team                      Team     @relation(fields: [teamId], references: [id])
 }
 
 enum GameStatus {
