@@ -37,22 +37,26 @@ router.get('/me', authenticateJWT, async (req, res) => {
                 updatedAt: true,
                 favoriteTeams: {
                     select: {
-                        espnId: true,
+                        id: true,
+                        key: true,
                         name: true,
-                        abbreviation: true,
-                        logoUrl: true
+                        city: true,
+                        wikipediaLogoUrl: true
                     }
                 },
                 favoritePlayers: {
                     select: {
-                        espnId: true,
-                        fullName: true,
+                        id: true,
+                        firstName: true,
+                        lastName: true,
                         position: true,
-                        headshot: true,
-                        teamEspnId: true,
+                        photoUrl: true,
+                        teamId: true,
                         team: {
                             select: {
-                                abbreviation: true
+                                key: true,
+                                city: true,
+                                name: true
                             }
                         }
                     }
@@ -169,6 +173,12 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({error: 'Invalid credentials.'});
         }
 
+        // Verify password
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({error: 'Invalid credentials.'});
+        }
+
         // Update last login
         await prisma.user.update({
             where: { id: user.id },
@@ -198,22 +208,26 @@ router.post('/login', async (req, res) => {
                 onboardingComplete: true,
                 favoriteTeams: {
                     select: {
-                        espnId: true,
+                        id: true,
+                        key: true,
                         name: true,
-                        abbreviation: true,
-                        logoUrl: true
+                        city: true,
+                        wikipediaLogoUrl: true
                     }
                 },
                 favoritePlayers: {
                     select: {
-                        espnId: true,
-                        fullName: true,
+                        id: true,
+                        firstName: true,
+                        lastName: true,
                         position: true,
-                        headshot: true,
-                        teamEspnId: true,
+                        photoUrl: true,
+                        teamId: true,
                         team: {
                             select: {
-                                abbreviation: true
+                                key: true,
+                                city: true,
+                                name: true
                             }
                         }
                     }
@@ -291,24 +305,28 @@ router.get('/profile', authenticateJWT, async (req, res) => {
             include: {
                 favoriteTeams: {
                     select: {
-                        espnId: true,
+                        id: true,
+                        key: true,
                         name: true,
-                        abbreviation: true,
-                        logoUrl: true,
+                        city: true,
+                        wikipediaLogoUrl: true,
                         primaryColor: true,
-                        alternateColor: true
+                        secondaryColor: true
                     }
                 },
                 favoritePlayers: {
                     select: {
-                        espnId: true,
-                        fullName: true,
+                        id: true,
+                        firstName: true,
+                        lastName: true,
                         position: true,
-                        headshot: true,
-                        teamEspnId: true,
+                        photoUrl: true,
+                        teamId: true,
                         team: {
                             select: {
-                                abbreviation: true
+                                key: true,
+                                city: true,
+                                name: true
                             }
                         }
                     }
@@ -389,7 +407,7 @@ router.put('/profile', authenticateJWT, async (req, res) => {
                 where: { id: req.user.id },
                 data: {
                     favoriteTeams: {
-                        set: favoriteTeams.map(teamId => ({ espnId: teamId }))
+                        set: favoriteTeams.map(teamId => ({ id: parseInt(teamId) }))
                     }
                 }
             });
@@ -401,7 +419,7 @@ router.put('/profile', authenticateJWT, async (req, res) => {
                 where: { id: req.user.id },
                 data: {
                     favoritePlayers: {
-                        set: favoritePlayers.map(playerId => ({ espnId: playerId }))
+                        set: favoritePlayers.map(playerId => ({ id: parseInt(playerId) }))
                     }
                 }
             });
@@ -413,24 +431,28 @@ router.put('/profile', authenticateJWT, async (req, res) => {
             include: {
                 favoriteTeams: {
                     select: {
-                        espnId: true,
+                        id: true,
+                        key: true,
                         name: true,
-                        abbreviation: true,
-                        logoUrl: true,
+                        city: true,
+                        wikipediaLogoUrl: true,
                         primaryColor: true,
-                        alternateColor: true
+                        secondaryColor: true
                     }
                 },
                 favoritePlayers: {
                     select: {
-                        espnId: true,
-                        fullName: true,
+                        id: true,
+                        firstName: true,
+                        lastName: true,
                         position: true,
-                        headshot: true,
-                        teamEspnId: true,
+                        photoUrl: true,
+                        teamId: true,
                         team: {
                             select: {
-                                abbreviation: true
+                                key: true,
+                                city: true,
+                                name: true
                             }
                         }
                     }
@@ -461,24 +483,28 @@ router.get('/profile', authenticateJWT, async (req, res) => {
             include: {
                 favoriteTeams: {
                     select: {
-                        espnId: true,
+                        id: true,
+                        key: true,
                         name: true,
-                        abbreviation: true,
-                        logoUrl: true,
+                        city: true,
+                        wikipediaLogoUrl: true,
                         primaryColor: true,
-                        alternateColor: true
+                        secondaryColor: true
                     }
                 },
                 favoritePlayers: {
                     select: {
-                        espnId: true,
-                        fullName: true,
+                        id: true,
+                        firstName: true,
+                        lastName: true,
                         position: true,
-                        headshot: true,
-                        teamEspnId: true,
+                        photoUrl: true,
+                        teamId: true,
                         team: {
                             select: {
-                                abbreviation: true
+                                key: true,
+                                city: true,
+                                name: true
                             }
                         }
                     }
@@ -559,7 +585,7 @@ router.put('/profile', authenticateJWT, async (req, res) => {
                 where: { id: req.user.id },
                 data: {
                     favoriteTeams: {
-                        set: favoriteTeams.map(teamId => ({ espnId: teamId }))
+                        set: favoriteTeams.map(teamId => ({ id: parseInt(teamId) }))
                     }
                 }
             });
@@ -571,7 +597,7 @@ router.put('/profile', authenticateJWT, async (req, res) => {
                 where: { id: req.user.id },
                 data: {
                     favoritePlayers: {
-                        set: favoritePlayers.map(playerId => ({ espnId: playerId }))
+                        set: favoritePlayers.map(playerId => ({ id: parseInt(playerId) }))
                     }
                 }
             });
@@ -583,24 +609,28 @@ router.put('/profile', authenticateJWT, async (req, res) => {
             include: {
                 favoriteTeams: {
                     select: {
-                        espnId: true,
+                        id: true,
+                        key: true,
                         name: true,
-                        abbreviation: true,
-                        logoUrl: true,
+                        city: true,
+                        wikipediaLogoUrl: true,
                         primaryColor: true,
-                        alternateColor: true
+                        secondaryColor: true
                     }
                 },
                 favoritePlayers: {
                     select: {
-                        espnId: true,
-                        fullName: true,
+                        id: true,
+                        firstName: true,
+                        lastName: true,
                         position: true,
-                        headshot: true,
-                        teamEspnId: true,
+                        photoUrl: true,
+                        teamId: true,
                         team: {
                             select: {
-                                abbreviation: true
+                                key: true,
+                                city: true,
+                                name: true
                             }
                         }
                     }

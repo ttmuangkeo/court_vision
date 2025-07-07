@@ -215,7 +215,7 @@ function TeamsList() {
                         ) : sleepers.length > 0 ? (
                             <div style={{ display: 'grid', gap: '16px' }}>
                                 {sleepers.map((sleeper, index) => (
-                                    <div key={sleeper.team.espnId} style={{
+                                    <div key={sleeper.team.id} style={{
                                         background: '#f0fdf4',
                                         padding: '20px',
                                         borderRadius: '12px',
@@ -237,7 +237,7 @@ function TeamsList() {
                                                 fontWeight: '700',
                                                 fontSize: '1.2rem'
                                             }}>
-                                                {sleeper.team.abbreviation}
+                                                {sleeper.team.key}
                                             </div>
                                             <div>
                                                 <h3 style={{
