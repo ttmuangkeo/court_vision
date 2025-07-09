@@ -33,8 +33,8 @@ function GamesList() {
       <div style={{ display: 'grid', gap: '10px' }}>
         {games.map(game => (
           <div
-            key={game.espnId}
-            onClick={() => handleGameClick(game.espnId)}
+            key={game.id}
+            onClick={() => handleGameClick(game.id)}
             style={{
               padding: '15px',
               border: '1px solid #ddd',

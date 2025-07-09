@@ -299,16 +299,16 @@ function TeamsList() {
                         gap: '20px'
                     }}>
                         {teams.map(team => {
-                            const primaryColor = getTeamPrimaryColor(team.espnId, teams);
-                            const alternateColor = getTeamAlternateColor(team.espnId, teams);
-                            const logoUrl = getTeamLogo(team.espnId, teams);
-                            const displayName = getTeamDisplayName(team.espnId, teams);
-                            const shortDisplayName = getTeamShortDisplayName(team.espnId, teams);
+                            const primaryColor = getTeamPrimaryColor(team.id, teams);
+                            const alternateColor = getTeamAlternateColor(team.id, teams);
+                            const logoUrl = getTeamLogo(team.id, teams);
+                            const displayName = getTeamDisplayName(team.id, teams);
+                            const shortDisplayName = getTeamShortDisplayName(team.id, teams);
                             
                             return (
                                 <div
-                                    key={team.espnId}
-                                    onClick={() => handleTeamClick(team.espnId)}
+                                    key={team.id}
+                                    onClick={() => handleTeamClick(team.id)}
                                     style={{
                                         backgroundColor: 'white',
                                         borderRadius: '16px',
@@ -380,7 +380,7 @@ function TeamsList() {
                                         {logoUrl ? (
                                             <img 
                                                 src={logoUrl} 
-                                                alt={team.abbreviation}
+                                                alt={team.key}
                                                 style={{ 
                                                     width: '100%', 
                                                     height: '100%', 
@@ -389,7 +389,7 @@ function TeamsList() {
                                                 }}
                                             />
                                         ) : (
-                                            team.abbreviation
+                                            team.key
                                         )}
                                     </div>
                                     

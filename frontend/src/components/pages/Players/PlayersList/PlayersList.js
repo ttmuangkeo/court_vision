@@ -377,7 +377,7 @@ function PlayersList() {
               >
                 <option value="">All Teams</option>
                 {teams.map(team => (
-                  <option key={team.espnId} value={team.espnId}>
+                  <option key={team.id} value={team.id}>
                     {team.name}
                   </option>
                 ))}
@@ -456,7 +456,7 @@ function PlayersList() {
         }}>
           {players.map(player => (
             <div
-              key={player.espnId}
+              key={player.id}
               style={{
                 backgroundColor: 'white',
                 padding: '24px',
@@ -477,7 +477,7 @@ function PlayersList() {
                 e.target.style.transform = 'translateY(0)';
                 e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
               }}
-              onClick={() => handlePlayerClick(player.espnId)}
+              onClick={() => handlePlayerClick(player.id)}
             >
               {/* Player Avatar */}
               <div style={{
@@ -495,10 +495,10 @@ function PlayersList() {
                 border: '1px solid rgba(0, 0, 0, 0.05)',
                 overflow: 'hidden'
               }}>
-                {player.headshot ? (
+                {player.photoUrl ? (
                   <img 
-                    src={player.headshot} 
-                    alt={player.fullName || player.name}
+                    src={player.photoUrl} 
+                    alt={player.firstName + " " + player.lastName || player.firstName + " " + player.lastName}
                     style={{ 
                       width: '100%', 
                       height: '100%', 
@@ -506,7 +506,7 @@ function PlayersList() {
                     }}
                   />
                 ) : (
-                  (player.fullName || player.name || 'P').split(' ').map(n => n[0]).join('')
+                  (player.firstName + " " + player.lastName || player.firstName + " " + player.lastName || 'P').split(' ').map(n => n[0]).join('')
                 )}
               </div>
               
@@ -519,9 +519,9 @@ function PlayersList() {
                   marginBottom: '4px',
                   lineHeight: '1.3'
                 }}>
-                  {player.fullName || player.name || 'Unknown Player'}
+                  {player.firstName + " " + player.lastName || player.firstName + " " + player.lastName || 'Unknown Player'}
                 </h4>
-                {player.shortName && player.shortName !== (player.fullName || player.name) && (
+                {player.firstName + " " + player.lastName && player.firstName + " " + player.lastName !== (player.firstName + " " + player.lastName || player.firstName + " " + player.lastName) && (
                   <p style={{ 
                     fontSize: '0.9rem', 
                     color: '#94a3b8',
@@ -529,7 +529,7 @@ function PlayersList() {
                     fontWeight: '500',
                     fontStyle: 'italic'
                   }}>
-                    {player.shortName}
+                    {player.firstName + " " + player.lastName}
                   </p>
                 )}
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
@@ -543,7 +543,7 @@ function PlayersList() {
                   }}>
                     {player.position}
                   </span>
-                  {player.jerseyNumber && (
+                  {player.jersey && (
                     <span style={{
                       padding: '6px 12px',
                       backgroundColor: '#f1f5f9',
@@ -552,10 +552,10 @@ function PlayersList() {
                       fontSize: '0.8rem',
                       fontWeight: '600'
                     }}>
-                      #{player.jerseyNumber}
+                      #{player.jersey}
                     </span>
                   )}
-                  {player.age && (
+                  {player.birthDate ? Math.floor((new Date() - new Date(player.birthDate)) / (365.25 * 24 * 60 * 60 * 1000)) : null && (
                     <span style={{
                       padding: '6px 12px',
                       backgroundColor: '#fef3c7',
@@ -564,7 +564,7 @@ function PlayersList() {
                       fontSize: '0.8rem',
                       fontWeight: '600'
                     }}>
-                      {player.age} years old
+                      {player.birthDate ? Math.floor((new Date() - new Date(player.birthDate)) / (365.25 * 24 * 60 * 60 * 1000)) : null} years old
                     </span>
                   )}
                   {player.experience && (
@@ -602,31 +602,31 @@ function PlayersList() {
                 </p>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap' }}>
-                  {player.displayHeight && (
+                  {player.height && (
                     <span style={{ 
                       fontSize: '0.875rem', 
                       color: '#64748b',
                       fontWeight: '500'
                     }}>
-                      {player.displayHeight}
+                      {Math.floor(player.height / 12) + "'" + (player.height % 12) + '"'}
                     </span>
                   )}
-                  {player.displayWeight && (
+                  {player.weight && (
                     <span style={{ 
                       fontSize: '0.875rem', 
                       color: '#64748b',
                       fontWeight: '500'
                     }}>
-                      {player.displayWeight}
+                      {player.weight + " lbs"}
                     </span>
                   )}
-                  {player.birthPlace && (
+                  {(player.birthCity && player.birthState) && (
                     <span style={{ 
                       fontSize: '0.875rem', 
                       color: '#64748b',
                       fontWeight: '500'
                     }}>
-                      • {player.birthPlace}
+                      • {player.birthCity && player.birthState ? player.birthCity + ", " + player.birthState : player.birthCity || player.birthState}
                     </span>
                   )}
                 </div>

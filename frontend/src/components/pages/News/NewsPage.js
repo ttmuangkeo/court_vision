@@ -161,7 +161,7 @@ const NewsPage = () => {
                   <h4>Teams</h4>
                   <div className="favorites-list">
                     {user.favoriteTeams.map(team => (
-                      <div key={team.espnId} className="favorite-item">
+                      <div key={team.id} className="favorite-item">
                         {team.logoUrl && (
                           <img src={team.logoUrl} alt={team.name} className="favorite-logo" />
                         )}
@@ -177,17 +177,17 @@ const NewsPage = () => {
                   <h4>Players</h4>
                   <div className="favorites-list">
                     {user.favoritePlayers.map(player => (
-                      <div key={player.espnId} className="favorite-item">
+                      <div key={player.id} className="favorite-item">
                         <div className="player-avatar-small">
-                          {player.headshot ? (
-                            <img src={player.headshot} alt={player.fullName} />
+                          {player.photoUrl ? (
+                            <img src={player.photoUrl} alt={player.firstName + " " + player.lastName} />
                           ) : (
                             <div className="player-initials-small">
-                              {(player.fullName || 'P').split(' ').map(n => n[0]).join('')}
+                              {(player.firstName + " " + player.lastName || 'P').split(' ').map(n => n[0]).join('')}
                             </div>
                           )}
                         </div>
-                        <span>{player.fullName}</span>
+                        <span>{player.firstName + " " + player.lastName}</span>
                       </div>
                     ))}
                   </div>

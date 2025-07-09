@@ -68,10 +68,10 @@ const PersonalizedDashboard = () => {
     console.log('User favorite players:', user.favoritePlayers);
     if (user.favoritePlayers && user.favoritePlayers.length > 0) {
       user.favoritePlayers.forEach(player => {
-        console.log(`Player ${player.fullName}:`, {
-          espnId: player.espnId,
-          headshot: player.headshot,
-          hasHeadshot: !!player.headshot
+        console.log(`Player ${player.firstName + " " + player.lastName}:`, {
+          espnId: player.id,
+          headshot: player.photoUrl,
+          hasHeadshot: !!player.photoUrl
         });
       });
     }
@@ -119,17 +119,17 @@ const PersonalizedDashboard = () => {
         const recentGames = gamesArray.filter(game => {
           if (!user || !user.favoriteTeams || !Array.isArray(user.favoriteTeams) || user.favoriteTeams.length === 0) return true;
           return user.favoriteTeams.some(team => 
-            team && team.espnId && (team.espnId === game.homeTeamId || team.espnId === game.awayTeamId)
+            team && team.id && (team.id === game.homeTeamId || team.id === game.awayTeamId)
           );
         });
 
         const recentPlays = playsArray.filter(play => {
           if (!user || !user.favoritePlayers || !Array.isArray(user.favoritePlayers) || user.favoritePlayers.length === 0) return true;
           return user.favoritePlayers.some(player => 
-            player && player.espnId && (
-              player.espnId === play.ballHandlerId || 
-              player.espnId === play.primaryPlayerId || 
-              player.espnId === play.secondaryPlayerId
+            player && player.id && (
+              player.id === play.ballHandlerId || 
+              player.id === play.primaryPlayerId || 
+              player.id === play.secondaryPlayerId
             )
           );
         });
@@ -214,14 +214,14 @@ const PersonalizedDashboard = () => {
               <div className="dashboard-fav-teams-chips">
                 {enrichedFavoriteTeams.map((team, idx) => (
                   <div
-                    key={team.espnId}
+                    key={team.id}
                     className={`team-chip-modern${idx === activeTeamIndex ? ' active' : ''}`}
                     onClick={() => setActiveTeamIndex(idx)}
                   >
                     {team.logoUrl ? (
-                      <img src={team.logoUrl} alt={team.abbreviation} />
+                      <img src={team.logoUrl} alt={team.key} />
                     ) : (
-                      <span>{team.abbreviation}</span>
+                      <span>{team.key}</span>
                     )}
                   </div>
                 ))}
@@ -269,7 +269,7 @@ const PersonalizedDashboard = () => {
             </div>
             <div className="games-scroll-row">
               {dashboardData.recentGames.map(game => (
-                <div key={game.espnId} className="game-card-modern">
+                <div key={game.id} className="game-card-modern">
                   <div className="game-teams-modern">
                     <div className="team-modern">
                       <span className="team-name-modern">{game.homeTeam?.abbreviation}</span>
@@ -303,18 +303,18 @@ const PersonalizedDashboard = () => {
               </div>
               <div className="players-scroll-row">
                 {user.favoritePlayers.slice(0, 8).map(player => (
-                  <div key={player.espnId} className="player-card-modern">
+                  <div key={player.id} className="player-card-modern">
                     <div className="player-avatar-modern">
-                      {player.headshot ? (
-                        <img src={player.headshot} alt={player.fullName} />
+                      {player.photoUrl ? (
+                        <img src={player.photoUrl} alt={player.firstName + " " + player.lastName} />
                       ) : (
                         <div className="player-initials">
-                          {(player.fullName || 'P').split(' ').map(n => n[0]).join('')}
+                          {(player.firstName + " " + player.lastName || 'P').split(' ').map(n => n[0]).join('')}
                         </div>
                       )}
                     </div>
                     <div className="player-info-modern">
-                      <h3>{player.fullName}</h3>
+                      <h3>{player.firstName + " " + player.lastName}</h3>
                       <p>{player.position} • {player.teamAbbreviation || player.team?.abbreviation || 'FA'}</p>
                     </div>
                   </div>
@@ -330,7 +330,7 @@ const PersonalizedDashboard = () => {
             </div>
             <div className="games-scroll-row">
               {dashboardData.upcomingGames.map(game => (
-                <div key={game.espnId} className="game-card-modern upcoming">
+                <div key={game.id} className="game-card-modern upcoming">
                   <div className="game-teams-modern">
                     <div className="team-modern">
                       <span className="team-name-modern">{game.homeTeam?.abbreviation}</span>

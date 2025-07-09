@@ -153,8 +153,8 @@ function GamesDashboard() {
             }}>
               {games.map(game => (
                 <div
-                  key={game.espnId}
-                  onClick={() => handleGameClick(game.espnId)}
+                  key={game.id}
+                  onClick={() => handleGameClick(game.id)}
                   style={{
                     backgroundColor: 'white',
                     borderRadius: '16px',

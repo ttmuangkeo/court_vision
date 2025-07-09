@@ -39,7 +39,7 @@ const TeamSelectionStep = ({ data, onUpdate, onNext, onBack, isFirstStep, isLast
     const filteredTeams = teams.filter(team =>
         team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         team.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        team.abbreviation.toLowerCase().includes(searchTerm.toLowerCase())
+        team.key.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (loading) {
@@ -74,16 +74,16 @@ const TeamSelectionStep = ({ data, onUpdate, onNext, onBack, isFirstStep, isLast
             <div className="teams-grid">
                 {filteredTeams.map((team) => (
                     <div
-                        key={team.espnId}
-                        className={`team-card ${selectedTeams.includes(team.espnId) ? 'selected' : ''}`}
-                        onClick={() => handleTeamToggle(team.espnId)}
+                        key={team.id}
+                        className={`team-card ${selectedTeams.includes(team.id) ? 'selected' : ''}`}
+                        onClick={() => handleTeamToggle(team.id)}
                     >
                         <div className="team-logo">
                             {team.logoUrl ? (
                                 <img src={team.logoUrl} alt={team.name} />
                             ) : (
                                 <div className="team-placeholder">
-                                    {team.abbreviation}
+                                    {team.key}
                                 </div>
                             )}
                         </div>
@@ -94,7 +94,7 @@ const TeamSelectionStep = ({ data, onUpdate, onNext, onBack, isFirstStep, isLast
                             </div>
                         </div>
                         <div className="selection-indicator">
-                            {selectedTeams.includes(team.espnId) && '✓'}
+                            {selectedTeams.includes(team.id) && '✓'}
                         </div>
                     </div>
                 ))}

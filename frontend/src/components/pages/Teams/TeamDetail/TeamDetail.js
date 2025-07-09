@@ -171,11 +171,11 @@ function TeamDetail() {
     }
 
     // Get team branding data
-    const primaryColor = getTeamPrimaryColor(team.espnId, [team]);
-    const alternateColor = getTeamAlternateColor(team.espnId, [team]);
-    const logoUrl = getTeamLogo(team.espnId, [team]);
-    const displayName = getTeamDisplayName(team.espnId, [team]);
-    const shortDisplayName = getTeamShortDisplayName(team.espnId, [team]);
+    const primaryColor = getTeamPrimaryColor(team.id, [team]);
+    const alternateColor = getTeamAlternateColor(team.id, [team]);
+    const logoUrl = getTeamLogo(team.id, [team]);
+    const displayName = getTeamDisplayName(team.id, [team]);
+    const shortDisplayName = getTeamShortDisplayName(team.id, [team]);
 
     return (
         <div style={{ 
@@ -247,7 +247,7 @@ function TeamDetail() {
                             {logoUrl ? (
                                 <img 
                                     src={logoUrl} 
-                                    alt={team.abbreviation}
+                                    alt={team.key}
                                     style={{ 
                                         width: '100%', 
                                         height: '100%', 
@@ -256,7 +256,7 @@ function TeamDetail() {
                                     }}
                                 />
                             ) : (
-                                team.abbreviation
+                                team.key
                             )}
                         </div>
                         
@@ -376,7 +376,7 @@ function TeamDetail() {
                             }}>
                                 {players.map(player => (
                                     <div
-                                        key={player.espnId}
+                                        key={player.id}
                                         style={{
                                             backgroundColor: 'white',
                                             padding: '16px',
@@ -397,13 +397,13 @@ function TeamDetail() {
                                             e.target.style.transform = 'translateY(0)';
                                             e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
                                         }}
-                                        onClick={() => navigate(`/players/${player.espnId}`)}
+                                        onClick={() => navigate(`/players/${player.id}`)}
                                     >
                                         {/* Player Avatar */}
-                                        {player.headshot ? (
+                                        {player.photoUrl ? (
                                             <img
-                                                src={player.headshot}
-                                                alt={`${player.fullName || player.name || 'Player'} headshot`}
+                                                src={player.photoUrl}
+                                                alt={`${player.firstName + " " + player.lastName || player.firstName + " " + player.lastName || 'Player'} headshot`}
                                                 style={{
                                                     width: '50px',
                                                     height: '50px',
@@ -423,7 +423,7 @@ function TeamDetail() {
                                             height: '50px',
                                             backgroundColor: '#f8fafc',
                                             borderRadius: '12px',
-                                            display: player.headshot ? 'none' : 'flex',
+                                            display: player.photoUrl ? 'none' : 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             fontSize: '1.2rem',
@@ -432,7 +432,7 @@ function TeamDetail() {
                                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                                             border: '1px solid rgba(0, 0, 0, 0.05)'
                                         }}>
-                                            {(player.fullName || player.name || 'P').split(' ').map(n => n[0]).join('')}
+                                            {(player.firstName + " " + player.lastName || player.firstName + " " + player.lastName || 'P').split(' ').map(n => n[0]).join('')}
                                         </div>
                                         
                                         {/* Player Info */}
@@ -443,7 +443,7 @@ function TeamDetail() {
                                                 color: '#1e293b',
                                                 marginBottom: '4px'
                                             }}>
-                                                {player.fullName || player.name || 'Unknown Player'}
+                                                {player.firstName + " " + player.lastName || player.firstName + " " + player.lastName || 'Unknown Player'}
                                             </h4>
                                             <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
                                                 <span style={{
@@ -456,7 +456,7 @@ function TeamDetail() {
                                                 }}>
                                                     {player.position}
                                                 </span>
-                                                {player.jerseyNumber && (
+                                                {player.jersey && (
                                                     <span style={{
                                                         padding: '4px 8px',
                                                         backgroundColor: '#f1f5f9',
@@ -465,7 +465,7 @@ function TeamDetail() {
                                                         fontSize: '0.75rem',
                                                         fontWeight: '600'
                                                     }}>
-                                                        #{player.jerseyNumber}
+                                                        #{player.jersey}
                                                     </span>
                                                 )}
                                             </div>

@@ -50,7 +50,7 @@ function PlayerDetail() {
                 const teamsRes = await axios.get(`${API_BASE}/teams`);
                 setTeams(teamsRes.data.data);
                 
-                // Use player.espnId for analytics calls
+                // Use player.id for analytics calls
                 if (playerData && playerData.espnId) {
                     // Fetch player patterns and analytics
                     const patternsRes = await axios.get(`${API_BASE}/analytics/player-patterns/${playerData.espnId}`);
@@ -134,12 +134,12 @@ function PlayerDetail() {
     }
 
     // Get team branding data if player is on an NBA team
-    const teamEspnId = player.teamEspnId;
-    const primaryColor = teamEspnId ? getTeamPrimaryColor(teamEspnId, teams) : '#667eea';
-    const alternateColor = teamEspnId ? getTeamAlternateColor(teamEspnId, teams) : '#ffffff';
-    const logoUrl = teamEspnId ? getTeamLogo(teamEspnId, teams) : null;
-    const teamDisplayName = teamEspnId ? getTeamDisplayName(teamEspnId, teams) : null;
-    const teamShortDisplayName = teamEspnId ? getTeamShortDisplayName(teamEspnId, teams) : null;
+    const teamId = player.teamId;
+    const primaryColor = teamId ? getTeamPrimaryColor(teamId, teams) : '#667eea';
+    const alternateColor = teamId ? getTeamAlternateColor(teamId, teams) : '#ffffff';
+    const logoUrl = teamId ? getTeamLogo(teamId, teams) : null;
+    const teamDisplayName = teamId ? getTeamDisplayName(teamId, teams) : null;
+    const teamShortDisplayName = teamId ? getTeamShortDisplayName(teamId, teams) : null;
 
     return (
         <div style={{ 
@@ -195,22 +195,22 @@ function PlayerDetail() {
                         <div style={{
                             width: '100px',
                             height: '100px',
-                            backgroundColor: player.headshot ? 'transparent' : 'rgba(255, 255, 255, 0.2)',
+                            backgroundColor: player.photoUrl ? 'transparent' : 'rgba(255, 255, 255, 0.2)',
                             borderRadius: '25px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: player.headshot ? '0' : '2.5rem',
+                            fontSize: player.photoUrl ? '0' : '2.5rem',
                             fontWeight: '700',
                             color: 'white',
                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                            border: player.headshot ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
+                            border: player.photoUrl ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
                             overflow: 'hidden'
                         }}>
-                            {player.headshot ? (
+                            {player.photoUrl ? (
                                 <img 
-                                    src={player.headshot} 
-                                    alt={player.fullName || player.name}
+                                    src={player.photoUrl} 
+                                    alt={player.firstName + " " + player.lastName || player.firstName + " " + player.lastName}
                                     style={{ 
                                         width: '100%', 
                                         height: '100%', 
@@ -218,7 +218,7 @@ function PlayerDetail() {
                                     }}
                                 />
                             ) : (
-                                (player.fullName || player.name || 'P').split(' ').map(n => n[0]).join('')
+                                (player.firstName + " " + player.lastName || player.firstName + " " + player.lastName || 'P').split(' ').map(n => n[0]).join('')
                             )}
                         </div>
                         
@@ -231,7 +231,7 @@ function PlayerDetail() {
                                 letterSpacing: '-0.02em',
                                 lineHeight: '1.1'
                             }}>
-                                {player.fullName || player.name}
+                                {player.firstName + " " + player.lastName || player.firstName + " " + player.lastName}
                             </h1>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
                                 <span style={{
@@ -243,7 +243,7 @@ function PlayerDetail() {
                                 }}>
                                     {player.position}
                                 </span>
-                                {player.jerseyNumber && (
+                                {player.jersey && (
                                     <span style={{
                                         padding: '4px 10px',
                                         backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -251,7 +251,7 @@ function PlayerDetail() {
                                         fontSize: '0.9rem',
                                         fontWeight: '600'
                                     }}>
-                                        #{player.jerseyNumber}
+                                        #{player.jersey}
                                     </span>
                                 )}
                                 {teamDisplayName && (
@@ -280,7 +280,7 @@ function PlayerDetail() {
                         </div>
 
                         {/* Team Logo (if NBA player) */}
-                        {teamEspnId && logoUrl && (
+                        {teamId && logoUrl && (
                             <div style={{
                                 width: '80px',
                                 height: '80px',
@@ -546,14 +546,14 @@ function PlayerDetail() {
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Full Name:</span>
                                                 <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1e293b' }}>
-                                                    {player.fullName || player.name}
+                                                    {player.firstName + " " + player.lastName || player.firstName + " " + player.lastName}
                                                 </span>
                                             </div>
-                                            {player.shortName && player.shortName !== (player.fullName || player.name) && (
+                                            {player.firstName + " " + player.lastName && player.firstName + " " + player.lastName !== (player.firstName + " " + player.lastName || player.firstName + " " + player.lastName) && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                     <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Short Name:</span>
                                                     <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1e293b' }}>
-                                                        {player.shortName}
+                                                        {player.firstName + " " + player.lastName}
                                                     </span>
                                                 </div>
                                             )}
@@ -570,11 +570,11 @@ function PlayerDetail() {
                                                     {player.position}
                                                 </span>
                                             </div>
-                                            {player.jerseyNumber && (
+                                            {player.jersey && (
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                     <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Jersey:</span>
                                                     <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1e293b' }}>
-                                                        #{player.jerseyNumber}
+                                                        #{player.jersey}
                                                     </span>
                                                 </div>
                                             )}
@@ -1611,8 +1611,8 @@ function PlayerDetail() {
                                 </h2>
                                 
                                 <DefensiveScoutingPanel 
-                                    playerId={player.espnId}
-                                    playerName={player.fullName || player.name}
+                                    playerId={player.id}
+                                    playerName={player.firstName + " " + player.lastName || player.firstName + " " + player.lastName}
                                     gameId={null}
                                 />
                             </div>
@@ -1628,7 +1628,7 @@ function PlayerDetail() {
                         top: '20px'
                     }}>
                         {/* Team Information (if NBA player) */}
-                        {teamEspnId && (
+                        {teamId && (
                             <div style={{
                                 backgroundColor: 'white',
                                 padding: '24px',

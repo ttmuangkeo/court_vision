@@ -45,7 +45,7 @@ const PlayerPreferencesStep = ({ data, onUpdate, onNext, onBack, isFirstStep, is
     ];
 
     const filteredPlayers = players.filter(player => {
-        const matchesSearch = player.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = player.firstName + " " + player.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              player.team?.name?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
         return matchesSearch && matchesPosition;
@@ -97,13 +97,13 @@ const PlayerPreferencesStep = ({ data, onUpdate, onNext, onBack, isFirstStep, is
             <div className="players-grid">
                 {filteredPlayers.slice(0, 50).map((player) => (
                     <div
-                        key={player.espnId}
-                        className={`player-card ${selectedPlayers.includes(player.espnId) ? 'selected' : ''}`}
-                        onClick={() => handlePlayerToggle(player.espnId)}
+                        key={player.id}
+                        className={`player-card ${selectedPlayers.includes(player.id) ? 'selected' : ''}`}
+                        onClick={() => handlePlayerToggle(player.id)}
                     >
                         <div className="player-avatar">
-                            {player.headshot ? (
-                                <img src={player.headshot} alt={player.fullName} />
+                            {player.photoUrl ? (
+                                <img src={player.photoUrl} alt={player.firstName + " " + player.lastName} />
                             ) : (
                                 <div className="player-placeholder">
                                     {player.firstName?.[0]}{player.lastName?.[0]}
@@ -111,16 +111,16 @@ const PlayerPreferencesStep = ({ data, onUpdate, onNext, onBack, isFirstStep, is
                             )}
                         </div>
                         <div className="player-info">
-                            <div className="player-name">{player.fullName}</div>
+                            <div className="player-name">{player.firstName + " " + player.lastName}</div>
                             <div className="player-details">
                                 {player.position} • {player.team?.name || 'Free Agent'}
                             </div>
-                            {player.jerseyNumber && (
-                                <div className="player-number">#{player.jerseyNumber}</div>
+                            {player.jersey && (
+                                <div className="player-number">#{player.jersey}</div>
                             )}
                         </div>
                         <div className="selection-indicator">
-                            {selectedPlayers.includes(player.espnId) && '✓'}
+                            {selectedPlayers.includes(player.id) && '✓'}
                         </div>
                     </div>
                 ))}

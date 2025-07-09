@@ -50,10 +50,10 @@ const UserProfile = () => {
         
         // Set current user preferences
         if (userPrefsRes.data.user?.favoriteTeams) {
-          setSelectedTeams(userPrefsRes.data.user.favoriteTeams.map(team => team.espnId));
+          setSelectedTeams(userPrefsRes.data.user.favoriteTeams.map(team => team.id));
         }
         if (userPrefsRes.data.user?.favoritePlayers) {
-          setSelectedPlayers(userPrefsRes.data.user.favoritePlayers.map(player => player.espnId));
+          setSelectedPlayers(userPrefsRes.data.user.favoritePlayers.map(player => player.id));
         }
       } catch (error) {
         console.error('Error fetching profile data:', error);
@@ -312,16 +312,16 @@ const UserProfile = () => {
             <div className="teams-grid">
               {teams.map(team => (
                 <div
-                  key={team.espnId}
-                  className={`team-card ${selectedTeams.includes(team.espnId) ? 'selected' : ''}`}
-                  onClick={() => handleTeamToggle(team.espnId)}
+                  key={team.id}
+                  className={`team-card ${selectedTeams.includes(team.id) ? 'selected' : ''}`}
+                  onClick={() => handleTeamToggle(team.id)}
                   style={getTeamBranding(team)}
                 >
                   <div className="team-logo">
                     {team.logoUrl ? (
                       <img src={team.logoUrl} alt={team.name} />
                     ) : (
-                      <div className="team-initial">{team.abbreviation}</div>
+                      <div className="team-initial">{team.key}</div>
                     )}
                   </div>
                   <div className="team-info">
@@ -329,7 +329,7 @@ const UserProfile = () => {
                     <p>{team.conference} • {team.division}</p>
                   </div>
                   <div className="selection-indicator">
-                    {selectedTeams.includes(team.espnId) && '✓'}
+                    {selectedTeams.includes(team.id) && '✓'}
                   </div>
                 </div>
               ))}
@@ -353,22 +353,22 @@ const UserProfile = () => {
               {(playerSearchTerm ? searchResults : players.slice(0, 8))
                 .map(player => (
                   <div
-                    key={player.espnId}
-                    className={`player-card${selectedPlayers.includes(player.espnId) ? ' selected' : ''}`}
-                    onClick={() => handlePlayerToggle(player.espnId)}
+                    key={player.id}
+                    className={`player-card${selectedPlayers.includes(player.id) ? ' selected' : ''}`}
+                    onClick={() => handlePlayerToggle(player.id)}
                   >
                     <div className="player-avatar">
-                      {player.headshot ? (
-                        <img src={player.headshot} alt={player.fullName} />
+                      {player.photoUrl ? (
+                        <img src={player.photoUrl} alt={player.firstName + " " + player.lastName} />
                       ) : (
                         <div className="player-initials">
-                          {(player.fullName || 'P').split(' ').map(n => n[0]).join('')}
+                          {(player.firstName + " " + player.lastName || 'P').split(' ').map(n => n[0]).join('')}
                         </div>
                       )}
                     </div>
                     <div className="player-info">
-                      <h3>{player.fullName}</h3>
-                      <p>{player.position} • {player.team?.abbreviation || (player.teamEspnId ? teams.find(t => t.espnId === player.teamEspnId)?.abbreviation : 'FA')}</p>
+                      <h3>{player.firstName + " " + player.lastName}</h3>
+                      <p>{player.position} • {player.team?.abbreviation || (player.teamId ? teams.find(t => t.espnId === player.teamId)?.abbreviation : 'FA')}</p>
                     </div>
                   </div>
                 ))}

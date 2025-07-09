@@ -94,23 +94,23 @@ function PlayerSelector({
       <div className="player-selector-list">
         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
           {players
-            .filter(player => !selectedTeam || player.teamEspnId === selectedTeam)
+            .filter(player => !selectedTeam || player.teamId === selectedTeam)
             .map(player => (
               <div
-                key={player.espnId}
-                className={`player-selector-item${selectedPlayer && selectedPlayer.espnId === player.espnId ? ' selected' : ''}`}
+                key={player.id}
+                className={`player-selector-item${selectedPlayer && selectedPlayer.espnId === player.id ? ' selected' : ''}`}
                 onClick={() => onPlayerSelect(player)}
                 style={{
-                  borderLeft: selectedPlayer && selectedPlayer.espnId === player.espnId 
-                    ? `4px solid ${getTeamPrimaryColor(player.teamEspnId, teams)}` 
+                  borderLeft: selectedPlayer && selectedPlayer.espnId === player.id 
+                    ? `4px solid ${getTeamPrimaryColor(player.teamId, teams)}` 
                     : '4px solid transparent'
                 }}
               >
-                <div style={{ fontWeight: 'bold' }}>{player.fullName || player.name || 'Unknown Player'}</div>
+                <div style={{ fontWeight: 'bold' }}>{player.firstName + " " + player.lastName || player.firstName + " " + player.lastName || 'Unknown Player'}</div>
                 <div style={{ fontSize: '12px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {getTeamLogo(player.teamEspnId, teams) && (
+                  {getTeamLogo(player.teamId, teams) && (
                     <img 
-                      src={getTeamLogo(player.teamEspnId, teams)} 
+                      src={getTeamLogo(player.teamId, teams)} 
                       alt={player.team?.abbreviation}
                       style={{ width: '16px', height: '16px' }}
                     />
