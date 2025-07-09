@@ -85,7 +85,7 @@ router.get('/:id', async (req, res) => {
         const {include} = req.query;
 
         const team = await prisma.team.findUnique({
-            where: {espnId: id},
+            where: {id: parseInt(id)},
             include: include === 'players' ? {
                 players: {
                     include: {
@@ -151,7 +151,7 @@ router.get('/:id/statistics', async (req, res) => {
 
         const stats = await prisma.teamStatistics.findMany({
             where: {
-                teamId: id,
+                teamId: parseInt(id),
                 season,
                 seasonType
             },

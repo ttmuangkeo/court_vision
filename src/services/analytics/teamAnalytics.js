@@ -18,7 +18,7 @@ class TeamAnalytics {
         include: {
           team: {
             select: {
-              espnId: true,
+              id: true,
               name: true,
               abbreviation: true,
               conference: true,
@@ -248,7 +248,7 @@ class TeamAnalytics {
           espnId: { not: teamId }
         },
         select: {
-          espnId: true,
+          id: true,
           name: true,
           abbreviation: true,
           division: true

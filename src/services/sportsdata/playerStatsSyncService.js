@@ -2,7 +2,7 @@ const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 
 const API_URL = 'https://api.sportsdata.io/v3/nba/stats/json/PlayerSeasonStats';
-const API_KEY = '05d3364a5d5f40e59de209a8100ea36f';
+const API_KEY = process.env.SPORTSDATA_API_KEY;
 
 class SportsdataPlayerStatsSyncService {
   constructor() {

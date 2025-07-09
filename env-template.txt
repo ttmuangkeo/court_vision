@@ -1,0 +1,16 @@
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/court_vision"
+
+# API Keys
+SPORTSDATA_API_KEY="your_sportsdata_api_key_here"
+UNSPLASH_ACCESS_KEY="your_unsplash_access_key_here"
+
+# JWT Secret (for authentication)
+JWT_SECRET="your_jwt_secret_here"
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Frontend Configuration (for React app)
+REACT_APP_API_BASE="http://localhost:3000/api" 

@@ -7,10 +7,11 @@ const authenticateJWT = require('../../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const { gameId, playerId, tagId, teamId, include, limit = 20, page = 1 } = req.query;
+    const parsedGameId = gameId ? parseInt(gameId) : undefined;
     const skip = (page - 1) * limit;
 
     const where = {};
-    if (gameId) where.gameId = gameId;
+    if (parsedGameId) where.gameId = parsedGameId;
     if (playerId) where.tags = { some: { playerId } };
     if (tagId) where.tags = { some: { tagId } };
     if (teamId) where.tags = { some: { teamId } };
@@ -172,7 +173,7 @@ router.post('/', authenticateJWT, async (req, res) => {
     // Create the play
     const play = await prisma.play.create({
       data: {
-        gameId,
+        gameId: parseInt(gameId),
         timestamp: timestamp ? new Date(timestamp) : new Date(),
         gameTime,
         quarter,

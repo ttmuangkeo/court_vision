@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
         if (season) where.season = season;
         if (date) {
             const searchDate = new Date(date);
-            where.date = {
+            where.dateTime = {
                 gte: searchDate,
                 lt: new Date(searchDate.getTime() + 24 * 60 * 60 * 1000) // Next day
             };
@@ -40,7 +40,7 @@ router.get('/', async (req, res) => {
                 homeTeam: true,
                 awayTeam: true
             } : undefined,
-            orderBy: {date: 'desc'},
+            orderBy: {dateTime: 'desc'},
             skip: parseInt(skip),
             take: parseInt(limit)
         });
@@ -66,14 +66,14 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /api/games/:espnId - Get game by ESPN ID
-router.get('/:espnId', async (req, res) => {
+// GET /api/games/:id - Get game by ID
+router.get('/:id', async (req, res) => {
     try {
-        const {espnId} = req.params;
+        const {id} = req.params;
         const {include} = req.query;
 
         const game = await prisma.game.findUnique({
-            where: {espnId},
+            where: {id: parseInt(id)},
             include: include === 'teams' ? {
                 homeTeam: true,
                 awayTeam: true
@@ -129,7 +129,7 @@ router.get('/live/current', async (req, res) => {
                 homeTeam: true,
                 awayTeam: true
             },
-            orderBy: {date: 'desc'}
+            orderBy: {dateTime: 'desc'}
         });
 
         res.json({
@@ -155,7 +155,7 @@ router.get('/schedule/today', async (req, res) => {
 
         const todaysGames = await prisma.game.findMany({
             where: {
-                date: {
+                dateTime: {
                     gte: startOfDay,
                     lt: endOfDay
                 }
@@ -164,7 +164,7 @@ router.get('/schedule/today', async (req, res) => {
                 homeTeam: true,
                 awayTeam: true
             },
-            orderBy: {date: 'asc'}
+            orderBy: {dateTime: 'asc'}
         });
 
         res.json({
