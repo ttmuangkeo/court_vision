@@ -1,221 +1,300 @@
 const axios = require('axios');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../../db/client');
 
-const API_KEY = process.env.SPORTSDATA_API_KEY;
-const BASE_URL = 'https://api.sportsdata.io/v3/nba';
-
-class SportsdataTeamStatsSyncService {
+class TeamStatsSyncService {
   constructor() {
-    this.prisma = new PrismaClient();
+    this.apiKey = process.env.SPORTSDATA_API_KEY;
+    this.baseUrl = 'https://api.sportsdata.io/v3/nba/scores/json';
   }
 
-  async fetchTeamStandings(season = '2024-25') {
+  async syncTeamSeasonStats(season = 2025) {
     try {
-      const url = `${BASE_URL}/scores/json/Standings/${season}?key=${API_KEY}`;
-      console.log(`Fetching team standings from: ${url}`);
+      console.log(`Starting team season stats sync for ${season}...`);
       
-      const response = await axios.get(url);
-      return response.data;
+      const response = await axios.get(`${this.baseUrl}/TeamSeasonStats/${season}?key=${this.apiKey}`);
+      const teamStats = response.data;
+
+      if (!Array.isArray(teamStats)) {
+        throw new Error('Invalid response format from API');
+      }
+
+      console.log(`Found ${teamStats.length} team stats records`);
+
+      let syncedCount = 0;
+      let errorCount = 0;
+
+      for (const teamStat of teamStats) {
+        try {
+          await this.processTeamStats(teamStat, season);
+          syncedCount++;
+        } catch (error) {
+          console.error(`Error processing team stats for team ${teamStat.TeamID}:`, error.message);
+          errorCount++;
+        }
+      }
+
+      console.log(`Team stats sync completed: ${syncedCount} successful, ${errorCount} errors`);
+      return { syncedCount, errorCount };
     } catch (error) {
-      console.error('Error fetching team standings:', error.message);
+      console.error('Error syncing team season stats:', error);
       throw error;
     }
   }
 
-  async fetchTeamStats(season = '2024-25') {
-    try {
-      const url = `${BASE_URL}/stats/json/TeamSeasonStats/${season}?key=${API_KEY}`;
-      console.log(`Fetching team stats from: ${url}`);
-      
-      const response = await axios.get(url);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching team stats:', error.message);
-      throw error;
-    }
-  }
+  async processTeamStats(teamStat, season) {
+    const teamId = teamStat.TeamID;
+    const seasonType = teamStat.SeasonType;
 
-  transformStandingsData(standings) {
-    const transformedStats = [];
-    
-    standings.forEach(team => {
-      // Offensive stats
-      transformedStats.push({
-        teamId: team.TeamID,
-        season: '2024-25',
-        seasonType: 'regular',
-        category: 'offensive',
-        statName: 'points',
-        displayName: 'Points Per Game',
-        shortDisplayName: 'PPG',
-        description: 'Average points scored per game',
-        abbreviation: 'PPG',
-        value: team.Points || 0,
-        displayValue: `${team.Points || 0}`,
-        perGameValue: team.Points || 0,
-        perGameDisplayValue: `${team.Points || 0}`
-      });
-
-      transformedStats.push({
-        teamId: team.TeamID,
-        season: '2024-25',
-        seasonType: 'regular',
-        category: 'offensive',
-        statName: 'fieldGoalsPercentage',
-        displayName: 'Field Goal Percentage',
-        shortDisplayName: 'FG%',
-        description: 'Field goal shooting percentage',
-        abbreviation: 'FG%',
-        value: team.FieldGoalsPercentage || 0,
-        displayValue: `${(team.FieldGoalsPercentage || 0).toFixed(1)}%`,
-        perGameValue: team.FieldGoalsPercentage || 0,
-        perGameDisplayValue: `${(team.FieldGoalsPercentage || 0).toFixed(1)}%`
-      });
-
-      transformedStats.push({
-        teamId: team.TeamID,
-        season: '2024-25',
-        seasonType: 'regular',
-        category: 'offensive',
-        statName: 'threePointPercentage',
-        displayName: 'Three Point Percentage',
-        shortDisplayName: '3P%',
-        description: 'Three point shooting percentage',
-        abbreviation: '3P%',
-        value: team.ThreePointersPercentage || 0,
-        displayValue: `${(team.ThreePointersPercentage || 0).toFixed(1)}%`,
-        perGameValue: team.ThreePointersPercentage || 0,
-        perGameDisplayValue: `${(team.ThreePointersPercentage || 0).toFixed(1)}%`
-      });
-
-      // Defensive stats
-      transformedStats.push({
-        teamId: team.TeamID,
-        season: '2024-25',
-        seasonType: 'regular',
-        category: 'defensive',
-        statName: 'pointsAllowed',
-        displayName: 'Points Allowed Per Game',
-        shortDisplayName: 'PAPG',
-        description: 'Average points allowed per game',
-        abbreviation: 'PAPG',
-        value: team.PointsAgainst || 0,
-        displayValue: `${team.PointsAgainst || 0}`,
-        perGameValue: team.PointsAgainst || 0,
-        perGameDisplayValue: `${team.PointsAgainst || 0}`
-      });
-
-      // General stats
-      transformedStats.push({
-        teamId: team.TeamID,
-        season: '2024-25',
-        seasonType: 'regular',
-        category: 'general',
-        statName: 'wins',
-        displayName: 'Wins',
-        shortDisplayName: 'W',
-        description: 'Total wins',
-        abbreviation: 'W',
-        value: team.Wins || 0,
-        displayValue: `${team.Wins || 0}`,
-        perGameValue: team.Wins || 0,
-        perGameDisplayValue: `${team.Wins || 0}`
-      });
-
-      transformedStats.push({
-        teamId: team.TeamID,
-        season: '2024-25',
-        seasonType: 'regular',
-        category: 'general',
-        statName: 'losses',
-        displayName: 'Losses',
-        shortDisplayName: 'L',
-        description: 'Total losses',
-        abbreviation: 'L',
-        value: team.Losses || 0,
-        displayValue: `${team.Losses || 0}`,
-        perGameValue: team.Losses || 0,
-        perGameDisplayValue: `${team.Losses || 0}`
-      });
-
-      transformedStats.push({
-        teamId: team.TeamID,
-        season: '2024-25',
-        seasonType: 'regular',
-        category: 'general',
-        statName: 'winPercentage',
-        displayName: 'Win Percentage',
-        shortDisplayName: 'WIN%',
-        description: 'Win percentage',
-        abbreviation: 'WIN%',
-        value: team.Percentage || 0,
-        displayValue: `${(team.Percentage || 0).toFixed(3)}`,
-        perGameValue: team.Percentage || 0,
-        perGameDisplayValue: `${(team.Percentage || 0).toFixed(3)}`
-      });
+    // Verify team exists
+    const team = await prisma.team.findUnique({
+      where: { id: teamId }
     });
 
-    return transformedStats;
+    if (!team) {
+      console.warn(`Team ${teamId} not found in database, skipping...`);
+      return;
+    }
+
+    // Process offensive stats
+    await this.upsertTeamStat(teamId, season, seasonType, 'offensive', {
+      wins: teamStat.Wins,
+      losses: teamStat.Losses,
+      games: teamStat.Games,
+      points: teamStat.Points,
+      fieldGoalsMade: teamStat.FieldGoalsMade,
+      fieldGoalsAttempted: teamStat.FieldGoalsAttempted,
+      fieldGoalsPercentage: teamStat.FieldGoalsPercentage,
+      effectiveFieldGoalsPercentage: teamStat.EffectiveFieldGoalsPercentage,
+      twoPointersMade: teamStat.TwoPointersMade,
+      twoPointersAttempted: teamStat.TwoPointersAttempted,
+      twoPointersPercentage: teamStat.TwoPointersPercentage,
+      threePointersMade: teamStat.ThreePointersMade,
+      threePointersAttempted: teamStat.ThreePointersAttempted,
+      threePointersPercentage: teamStat.ThreePointersPercentage,
+      freeThrowsMade: teamStat.FreeThrowsMade,
+      freeThrowsAttempted: teamStat.FreeThrowsAttempted,
+      freeThrowsPercentage: teamStat.FreeThrowsPercentage,
+      offensiveRebounds: teamStat.OffensiveRebounds,
+      assists: teamStat.Assists,
+      turnovers: teamStat.Turnovers,
+      personalFouls: teamStat.PersonalFouls,
+      trueShootingAttempts: teamStat.TrueShootingAttempts,
+      trueShootingPercentage: teamStat.TrueShootingPercentage,
+      plusMinus: teamStat.PlusMinus,
+      possessions: teamStat.Possessions
+    });
+
+    // Process defensive stats
+    await this.upsertTeamStat(teamId, season, seasonType, 'defensive', {
+      defensiveRebounds: teamStat.DefensiveRebounds,
+      rebounds: teamStat.Rebounds,
+      steals: teamStat.Steals,
+      blockedShots: teamStat.BlockedShots,
+      defensiveReboundsPercentage: teamStat.DefensiveReboundsPercentage,
+      totalReboundsPercentage: teamStat.TotalReboundsPercentage
+    });
+
+    // Process advanced stats
+    await this.upsertTeamStat(teamId, season, seasonType, 'advanced', {
+      playerEfficiencyRating: teamStat.PlayerEfficiencyRating,
+      assistsPercentage: teamStat.AssistsPercentage,
+      stealsPercentage: teamStat.StealsPercentage,
+      blocksPercentage: teamStat.BlocksPercentage,
+      turnOversPercentage: teamStat.TurnOversPercentage,
+      usageRatePercentage: teamStat.UsageRatePercentage
+    });
+
+    // Process fantasy stats
+    await this.upsertTeamStat(teamId, season, seasonType, 'fantasy', {
+      fantasyPoints: teamStat.FantasyPoints,
+      fantasyPointsFanDuel: teamStat.FantasyPointsFanDuel,
+      fantasyPointsDraftKings: teamStat.FantasyPointsDraftKings,
+      fantasyPointsYahoo: teamStat.FantasyPointsYahoo,
+      fantasyPointsFantasyDraft: teamStat.FantasyPointsFantasyDraft,
+      doubleDoubles: teamStat.DoubleDoubles,
+      tripleDoubles: teamStat.TripleDoubles
+    });
+
+    // Process opponent stats if available
+    if (teamStat.OpponentStat) {
+      await this.processOpponentStats(teamId, season, seasonType, teamStat.OpponentStat);
+    }
   }
 
-  async saveTeamStatistics(statsData) {
-    const savedStats = [];
-    
-    for (const stat of statsData) {
-      try {
-        const savedStat = await this.prisma.teamStatistics.upsert({
+  async processOpponentStats(teamId, season, seasonType, opponentStat) {
+    // Process opponent offensive stats
+    await this.upsertTeamStat(teamId, season, seasonType, 'opponent_offensive', {
+      opponentPoints: opponentStat.Points,
+      opponentFieldGoalsMade: opponentStat.FieldGoalsMade,
+      opponentFieldGoalsAttempted: opponentStat.FieldGoalsAttempted,
+      opponentFieldGoalsPercentage: opponentStat.FieldGoalsPercentage,
+      opponentEffectiveFieldGoalsPercentage: opponentStat.EffectiveFieldGoalsPercentage,
+      opponentTwoPointersMade: opponentStat.TwoPointersMade,
+      opponentTwoPointersAttempted: opponentStat.TwoPointersAttempted,
+      opponentTwoPointersPercentage: opponentStat.TwoPointersPercentage,
+      opponentThreePointersMade: opponentStat.ThreePointersMade,
+      opponentThreePointersAttempted: opponentStat.ThreePointersAttempted,
+      opponentThreePointersPercentage: opponentStat.ThreePointersPercentage,
+      opponentFreeThrowsMade: opponentStat.FreeThrowsMade,
+      opponentFreeThrowsAttempted: opponentStat.FreeThrowsAttempted,
+      opponentFreeThrowsPercentage: opponentStat.FreeThrowsPercentage,
+      opponentOffensiveRebounds: opponentStat.OffensiveRebounds,
+      opponentAssists: opponentStat.Assists,
+      opponentTurnovers: opponentStat.Turnovers,
+      opponentPersonalFouls: opponentStat.PersonalFouls,
+      opponentTrueShootingAttempts: opponentStat.TrueShootingAttempts,
+      opponentTrueShootingPercentage: opponentStat.TrueShootingPercentage,
+      opponentPlusMinus: opponentStat.PlusMinus
+    });
+
+    // Process opponent defensive stats
+    await this.upsertTeamStat(teamId, season, seasonType, 'opponent_defensive', {
+      opponentDefensiveRebounds: opponentStat.DefensiveRebounds,
+      opponentRebounds: opponentStat.Rebounds,
+      opponentSteals: opponentStat.Steals,
+      opponentBlockedShots: opponentStat.BlockedShots,
+      opponentDefensiveReboundsPercentage: opponentStat.DefensiveReboundsPercentage,
+      opponentTotalReboundsPercentage: opponentStat.TotalReboundsPercentage
+    });
+  }
+
+  async upsertTeamStat(teamId, season, seasonType, category, stats) {
+    const seasonStr = season.toString();
+    const seasonTypeStr = seasonType.toString();
+
+    for (const [statName, value] of Object.entries(stats)) {
+      if (value !== null && value !== undefined) {
+        const displayName = this.formatDisplayName(statName);
+        const shortDisplayName = this.formatShortDisplayName(statName);
+        const abbreviation = this.getAbbreviation(statName);
+        const displayValue = this.formatDisplayValue(statName, value);
+
+        await prisma.teamStatistics.upsert({
           where: {
             teamId_season_seasonType_category_statName: {
-              teamId: stat.teamId,
-              season: stat.season,
-              seasonType: stat.seasonType,
-              category: stat.category,
-              statName: stat.statName
+              teamId,
+              season: seasonStr,
+              seasonType: seasonTypeStr,
+              category,
+              statName
             }
           },
-          update: stat,
-          create: stat
+          update: {
+            value: parseFloat(value),
+            displayValue,
+            lastSynced: new Date()
+          },
+          create: {
+            teamId,
+            season: seasonStr,
+            seasonType: seasonTypeStr,
+            category,
+            statName,
+            displayName,
+            shortDisplayName,
+            abbreviation,
+            value: parseFloat(value),
+            displayValue,
+            description: this.getDescription(statName)
+          }
         });
-        
-        savedStats.push(savedStat);
-      } catch (error) {
-        console.error(`Error saving stat ${stat.statName} for team ${stat.teamId}:`, error.message);
       }
     }
-    
-    return savedStats;
   }
 
-  async syncAllTeamsStatistics(season = '2024-25', seasonType = 'regular') {
-    try {
-      console.log('🚀 Starting team statistics sync from sportsdata.io...');
-      
-      // Fetch standings data
-      const standings = await this.fetchTeamStandings(season);
-      
-      if (!standings || standings.length === 0) {
-        console.log('No standings data found');
-        return [];
-      }
-      
-      console.log(`Found ${standings.length} teams in standings`);
-      
-      // Transform the data
-      const transformedStats = this.transformStandingsData(standings);
-      
-      // Save to database
-      const savedStats = await this.saveTeamStatistics(transformedStats);
-      
-      console.log(`✅ Successfully synced ${savedStats.length} team statistics`);
-      
-      return savedStats;
-    } catch (error) {
-      console.error('❌ Error during team statistics sync:', error);
-      throw error;
-    } finally {
-      await this.prisma.$disconnect();
+  formatDisplayName(statName) {
+    return statName
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  }
+
+  formatShortDisplayName(statName) {
+    const shortNames = {
+      'wins': 'W',
+      'losses': 'L',
+      'games': 'GP',
+      'points': 'PTS',
+      'fieldGoalsMade': 'FGM',
+      'fieldGoalsAttempted': 'FGA',
+      'fieldGoalsPercentage': 'FG%',
+      'effectiveFieldGoalsPercentage': 'eFG%',
+      'twoPointersMade': '2PM',
+      'twoPointersAttempted': '2PA',
+      'twoPointersPercentage': '2P%',
+      'threePointersMade': '3PM',
+      'threePointersAttempted': '3PA',
+      'threePointersPercentage': '3P%',
+      'freeThrowsMade': 'FTM',
+      'freeThrowsAttempted': 'FTA',
+      'freeThrowsPercentage': 'FT%',
+      'offensiveRebounds': 'OREB',
+      'defensiveRebounds': 'DREB',
+      'rebounds': 'REB',
+      'assists': 'AST',
+      'steals': 'STL',
+      'blockedShots': 'BLK',
+      'turnovers': 'TOV',
+      'personalFouls': 'PF',
+      'trueShootingPercentage': 'TS%',
+      'plusMinus': '+/-',
+      'possessions': 'POSS'
+    };
+
+    return shortNames[statName] || statName.toUpperCase();
+  }
+
+  getAbbreviation(statName) {
+    return this.formatShortDisplayName(statName);
+  }
+
+  formatDisplayValue(statName, value) {
+    if (statName.includes('Percentage')) {
+      return `${parseFloat(value).toFixed(1)}%`;
+    } else if (statName === 'plusMinus') {
+      const numValue = parseFloat(value);
+      return numValue >= 0 ? `+${numValue.toFixed(1)}` : numValue.toFixed(1);
+    } else if (statName.includes('Made') || statName.includes('Attempted')) {
+      return parseFloat(value).toFixed(1);
+    } else {
+      return parseFloat(value).toFixed(1);
     }
+  }
+
+  getDescription(statName) {
+    const descriptions = {
+      'wins': 'Total wins for the season',
+      'losses': 'Total losses for the season',
+      'games': 'Total games played',
+      'points': 'Total points scored',
+      'fieldGoalsMade': 'Total field goals made',
+      'fieldGoalsAttempted': 'Total field goals attempted',
+      'fieldGoalsPercentage': 'Field goal percentage',
+      'effectiveFieldGoalsPercentage': 'Effective field goal percentage (accounts for 3-pointers)',
+      'twoPointersMade': 'Total 2-point field goals made',
+      'twoPointersAttempted': 'Total 2-point field goals attempted',
+      'twoPointersPercentage': '2-point field goal percentage',
+      'threePointersMade': 'Total 3-point field goals made',
+      'threePointersAttempted': 'Total 3-point field goals attempted',
+      'threePointersPercentage': '3-point field goal percentage',
+      'freeThrowsMade': 'Total free throws made',
+      'freeThrowsAttempted': 'Total free throws attempted',
+      'freeThrowsPercentage': 'Free throw percentage',
+      'offensiveRebounds': 'Total offensive rebounds',
+      'defensiveRebounds': 'Total defensive rebounds',
+      'rebounds': 'Total rebounds',
+      'assists': 'Total assists',
+      'steals': 'Total steals',
+      'blockedShots': 'Total blocked shots',
+      'turnovers': 'Total turnovers',
+      'personalFouls': 'Total personal fouls',
+      'trueShootingPercentage': 'True shooting percentage (accounts for 3-pointers and free throws)',
+      'plusMinus': 'Point differential',
+      'possessions': 'Total possessions'
+    };
+
+    return descriptions[statName] || `Team ${statName} for the season`;
   }
 }
 
-module.exports = SportsdataTeamStatsSyncService; 
+module.exports = TeamStatsSyncService; 

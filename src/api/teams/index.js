@@ -147,32 +147,51 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/statistics', async (req, res) => {
     try {
         const { id } = req.params;
-        const { season = '2024-25', seasonType = 'regular' } = req.query;
+        const { season = '2025', seasonType = '1', category } = req.query;
+
+        const where = {
+            teamId: parseInt(id),
+            season,
+            seasonType
+        };
+
+        if (category) {
+            where.category = category;
+        }
 
         const stats = await prisma.teamStatistics.findMany({
-            where: {
-                teamId: parseInt(id),
-                season,
-                seasonType
-            },
+            where,
             orderBy: [
                 { category: 'asc' },
-                { displayName: 'asc' }
+                { statName: 'asc' }
             ]
         });
 
-        // Group by category
+        // Group by category and format the response
         const groupedStats = stats.reduce((acc, stat) => {
             if (!acc[stat.category]) {
                 acc[stat.category] = [];
             }
-            acc[stat.category].push(stat);
+            acc[stat.category].push({
+                name: stat.statName,
+                displayName: stat.displayName,
+                shortDisplayName: stat.shortDisplayName,
+                abbreviation: stat.abbreviation,
+                value: stat.value,
+                displayValue: stat.displayValue,
+                description: stat.description
+            });
             return acc;
         }, {});
 
         res.json({
             success: true,
-            data: groupedStats
+            data: {
+                teamId: parseInt(id),
+                season,
+                seasonType,
+                categories: groupedStats
+            }
         });
     } catch (error) {
         console.error('Error fetching team statistics:', error);

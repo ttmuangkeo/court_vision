@@ -20,7 +20,7 @@ class TeamAnalytics {
             select: {
               id: true,
               name: true,
-              abbreviation: true,
+              key: true,
               conference: true,
               division: true
             }
@@ -236,7 +236,7 @@ class TeamAnalytics {
   async getConferenceRivals(teamId) {
     try {
       const team = await prisma.team.findUnique({
-        where: { espnId: teamId },
+        where: { id: parseInt(teamId) },
         select: { conference: true, division: true }
       });
 
@@ -245,12 +245,12 @@ class TeamAnalytics {
       const rivals = await prisma.team.findMany({
         where: {
           conference: team.conference,
-          espnId: { not: teamId }
+          id: { not: parseInt(teamId) }
         },
         select: {
           id: true,
           name: true,
-          abbreviation: true,
+          key: true,
           division: true
         },
         orderBy: { name: 'asc' }

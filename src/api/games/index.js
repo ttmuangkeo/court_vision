@@ -11,8 +11,10 @@ router.get('/', async (req, res) => {
             team,
             date,
             season,
-            limit = 20,
-            page = 1
+            limit = 50, // Increased default limit
+            page = 1,
+            sortBy = 'dateTime',
+            sortOrder = 'desc'
         } = req.query;
 
         const skip = (page - 1) * limit;
@@ -29,10 +31,15 @@ router.get('/', async (req, res) => {
         }
         if (team) {
             where.OR = [
-                {homeTeamId: team},
-                {awayTeamId: team}
+                {homeTeamId: parseInt(team)},
+                {awayTeamId: parseInt(team)}
             ];
         }
+
+                // Validate sortBy parameter
+        const allowedSortFields = ['dateTime', 'homeTeamScore', 'awayTeamScore', 'status'];
+        const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'dateTime';
+        const validSortOrder = sortOrder === 'asc' ? 'asc' : 'desc';
 
         const games = await prisma.game.findMany({
             where,
@@ -40,7 +47,7 @@ router.get('/', async (req, res) => {
                 homeTeam: true,
                 awayTeam: true
             } : undefined,
-            orderBy: {dateTime: 'desc'},
+            orderBy: {[validSortBy]: validSortOrder},
             skip: parseInt(skip),
             take: parseInt(limit)
         });
@@ -129,7 +136,7 @@ router.get('/live/current', async (req, res) => {
                 homeTeam: true,
                 awayTeam: true
             },
-            orderBy: {dateTime: 'desc'}
+            orderBy: {[validSortBy]: validSortOrder}
         });
 
         res.json({

@@ -53,7 +53,7 @@ function TeamDetail() {
             setStatsLoading(true);
             axios.get(`${API_BASE}/teams/${teamId}/statistics`)
                 .then(res => {
-                    setStats(res.data.data);
+                    setStats(res.data.data.categories);
                     setStatsLoading(false);
                 })
                 .catch(err => {
@@ -540,7 +540,7 @@ function TeamDetail() {
                                                 </thead>
                                                 <tbody>
                                                     {statsArr.map(stat => (
-                                                        <tr key={stat.id}>
+                                                        <tr key={stat.name}>
                                                             <td style={{ padding: '8px 12px', fontWeight: '500', color: '#222' }}>{stat.displayName}</td>
                                                             <td style={{ padding: '8px 12px', color: '#444' }}>{stat.displayValue}</td>
                                                             <td style={{ padding: '8px 12px', color: '#666' }}>{stat.abbreviation}</td>
