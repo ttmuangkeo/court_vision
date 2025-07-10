@@ -1,10 +1,12 @@
 const axios = require('axios');
 const prisma = require('../../db/client');
+const GameAnalysisAI = require('../ai/gameAnalysisAI');
 
 class BoxScoreService {
   constructor() {
     this.apiKey = process.env.SPORTSDATA_API_KEY;
     this.baseUrl = 'https://api.sportsdata.io/v3/nba/stats/json';
+    this.aiAnalyzer = new GameAnalysisAI();
   }
 
   async getBoxScore(gameId) {
@@ -28,39 +30,76 @@ class BoxScoreService {
   async analyzeGameMatchup(gameId) {
     try {
       const boxScore = await this.getBoxScore(gameId);
-      const game = boxScore.Game;
-      const teamGames = boxScore.TeamGames;
-
-      if (teamGames.length !== 2) {
-        throw new Error('Expected exactly 2 teams in box score');
-      }
-
-      const [awayTeam, homeTeam] = teamGames;
       
-      // Analyze team performance
+      // Use AI for intelligent analysis
+      const aiAnalysis = await this.aiAnalyzer.generateAIAnalysis(boxScore);
+      
+      // Combine AI analysis with traditional stats
       const analysis = {
-        gameInfo: {
-          gameId: game.GameID,
-          date: game.DateTime,
-          awayTeam: awayTeam.Team,
-          homeTeam: homeTeam.Team,
-          awayScore: game.AwayTeamScore,
-          homeScore: game.HomeTeamScore,
-          winner: game.AwayTeamScore > game.HomeTeamScore ? awayTeam.Team : homeTeam.Team,
-          margin: Math.abs(game.AwayTeamScore - game.HomeTeamScore)
+        ...aiAnalysis,
+        traditionalStats: {
+          away: this.analyzeTeamPerformance(boxScore.TeamGames[0]),
+          home: this.analyzeTeamPerformance(boxScore.TeamGames[1])
         },
-        teamAnalysis: {
-          away: this.analyzeTeamPerformance(awayTeam),
-          home: this.analyzeTeamPerformance(homeTeam)
-        },
-        matchup: this.compareTeams(awayTeam, homeTeam),
-        gamePlan: this.generateGamePlan(awayTeam, homeTeam)
+        matchup: this.compareTeams(boxScore.TeamGames[0], boxScore.TeamGames[1])
       };
 
       return analysis;
     } catch (error) {
       console.error('Error analyzing game matchup:', error);
-      throw error;
+      
+      // Fallback to traditional analysis if AI fails
+      try {
+        const boxScore = await this.getBoxScore(gameId);
+        const game = boxScore.Game;
+        const teamGames = boxScore.TeamGames;
+
+        if (teamGames.length !== 2) {
+          throw new Error('Expected exactly 2 teams in box score');
+        }
+
+        const [awayTeam, homeTeam] = teamGames;
+        
+        return {
+          gameInfo: {
+            gameId: game.GameID,
+            date: game.DateTime,
+            awayTeam: awayTeam.Team,
+            homeTeam: homeTeam.Team,
+            awayScore: game.AwayTeamScore,
+            homeScore: game.HomeTeamScore,
+            winner: game.AwayTeamScore > game.HomeTeamScore ? awayTeam.Team : homeTeam.Team,
+            margin: Math.abs(game.AwayTeamScore - game.HomeTeamScore)
+          },
+          teamAnalysis: {
+            away: this.analyzeTeamPerformance(awayTeam),
+            home: this.analyzeTeamPerformance(homeTeam)
+          },
+          matchup: this.compareTeams(awayTeam, homeTeam),
+          gamePlan: this.generateGamePlan(awayTeam, homeTeam),
+          aiAnalysis: {
+            summary: "AI analysis unavailable - using traditional analysis",
+            keyInsights: ["Traditional statistical analysis used"],
+            matchupAnalysis: {
+              advantages: { away: [], home: [] },
+              keyFactors: []
+            },
+            strategicInsights: {
+              offensiveStrategy: "Analysis based on traditional stats",
+              defensiveStrategy: "Analysis based on traditional stats",
+              adjustments: "Analysis based on traditional stats"
+            },
+            gamePlan: {
+              forWinner: "Traditional analysis used",
+              forLoser: "Traditional analysis used",
+              keyTakeaways: []
+            }
+          }
+        };
+      } catch (fallbackError) {
+        console.error('Fallback analysis also failed:', fallbackError);
+        throw error;
+      }
     }
   }
 
