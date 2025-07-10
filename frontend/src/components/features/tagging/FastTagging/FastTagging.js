@@ -170,7 +170,7 @@ function FastTagging() {
         createdById,
         tags: currentPlayTags.map(tagData => ({
           tagId: tagData.tag.id,
-          playerId: selectedPlayer.espnId,
+          playerId: selectedPlayer.id,
           teamId: selectedPlayer.teamId,
           context: {
             action: tagData.actionName,

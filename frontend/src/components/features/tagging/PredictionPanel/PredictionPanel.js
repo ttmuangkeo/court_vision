@@ -24,7 +24,7 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
                 const suggestionsRes = await axios.get(`${API_BASE}/analytics/suggestions`, {
                     params: {
                         gameId,
-                        playerId: selectedPlayer?.espnId,
+                        playerId: selectedPlayer?.id,
                         teamId: selectedTeam,
                         quarter: currentQuarter,
                         gameTime
@@ -33,7 +33,7 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
                 setSuggestions(suggestionsRes.data.data.suggestions);
 
                 // Fetch player patterns if player is selected
-                if (selectedPlayer?.espnId) {
+                if (selectedPlayer?.id) {
                     const playerRes = await axios.get(`${API_BASE}/analytics/player-patterns/${selectedPlayer.espnId}`, {
                         params: { gameId }
                     });
@@ -62,7 +62,7 @@ function PredictionPanel({ gameId, selectedPlayer, selectedTeam, currentQuarter,
         if (gameId) {
             fetchAnalytics();
         }
-    }, [gameId, selectedPlayer?.espnId, selectedTeam, currentQuarter, gameTime, refreshTrigger]);
+    }, [gameId, selectedPlayer?.id, selectedTeam, currentQuarter, gameTime, refreshTrigger]);
 
     if (loading) {
         return (

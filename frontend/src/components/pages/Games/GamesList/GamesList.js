@@ -62,15 +62,15 @@ function GamesList() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>
-                  {game.homeTeam?.abbreviation} vs {game.awayTeam?.abbreviation}
+                  {game.homeTeam?.name} vs {game.awayTeam?.name}
                 </h3>
                 <div style={{ color: '#666', fontSize: '14px' }}>
-                  {new Date(game.date).toLocaleDateString()} • {new Date(game.date).toLocaleTimeString()}
+                  {new Date(game.dateTime).toLocaleDateString()} • {new Date(game.dateTime).toLocaleTimeString()}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
-                  {game.homeScore} - {game.awayScore}
+                  {game.homeTeamScore} - {game.awayTeamScore}
                 </div>
                 <div style={{ 
                   fontSize: '12px', 

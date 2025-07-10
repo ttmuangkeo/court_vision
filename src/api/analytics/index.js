@@ -7,15 +7,16 @@ const authenticateJWT = require('../../middleware/auth');
 router.get('/player-patterns/:playerId', authenticateJWT, async (req, res) => {
     try {
         const { playerId } = req.params;
+        const parsedPlayerId = parseInt(playerId);
         const { gameId } = req.query;
         const userId = req.user.id;
 
         // Get all plays where this player was involved (filtered by user)
         const playerPlays = await prisma.playTag.findMany({
             where: {
-                playerId: playerId,
+                playerId: parsedPlayerId,
                 createdById: userId, // Filter by authenticated user
-                ...(gameId && { play: { gameId } })
+                ...(parsedGameId && { play: { gameId: parsedGameId } })
             },
             include: {
                 tag: true,
@@ -84,15 +85,16 @@ router.get('/player-patterns/:playerId', authenticateJWT, async (req, res) => {
 router.get('/team-tendencies/:teamId', authenticateJWT, async (req, res) => {
     try {
         const { teamId } = req.params;
+        const parsedTeamId = parseInt(teamId);
         const { gameId } = req.query;
         const userId = req.user.id;
 
         // Get all plays for this team (filtered by user)
         const teamPlays = await prisma.playTag.findMany({
             where: {
-                teamId: teamId,
+                teamId: parsedTeamId,
                 createdById: userId, // Filter by authenticated user
-                ...(gameId && { play: { gameId } })
+                ...(parsedGameId && { play: { gameId: parsedGameId } })
             },
             include: {
                 tag: true,
@@ -161,15 +163,16 @@ router.get('/team-tendencies/:teamId', authenticateJWT, async (req, res) => {
 router.get('/defensive-scouting/:playerId', authenticateJWT, async (req, res) => {
     try {
         const { playerId } = req.params;
+        const parsedPlayerId = parseInt(playerId);
         const { gameId } = req.query;
         const userId = req.user.id;
 
         // Get all plays with sequences for this player (filtered by user)
         const playerPlays = await prisma.playTag.findMany({
             where: {
-                playerId: playerId,
+                playerId: parsedPlayerId,
                 createdById: userId, // Filter by authenticated user
-                ...(gameId && { play: { gameId } })
+                ...(parsedGameId && { play: { gameId: parsedGameId } })
             },
             include: {
                 tag: true,
@@ -433,7 +436,7 @@ router.get('/game-context/:gameId', async (req, res) => {
 
         // Get game details
         const game = await prisma.game.findUnique({
-            where: { espnId: gameId },
+            where: { id: parseInt(gameId) },
             include: {
                 homeTeam: true,
                 awayTeam: true,
@@ -471,7 +474,7 @@ router.get('/game-context/:gameId', async (req, res) => {
             tags: play.tags.map(pt => ({
                 name: pt.tag.name,
                 player: pt.player?.name,
-                team: pt.team?.abbreviation
+                team: pt.team?.name
             }))
         }));
 
@@ -496,8 +499,8 @@ router.get('/game-context/:gameId', async (req, res) => {
                     id: game.id,
                     homeTeam: game.homeTeam,
                     awayTeam: game.awayTeam,
-                    homeScore: game.homeScore,
-                    awayScore: game.awayScore,
+                    homeScore: game.homeTeamScore,
+                    awayScore: game.awayTeamScore,
                     status: game.status,
                     quarter: game.quarter,
                     timeRemaining: game.timeRemaining
@@ -521,12 +524,17 @@ router.get('/suggestions', async (req, res) => {
     try {
         const { gameId, playerId, teamId, quarter, gameTime } = req.query;
 
+        // Parse IDs as integers
+        const parsedGameId = gameId ? parseInt(gameId) : undefined;
+        const parsedPlayerId = playerId ? parseInt(playerId) : undefined;
+        const parsedTeamId = teamId ? parseInt(teamId) : undefined;
+
         // Get recent plays for context (more data for better analysis)
         const recentPlays = await prisma.playTag.findMany({
             where: {
-                ...(gameId && { play: { gameId } }),
-                ...(playerId && { playerId }),
-                ...(teamId && { teamId })
+                ...(parsedGameId && { play: { gameId: parsedGameId } }),
+                ...(parsedPlayerId && { playerId: parsedPlayerId }),
+                ...(parsedTeamId && { teamId: parsedTeamId })
             },
             include: {
                 tag: true,
@@ -539,7 +547,6 @@ router.get('/suggestions', async (req, res) => {
             ],
             take: 50 // More data for better patterns
         });
-
         const suggestions = [];
 
         // 1. NEXT ACTION PREDICTION (based on sequence patterns)
@@ -692,7 +699,7 @@ router.get('/suggestions', async (req, res) => {
                 recentContext: recentPlays.slice(0, 5).map(pt => ({
                     tag: pt.tag.name,
                     player: pt.player?.name,
-                    team: pt.team?.abbreviation,
+                    team: pt.team?.name,
                     quarter: pt.play.quarter,
                     gameTime: pt.play.gameTime,
                     timestamp: pt.createdAt
@@ -712,15 +719,16 @@ router.get('/suggestions', async (req, res) => {
 router.get('/decision-quality/:playerId', authenticateJWT, async (req, res) => {
     try {
         const { playerId } = req.params;
+        const parsedPlayerId = parseInt(playerId);
         const { gameId } = req.query;
         const userId = req.user.id;
 
         // Get all plays with sequences for this player (filtered by user)
         const playerPlays = await prisma.playTag.findMany({
             where: {
-                playerId: playerId,
+                playerId: parsedPlayerId,
                 createdById: userId, // Filter by authenticated user
-                ...(gameId && { play: { gameId } })
+                ...(parsedGameId && { play: { gameId: parsedGameId } })
             },
             include: {
                 tag: true,

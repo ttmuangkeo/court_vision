@@ -60,7 +60,7 @@ const PersonalizedDashboard = () => {
       return;
     }
     const enriched = user.favoriteTeams.map(fav =>
-      allTeams.find(t => t.espnId === fav.espnId) || fav
+      allTeams.find(t => t.id === fav.id) || fav
     );
     setEnrichedFavoriteTeams(enriched);
     
@@ -69,7 +69,7 @@ const PersonalizedDashboard = () => {
     if (user.favoritePlayers && user.favoritePlayers.length > 0) {
       user.favoritePlayers.forEach(player => {
         console.log(`Player ${player.firstName + " " + player.lastName}:`, {
-          espnId: player.id,
+          id: player.id,
           headshot: player.photoUrl,
           hasHeadshot: !!player.photoUrl
         });
@@ -272,18 +272,18 @@ const PersonalizedDashboard = () => {
                 <div key={game.id} className="game-card-modern">
                   <div className="game-teams-modern">
                     <div className="team-modern">
-                      <span className="team-name-modern">{game.homeTeam?.abbreviation}</span>
-                      <span className="score-modern">{game.homeScore || 0}</span>
+                      <span className="team-name-modern">{game.homeTeam?.name}</span>
+                      <span className="score-modern">{game.homeTeamScore || 0}</span>
                     </div>
                     <div className="vs-modern">vs</div>
                     <div className="team-modern">
-                      <span className="team-name-modern">{game.awayTeam?.abbreviation}</span>
-                      <span className="score-modern">{game.awayScore || 0}</span>
+                      <span className="team-name-modern">{game.awayTeam?.name}</span>
+                      <span className="score-modern">{game.awayTeamScore || 0}</span>
                     </div>
                   </div>
                   <div className="game-info-modern">
                     <span className="game-date-modern">
-                      {new Date(game.date).toLocaleDateString()}
+                      {new Date(game.dateTime).toLocaleDateString()}
                     </span>
                     <span className={`game-status-modern ${game.status.toLowerCase()}`}>
                       {game.status}
@@ -333,16 +333,16 @@ const PersonalizedDashboard = () => {
                 <div key={game.id} className="game-card-modern upcoming">
                   <div className="game-teams-modern">
                     <div className="team-modern">
-                      <span className="team-name-modern">{game.homeTeam?.abbreviation}</span>
+                      <span className="team-name-modern">{game.homeTeam?.name}</span>
                     </div>
                     <div className="vs-modern">vs</div>
                     <div className="team-modern">
-                      <span className="team-name-modern">{game.awayTeam?.abbreviation}</span>
+                      <span className="team-name-modern">{game.awayTeam?.name}</span>
                     </div>
                   </div>
                   <div className="game-info-modern">
                     <span className="game-date-modern">
-                      {new Date(game.date).toLocaleDateString()}
+                      {new Date(game.dateTime).toLocaleDateString()}
                     </span>
                     <span className={`game-status-modern ${game.status.toLowerCase()}`}>
                       {game.status}

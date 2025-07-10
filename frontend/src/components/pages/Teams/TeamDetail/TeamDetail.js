@@ -668,7 +668,7 @@ function TeamDetail() {
                                 >
                                     <option value="">Choose a team...</option>
                                     {rivals.map(rival => (
-                                        <option key={rival.espnId} value={rival.espnId}>
+                                        <option key={rival.id} value={rival.id}>
                                             {rival.name} ({rival.division})
                                         </option>
                                     ))}

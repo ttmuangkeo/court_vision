@@ -195,7 +195,7 @@ function GamesDashboard() {
                         fontWeight: '700',
                         color: '#1e293b'
                       }}>
-                        {game.homeTeam?.abbreviation} vs {game.awayTeam?.abbreviation}
+                        {game.homeTeam?.name} vs {game.awayTeam?.name}
                       </h3>
                       <div style={{ 
                         color: '#64748b', 
@@ -203,7 +203,7 @@ function GamesDashboard() {
                         fontWeight: '500',
                         marginBottom: '12px'
                       }}>
-                        {new Date(game.date).toLocaleDateString()} • {new Date(game.date).toLocaleTimeString()}
+                        {new Date(game.dateTime).toLocaleDateString()} • {new Date(game.dateTime).toLocaleTimeString()}
                       </div>
                       <div style={{
                         display: 'inline-flex',
@@ -235,7 +235,7 @@ function GamesDashboard() {
                         marginBottom: '4px',
                         color: '#667eea'
                       }}>
-                        {game.homeScore || 0} - {game.awayScore || 0}
+                        {game.homeTeamScore || 0} - {game.awayTeamScore || 0}
                       </div>
                       <div style={{
                         color: '#94a3b8',

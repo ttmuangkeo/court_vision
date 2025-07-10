@@ -10,7 +10,7 @@ function DecisionQualityPanel({ gameId, selectedPlayer, refreshTrigger }) {
 
     useEffect(() => {
         const fetchDecisionQuality = async () => {
-            if (!selectedPlayer?.espnId) {
+            if (!selectedPlayer?.id) {
                 setDecisionData(null);
                 return;
             }
@@ -29,7 +29,7 @@ function DecisionQualityPanel({ gameId, selectedPlayer, refreshTrigger }) {
         };
 
         fetchDecisionQuality();
-    }, [selectedPlayer?.espnId, gameId, refreshTrigger]);
+    }, [selectedPlayer?.id, gameId, refreshTrigger]);
 
     if (loading) {
         return (

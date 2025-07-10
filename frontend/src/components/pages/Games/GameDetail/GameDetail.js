@@ -148,7 +148,7 @@ function GameDetail() {
                             letterSpacing: '-0.02em',
                             lineHeight: '1.1'
                         }}>
-                            {game.homeTeam?.abbreviation} vs {game.awayTeam?.abbreviation}
+                            {game.homeTeam?.name} vs {game.awayTeam?.name}
                         </h1>
                         <p style={{ 
                             fontSize: '1.25rem', 
@@ -157,7 +157,7 @@ function GameDetail() {
                             lineHeight: '1.5',
                             marginBottom: '20px'
                         }}>
-                            {new Date(game.date).toLocaleDateString('en-US', { 
+                            {new Date(game.dateTime).toLocaleDateString('en-US', { 
                                 weekday: 'long', 
                                 year: 'numeric', 
                                 month: 'long', 
@@ -227,7 +227,7 @@ function GameDetail() {
                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                                 border: '1px solid rgba(0, 0, 0, 0.05)'
                             }}>
-                                {game.homeTeam?.abbreviation}
+                                {game.homeTeam?.name}
                             </div>
                             <h3 style={{ 
                                 fontSize: '1.5rem', 
@@ -242,7 +242,7 @@ function GameDetail() {
                                 fontWeight: '700', 
                                 color: '#667eea'
                             }}>
-                                {game.homeScore || 0}
+                                {game.homeTeamScore || 0}
                             </div>
                         </div>
 
@@ -268,7 +268,7 @@ function GameDetail() {
                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                                 border: '1px solid rgba(0, 0, 0, 0.05)'
                             }}>
-                                {game.awayTeam?.abbreviation}
+                                {game.awayTeam?.name}
                             </div>
                             <h3 style={{ 
                                 fontSize: '1.5rem', 
@@ -283,7 +283,7 @@ function GameDetail() {
                                 fontWeight: '700', 
                                 color: '#667eea'
                             }}>
-                                {game.awayScore || 0}
+                                {game.awayTeamScore || 0}
                             </div>
                         </div>
                     </div>

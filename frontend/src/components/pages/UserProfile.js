@@ -368,7 +368,7 @@ const UserProfile = () => {
                     </div>
                     <div className="player-info">
                       <h3>{player.firstName + " " + player.lastName}</h3>
-                      <p>{player.position} • {player.team?.abbreviation || (player.teamId ? teams.find(t => t.espnId === player.teamId)?.abbreviation : 'FA')}</p>
+                      <p>{player.position} • {player.team?.abbreviation || (player.teamId ? teams.find(t => t.id === player.teamId)?.abbreviation : 'FA')}</p>
                     </div>
                   </div>
                 ))}

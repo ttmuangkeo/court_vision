@@ -98,10 +98,10 @@ function PlayerSelector({
             .map(player => (
               <div
                 key={player.id}
-                className={`player-selector-item${selectedPlayer && selectedPlayer.espnId === player.id ? ' selected' : ''}`}
+                className={`player-selector-item${selectedPlayer && selectedPlayer.id === player.id ? ' selected' : ''}`}
                 onClick={() => onPlayerSelect(player)}
                 style={{
-                  borderLeft: selectedPlayer && selectedPlayer.espnId === player.id 
+                  borderLeft: selectedPlayer && selectedPlayer.id === player.id 
                     ? `4px solid ${getTeamPrimaryColor(player.teamId, teams)}` 
                     : '4px solid transparent'
                 }}

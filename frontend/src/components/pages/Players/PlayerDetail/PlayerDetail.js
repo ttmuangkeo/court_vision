@@ -51,17 +51,17 @@ function PlayerDetail() {
                 setTeams(teamsRes.data.data);
                 
                 // Use player.id for analytics calls
-                if (playerData && playerData.espnId) {
+                if (playerData && playerData.id) {
                     // Fetch player patterns and analytics
-                    const patternsRes = await axios.get(`${API_BASE}/analytics/player-patterns/${playerData.espnId}`);
+                    const patternsRes = await axios.get(`${API_BASE}/analytics/player-patterns/${playerData.id}`);
                     setPlayerPatterns(patternsRes.data.data);
                     
                     // Fetch decision quality analysis
-                    const decisionRes = await axios.get(`${API_BASE}/analytics/decision-quality/${playerData.espnId}`);
+                    const decisionRes = await axios.get(`${API_BASE}/analytics/decision-quality/${playerData.id}`);
                     setDecisionQuality(decisionRes.data.data);
                     
                     // Fetch recent plays for this player
-                    const playsRes = await axios.get(`${API_BASE}/plays?playerId=${playerData.espnId}&limit=20&include=tags`);
+                    const playsRes = await axios.get(`${API_BASE}/plays?playerId=${playerData.id}&limit=20&include=tags`);
                     setRecentPlays(playsRes.data.data || []);
                 }
                 
