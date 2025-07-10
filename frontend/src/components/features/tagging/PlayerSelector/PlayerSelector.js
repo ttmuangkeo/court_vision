@@ -24,20 +24,6 @@ function PlayerSelector({
             Filter by Team:
           </label>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => onTeamSelect(null)}
-              style={{
-                padding: '8px 12px',
-                background: selectedTeam === null ? '#007bff' : '#fff',
-                color: selectedTeam === null ? '#fff' : '#333',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              All Players
-            </button>
-            
             {/* Home Team Button */}
             <button
               onClick={() => onTeamSelect(game.homeTeamId)}
@@ -94,7 +80,10 @@ function PlayerSelector({
       <div className="player-selector-list">
         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
           {players
-            .filter(player => !selectedTeam || player.teamId === selectedTeam)
+            .filter(player => {
+            const effectiveTeam = selectedTeam || game.homeTeamId;
+            return player.teamId === effectiveTeam;
+          })
             .map(player => (
               <div
                 key={player.id}

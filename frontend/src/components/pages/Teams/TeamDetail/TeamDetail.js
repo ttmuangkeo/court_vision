@@ -20,6 +20,8 @@ function TeamDetail() {
     const [selectedRival, setSelectedRival] = useState(null);
     const [comparison, setComparison] = useState(null);
     const [comparisonLoading, setComparisonLoading] = useState(false);
+    const [games, setGames] = useState([]);
+    const [gamesLoading, setGamesLoading] = useState(false);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -103,6 +105,21 @@ function TeamDetail() {
                 });
         }
     }, [selectedRival, teamId]);
+    useEffect(() => {
+        if (activeTab === 'games' && teamId) {
+            setGamesLoading(true);
+            axios.get(`${API_BASE}/games?team=${teamId}&limit=50&include=teams`)
+                .then(res => {
+                    setGames(res.data.data);
+                    setGamesLoading(false);
+                })
+                .catch(err => {
+                    console.error('Error fetching games:', err);
+                    setGames([]);
+                    setGamesLoading(false);
+                });
+        }
+    }, [activeTab, teamId]);
 
     const handleBackClick = () => {
         navigate('/teams');
@@ -341,6 +358,18 @@ function TeamDetail() {
                         transition: 'all 0.2s',
                         outline: 'none',
                     }}>Analytics</button>
+                    <button onClick={() => setActiveTab('games')} style={{
+                        border: 'none',
+                        background: activeTab === 'games' ? primaryColor : 'transparent',
+                        color: activeTab === 'games' ? '#fff' : '#222',
+                        fontWeight: '600',
+                        fontSize: '1rem',
+                        padding: '16px 28px',
+                        borderRadius: '18px 18px 0 0',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        outline: 'none',
+                    }}>Games</button>
                     <button onClick={() => setActiveTab('comparison')} style={{
                         border: 'none',
                         background: activeTab === 'comparison' ? primaryColor : 'transparent',
@@ -644,12 +673,121 @@ function TeamDetail() {
                         </div>
                     )}
 
+                    
+                    {activeTab === 'games' && (
+                        <div>
+                            <h2 style={{ 
+                                fontSize: '1.75rem', 
+                                fontWeight: '700', 
+                                color: '#1e293b',
+                                marginBottom: '24px',
+                                letterSpacing: '-0.01em'
+                            }}>
+                                Team Games
+                            </h2>
+                            
+                            {gamesLoading ? (
+                                <div style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'center', 
+                                    alignItems: 'center', 
+                                    height: '200px',
+                                    fontSize: '1.1rem',
+                                    color: '#8e8e93'
+                                }}>
+                                    Loading games...
+                                </div>
+                            ) : games.length > 0 ? (
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                                    gap: '20px'
+                                }}>
+                                    {games.map(game => (
+                                        <div
+                                            key={game.id}
+                                            onClick={() => navigate(`/games/${game.id}/tag`)}
+                                            style={{
+                                                backgroundColor: 'white',
+                                                padding: '20px',
+                                                borderRadius: '12px',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                                                border: '1px solid rgba(0, 0, 0, 0.05)',
+                                                transition: 'all 0.2s ease',
+                                                position: 'relative',
+                                                overflow: 'hidden'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.transform = 'translateY(-2px)';
+                                                e.target.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.transform = 'translateY(0)';
+                                                e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
+                                            }}
+                                        >
+                                            {/* Status Badge */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '12px',
+                                                right: '12px',
+                                                padding: '4px 8px',
+                                                borderRadius: '6px',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                color: 'white',
+                                                backgroundColor: game.status === 'FINISHED' ? '#28a745' : 
+                                                               game.status === 'LIVE' ? '#dc3545' : '#6c757d'
+                                            }}>
+                                                {game.status}
+                                            </div>
+
+                                            <h3 style={{ 
+                                                        margin: '0 0 8px 0', 
+                                                        fontSize: '1.1rem',
+                                                        fontWeight: '600',
+                                                        color: '#1e293b'
+                                                    }}>
+                                                        {game.homeTeam?.name} vs {game.awayTeam?.name}
+                                                    </h3>
+                                                    <p style={{
+                                                        margin: '0',
+                                                        fontSize: '0.9rem',
+                                                        color: '#6b7280',
+                                                        fontWeight: '500'
+                                                    }}>
+                                                        {new Date(game.dateTime).toLocaleDateString('en-US', {
+                                                            weekday: 'short',
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric'
+                                                        })}
+                                                    </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ 
+                                    textAlign: 'center', 
+                                    padding: '60px 20px',
+                                    color: '#64748b'
+                                }}>
+                                    <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>
+                                        No games found for this team.
+                                    </p>
+                                    <p style={{ fontSize: '0.9rem', color: '#9ca3af' }}>
+                                        Games will appear here once they are synced from the API.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     {activeTab === 'comparison' && (
                         <div>
                             <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '20px' }}>
                                 Compare with Conference Rivals
                             </h3>
-                            
                             {/* Rival Selector */}
                             <div style={{ marginBottom: '24px' }}>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#374151' }}>
@@ -674,7 +812,6 @@ function TeamDetail() {
                                     ))}
                                 </select>
                             </div>
-
                             {/* Comparison Results */}
                             {comparisonLoading ? (
                                 <div style={{ color: '#888', fontSize: '1.1rem' }}>Loading comparison...</div>
@@ -724,7 +861,6 @@ function TeamDetail() {
                                             ))}
                                         </div>
                                     </div>
-
                                     {/* Team Advantages */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                                         <div>
