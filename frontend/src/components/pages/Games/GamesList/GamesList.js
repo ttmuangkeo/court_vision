@@ -61,7 +61,7 @@ function GamesList() {
   }, [currentPage, sortBy, sortOrder, statusFilter, teamFilter]);
 
   const handleGameClick = (gameId) => {
-    navigate(`/games/${gameId}/tag`);
+    navigate(`/games/${gameId}`);
   };
 
   

@@ -4,10 +4,11 @@ import Navbar from './components/layout/Navbar';
 import LandingPage from './components/pages/LandingPage';
 import PersonalizedDashboard from './components/pages/PersonalizedDashboard';
 import UserProfile from './components/pages/UserProfile';
-import GamesDashboard from './components/pages/Games/GamesDashboard';
+
 import GamesList from './components/pages/Games/GamesList';
 import GameDetail from './components/pages/Games/GameDetail';
 import GameAnalytics from './components/pages/Analytics/GameAnalytics';
+import GameAnalysis from './components/features/gameAnalysis/GameAnalysis';
 import FastTagging from './components/features/tagging/FastTagging';
 import TeamsList from './components/pages/Teams/TeamsList';
 import TeamDetail from './components/pages/Teams/TeamDetail';
@@ -18,6 +19,17 @@ import AuthPage from './components/pages/Auth/AuthPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 // import TagsList from './components/TagsList'; // (create this next!)
 import './App.css';
+
+
+// Game Analysis Wrapper Component
+function GameAnalysisWrapper() {
+  const { gameId } = useParams();
+  return (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <GameAnalysis gameId={gameId} />
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -82,6 +94,14 @@ function App() {
               <>
                 <Navbar />
                 <GameAnalytics />
+              </>
+            </ProtectedRoute>
+          } />
+          <Route path="/games/:gameId/analysis" element={
+            <ProtectedRoute requireAuth={true}>
+              <>
+                <Navbar />
+                <GameAnalysisWrapper />
               </>
             </ProtectedRoute>
           } />

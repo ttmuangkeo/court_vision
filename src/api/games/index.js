@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../../../src/db/client');
+const BoxScoreService = require('../../services/sportsdata/boxScoreService');
 
 // GET /api/games - Get all games
 router.get('/', async (req, res) => {
@@ -31,8 +32,8 @@ router.get('/', async (req, res) => {
         }
         if (team) {
             where.OR = [
-                {homeTeamId: parseInt(team)},
-                {awayTeamId: parseInt(team)}
+                {homeTeamId: team},
+                {awayTeamId: team}
             ];
         }
 
@@ -47,7 +48,7 @@ router.get('/', async (req, res) => {
                 homeTeam: true,
                 awayTeam: true
             } : undefined,
-            orderBy: {[validSortBy]: validSortOrder},
+            orderBy: {dateTime: 'desc'},
             skip: parseInt(skip),
             take: parseInt(limit)
         });
@@ -186,6 +187,58 @@ router.get('/schedule/today', async (req, res) => {
             error: 'Failed to fetch today\'s games'
         });
     }
+});
+
+
+// GET /api/games/:id/analysis - Get detailed game analysis and matchup comparison
+router.get('/:id/analysis', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const boxScoreService = new BoxScoreService();
+
+    // Get game analysis
+    const analysis = await boxScoreService.analyzeGameMatchup(id);
+    
+    // Save analysis for future reference
+    await boxScoreService.saveGameAnalysis(id, analysis);
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+  } catch (error) {
+    console.error('Error fetching game analysis:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch game analysis'
+    });
+  }
+});
+
+// GET /api/games/:id/matchup - Get team matchup comparison
+router.get('/:id/matchup', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const boxScoreService = new BoxScoreService();
+
+    const analysis = await boxScoreService.analyzeGameMatchup(id);
+    
+    // Return just the matchup comparison
+    res.json({
+      success: true,
+      data: {
+        gameInfo: analysis.gameInfo,
+        matchup: analysis.matchup,
+        gamePlan: analysis.gamePlan
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching matchup analysis:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch matchup analysis'
+    });
+  }
 });
 
 module.exports = router;

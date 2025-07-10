@@ -487,6 +487,20 @@ model TeamStatistics {
   @@map("team_statistics")
 }
 
+
+
+
+
+model GameAnalysis {
+  id        String   @id @default(cuid())
+  gameId    String   @unique
+  analysis  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("game_analysis")
+}
+
 model PlayerNews {
   id                Int      @id // NewsID from sportsdata.io
   source            String

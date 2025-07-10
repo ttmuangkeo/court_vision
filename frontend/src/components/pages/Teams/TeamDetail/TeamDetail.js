@@ -13,6 +13,7 @@ function TeamDetail() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('roster');
     const [stats, setStats] = useState(null);
+    const [showCompleteStats, setShowCompleteStats] = useState(false);
     const [statsLoading, setStatsLoading] = useState(false);
     const [analytics, setAnalytics] = useState(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -517,41 +518,377 @@ function TeamDetail() {
                     
                     {activeTab === 'stats' && (
                         <div>
-                            {statsLoading ? (
+                            {showCompleteStats ? (
+                                <div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                        <h3 style={{
+                                            fontSize: '1.5rem',
+                                            fontWeight: '700',
+                                            color: '#1e293b'
+                                        }}>Complete Team Statistics</h3>
+                                        <button
+                                            onClick={() => setShowCompleteStats(false)}
+                                            style={{
+                                                padding: '8px 16px',
+                                                background: '#6b7280',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                fontSize: '0.9rem',
+                                                fontWeight: '600',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            Back to Summary
+                                        </button>
+                                    </div>
+                                    {Object.entries(stats).map(([category, statsArr]) => (
+                                        <div key={category} style={{ marginBottom: '32px' }}>
+                                            <h3 style={{
+                                                fontSize: '1.3rem',
+                                                fontWeight: '700',
+                                                marginBottom: '12px',
+                                                color: primaryColor
+                                            }}>{category.charAt(0).toUpperCase() + category.slice(1)} Stats</h3>
+                                            <div style={{ overflowX: 'auto' }}>
+                                                <table style={{ width: '100%', borderCollapse: 'collapse', background: '#f9f9f9', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+                                                    <thead>
+                                                        <tr style={{ background: alternateColor || '#ececec' }}>
+                                                            <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Stat</th>
+                                                            <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Value</th>
+                                                            <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Abbr</th>
+                                                            <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {statsArr.map(stat => (
+                                                            <tr key={stat.name}>
+                                                                <td style={{ padding: '8px 12px', fontWeight: '500', color: '#222' }}>{stat.displayName}</td>
+                                                                <td style={{ padding: '8px 12px', color: '#444' }}>{stat.displayValue}</td>
+                                                                <td style={{ padding: '8px 12px', color: '#666' }}>{stat.abbreviation}</td>
+                                                                <td style={{ padding: '8px 12px', color: '#888', fontSize: '0.95em' }}>{stat.description || '-'}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : statsLoading ? (
                                 <div style={{ color: '#888', fontSize: '1.1rem' }}>Loading team statistics...</div>
                             ) : stats && Object.keys(stats).length > 0 ? (
-                                Object.entries(stats).map(([category, statsArr]) => (
-                                    <div key={category} style={{ marginBottom: '32px' }}>
+                                <div>
+                                    {/* Key Performance Indicators */}
+                                    <div style={{ marginBottom: '32px' }}>
+                                        <h3 style={{
+                                            fontSize: '1.5rem',
+                                            fontWeight: '700',
+                                            marginBottom: '20px',
+                                            color: '#1e293b'
+                                        }}>🏆 Key Performance Indicators</h3>
+                                        <div style={{ 
+                                            display: 'grid', 
+                                            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                                            gap: '16px'
+                                        }}>
+                                            {(() => {
+                                                const kpiStats = [];
+                                                if (stats.offensive) {
+                                                    const wins = stats.offensive.find(s => s.name === 'wins');
+                                                    const losses = stats.offensive.find(s => s.name === 'losses');
+                                                    const points = stats.offensive.find(s => s.name === 'points');
+                                                    const assists = stats.offensive.find(s => s.name === 'assists');
+                                                    
+                                                    if (wins && losses) {
+                                                        const winRate = ((wins.value / (wins.value + losses.value)) * 100).toFixed(1);
+                                                        kpiStats.push({
+                                                            title: 'Win Rate',
+                                                            value: winRate + '%',
+                                                            subtitle: wins.value + 'W - ' + losses.value + 'L',
+                                                            color: '#10b981',
+                                                            icon: '🏆'
+                                                        });
+                                                    }
+                                                    
+                                                    if (points) {
+                                                        kpiStats.push({
+                                                            title: 'Points Per Game',
+                                                            value: (points.value / 82).toFixed(1),
+                                                            subtitle: points.value + ' total points',
+                                                            color: '#3b82f6',
+                                                            icon: '🏀'
+                                                        });
+                                                    }
+                                                    
+                                                    if (assists) {
+                                                        kpiStats.push({
+                                                            title: 'Assists Per Game',
+                                                            value: (assists.value / 82).toFixed(1),
+                                                            subtitle: assists.value + ' total assists',
+                                                            color: '#8b5cf6',
+                                                            icon: '🤝'
+                                                        });
+                                                    }
+                                                }
+                                                
+                                                return kpiStats.map((kpi, index) => (
+                                                    <div key={index} style={{
+                                                        background: 'white',
+                                                        padding: '20px',
+                                                        borderRadius: '12px',
+                                                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                                                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                                                            <span style={{ fontSize: '1.5rem', marginRight: '8px' }}>{kpi.icon}</span>
+                                                            <span style={{ 
+                                                                fontSize: '0.9rem', 
+                                                                fontWeight: '600', 
+                                                                color: kpi.color,
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.5px'
+                                                            }}>{kpi.title}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1e293b', marginBottom: '4px' }}>
+                                                            {kpi.value}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
+                                                            {kpi.subtitle}
+                                                        </div>
+                                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Shooting Efficiency */}
+                                    {stats.offensive && (
+                                        <div style={{ marginBottom: '32px' }}>
+                                            <h3 style={{
+                                                fontSize: '1.3rem',
+                                                fontWeight: '700',
+                                                marginBottom: '16px',
+                                                color: '#1e293b'
+                                            }}>🎯 Shooting Efficiency</h3>
+                                            <div style={{ 
+                                                display: 'grid', 
+                                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                                gap: '12px'
+                                            }}>
+                                                {(() => {
+                                                    const shootingStats = [];
+                                                    const fgPct = stats.offensive.find(s => s.name === 'fieldGoalsPercentage');
+                                                    const threePct = stats.offensive.find(s => s.name === 'threePointersPercentage');
+                                                    const ftPct = stats.offensive.find(s => s.name === 'freeThrowsPercentage');
+                                                    
+                                                    if (fgPct) shootingStats.push({
+                                                        label: 'FG%',
+                                                        value: fgPct.displayValue,
+                                                        color: '#10b981'
+                                                    });
+                                                    if (threePct) shootingStats.push({
+                                                        label: '3P%',
+                                                        value: threePct.displayValue,
+                                                        color: '#3b82f6'
+                                                    });
+                                                    if (ftPct) shootingStats.push({
+                                                        label: 'FT%',
+                                                        value: ftPct.displayValue,
+                                                        color: '#8b5cf6'
+                                                    });
+                                                    
+                                                    return shootingStats.map((stat, index) => (
+                                                        <div key={index} style={{
+                                                            background: 'white',
+                                                            padding: '16px',
+                                                            borderRadius: '8px',
+                                                            textAlign: 'center',
+                                                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                                                        }}>
+                                                            <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '4px' }}>
+                                                                {stat.label}
+                                                            </div>
+                                                            <div style={{ 
+                                                                fontSize: '1.5rem', 
+                                                                fontWeight: '700', 
+                                                                color: stat.color 
+                                                            }}>
+                                                                {stat.value}
+                                                            </div>
+                                                        </div>
+                                                    ));
+                                                })()}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Defensive Metrics */}
+                                    {stats.defensive && (
+                                        <div style={{ marginBottom: '32px' }}>
+                                            <h3 style={{
+                                                fontSize: '1.3rem',
+                                                fontWeight: '700',
+                                                marginBottom: '16px',
+                                                color: '#1e293b'
+                                            }}>🛡️ Defensive Performance</h3>
+                                            <div style={{ 
+                                                display: 'grid', 
+                                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                                gap: '12px'
+                                            }}>
+                                                {(() => {
+                                                    const defensiveStats = [];
+                                                    const rebounds = stats.defensive.find(s => s.name === 'rebounds');
+                                                    const blocks = stats.defensive.find(s => s.name === 'blockedShots');
+                                                    const steals = stats.defensive.find(s => s.name === 'steals');
+                                                    
+                                                    if (rebounds) defensiveStats.push({
+                                                        label: 'Rebounds',
+                                                        value: (rebounds.value / 82).toFixed(1),
+                                                        subtitle: 'per game',
+                                                        color: '#f59e0b'
+                                                    });
+                                                    if (blocks) defensiveStats.push({
+                                                        label: 'Blocks',
+                                                        value: (blocks.value / 82).toFixed(1),
+                                                        subtitle: 'per game',
+                                                        color: '#ef4444'
+                                                    });
+                                                    if (steals) defensiveStats.push({
+                                                        label: 'Steals',
+                                                        value: (steals.value / 82).toFixed(1),
+                                                        subtitle: 'per game',
+                                                        color: '#10b981'
+                                                    });
+                                                    
+                                                    return defensiveStats.map((stat, index) => (
+                                                        <div key={index} style={{
+                                                            background: 'white',
+                                                            padding: '16px',
+                                                            borderRadius: '8px',
+                                                            textAlign: 'center',
+                                                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                                                        }}>
+                                                            <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '4px' }}>
+                                                                {stat.label}
+                                                            </div>
+                                                            <div style={{ 
+                                                                fontSize: '1.5rem', 
+                                                                fontWeight: '700', 
+                                                                color: stat.color 
+                                                            }}>
+                                                                {stat.value}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                                {stat.subtitle}
+                                                            </div>
+                                                        </div>
+                                                    ));
+                                                })()}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Advanced Stats */}
+                                    <div style={{ marginBottom: '32px' }}>
                                         <h3 style={{
                                             fontSize: '1.3rem',
                                             fontWeight: '700',
-                                            marginBottom: '12px',
-                                            color: primaryColor
-                                        }}>{category.charAt(0).toUpperCase() + category.slice(1)} Stats</h3>
-                                        <div style={{ overflowX: 'auto' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#f9f9f9', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
-                                                <thead>
-                                                    <tr style={{ background: alternateColor || '#ececec' }}>
-                                                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Stat</th>
-                                                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Value</th>
-                                                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Abbr</th>
-                                                        <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: '600', fontSize: '1rem', color: '#333' }}>Description</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {statsArr.map(stat => (
-                                                        <tr key={stat.name}>
-                                                            <td style={{ padding: '8px 12px', fontWeight: '500', color: '#222' }}>{stat.displayName}</td>
-                                                            <td style={{ padding: '8px 12px', color: '#444' }}>{stat.displayValue}</td>
-                                                            <td style={{ padding: '8px 12px', color: '#666' }}>{stat.abbreviation}</td>
-                                                            <td style={{ padding: '8px 12px', color: '#888', fontSize: '0.95em' }}>{stat.description || '-'}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
+                                            marginBottom: '16px',
+                                            color: '#1e293b'
+                                        }}>📊 Advanced Analytics</h3>
+                                        <div style={{ 
+                                            display: 'grid', 
+                                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                                            gap: '16px'
+                                        }}>
+                                            {(() => {
+                                                const advancedStats = [];
+                                                if (stats.offensive) {
+                                                    const trueShooting = stats.offensive.find(s => s.name === 'trueShootingPercentage');
+                                                    const effectiveFG = stats.offensive.find(s => s.name === 'effectiveFieldGoalsPercentage');
+                                                    
+                                                    if (trueShooting) advancedStats.push({
+                                                        title: 'True Shooting %',
+                                                        value: trueShooting.displayValue,
+                                                        description: 'Overall shooting efficiency including 3-pointers and free throws',
+                                                        color: '#10b981'
+                                                    });
+                                                    if (effectiveFG) advancedStats.push({
+                                                        title: 'Effective FG %',
+                                                        value: effectiveFG.displayValue,
+                                                        description: 'Field goal percentage adjusted for 3-point shots',
+                                                        color: '#3b82f6'
+                                                    });
+                                                }
+                                                
+                                                return advancedStats.map((stat, index) => (
+                                                    <div key={index} style={{
+                                                        background: 'white',
+                                                        padding: '20px',
+                                                        borderRadius: '12px',
+                                                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                                                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                                                    }}>
+                                                        <div style={{ 
+                                                            fontSize: '1rem', 
+                                                            fontWeight: '600', 
+                                                            color: stat.color,
+                                                            marginBottom: '8px'
+                                                        }}>
+                                                            {stat.title}
+                                                        </div>
+                                                        <div style={{ 
+                                                            fontSize: '1.8rem', 
+                                                            fontWeight: '700', 
+                                                            color: '#1e293b',
+                                                            marginBottom: '8px'
+                                                        }}>
+                                                            {stat.value}
+                                                        </div>
+                                                        <div style={{ 
+                                                            fontSize: '0.9rem', 
+                                                            color: '#64748b',
+                                                            lineHeight: '1.4'
+                                                        }}>
+                                                            {stat.description}
+                                                        </div>
+                                                    </div>
+                                                ));
+                                            })()}
                                         </div>
                                     </div>
-                                ))
+
+                                    {/* View All Stats Button */}
+                                    <div style={{ textAlign: 'center', marginTop: '32px' }}>
+                                        <button
+                                            onClick={() => {
+                                                // Show the complete table format
+                                                setShowCompleteStats(true);
+                                            }}
+                                            style={{
+                                                padding: '12px 24px',
+                                                background: primaryColor,
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                fontSize: '0.9rem',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.target.style.opacity = '0.9';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.target.style.opacity = '1';
+                                            }}
+                                        >
+                                            View Complete Statistics
+                                        </button>
+                                    </div>
+                                </div>
                             ) : (
                                 <div style={{ color: '#888', fontSize: '1.1rem' }}>No statistics available for this team.</div>
                             )}

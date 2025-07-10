@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import GameAnalysis from '../../../features/gameAnalysis/GameAnalysis';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -10,6 +11,7 @@ function GameDetail() {
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(true);
     const [recentPlays, setRecentPlays] = useState([]);
+    const [showAnalysis, setShowAnalysis] = useState(false);
 
     useEffect(() => {
         const fetchGameData = async () => {
@@ -432,6 +434,54 @@ function GameDetail() {
                             </p>
                         </div>
                     )}
+
+                {/* Game Analysis */}
+                <div style={{ marginTop: '50px' }}>
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        marginBottom: '24px'
+                    }}>
+                        <h2 style={{ 
+                            fontSize: '2rem', 
+                            fontWeight: '700', 
+                            color: '#1e293b',
+                            letterSpacing: '-0.01em'
+                        }}>
+                            Game Analysis
+                        </h2>
+                        <button
+                            onClick={() => setShowAnalysis(!showAnalysis)}
+                            style={{
+                                padding: '12px 24px',
+                                border: 'none',
+                                borderRadius: '8px',
+                                backgroundColor: showAnalysis ? '#ef4444' : '#667eea',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                fontWeight: '600',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            {showAnalysis ? 'Hide Analysis' : 'View Analysis'}
+                        </button>
+                    </div>
+                    
+                    {showAnalysis && (
+                        <div style={{
+                            backgroundColor: 'white',
+                            borderRadius: '12px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                            border: '1px solid rgba(0, 0, 0, 0.05)',
+                            overflow: 'hidden'
+                        }}>
+                            <GameAnalysis gameId={gameId} />
+                        </div>
+                    )}
+                </div>
+
                 </div>
             </div>
         </div>
