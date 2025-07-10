@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './QuickActions.css';
 import './QuickActionsCompact.css';
 import TagDetailsModal from '../TagDetailsModal';
 import { playFlows } from './quickActionsConfig';
@@ -39,6 +38,40 @@ function QuickActionsSimple({ onQuickTag, onAutoSave, selectedPlayer, gameTime, 
     { name: 'Foul Drawn', icon: '🚨', color: '#9C27B0' },
     { name: 'Good Defense', icon: '🛡️', color: '#607D8B' }
   ];
+
+  // Dynamic action categories for step-by-step tagging
+  const dynamicActionCategories = {
+    'Ball Movement': [
+      { name: 'Dribble Handoff', icon: '🤝', color: '#4CAF50' },
+      { name: 'Pass Out', icon: '📤', color: '#2196F3' },
+      { name: 'Pass to Roller', icon: '🔄', color: '#FF9800' },
+      { name: 'Pass to Corner', icon: '📐', color: '#9C27B0' }
+    ],
+    'Screens': [
+      { name: 'Off-Ball Screen Set', icon: '📞', color: '#4CAF50' },
+      { name: 'Pick and Roll', icon: '🔄', color: '#2196F3' },
+      { name: 'Pick and Pop', icon: '📤', color: '#FF9800' },
+      { name: 'Screen Mismatch', icon: '⚖️', color: '#9C27B0' }
+    ],
+    'Player Actions': [
+      { name: 'Post Up', icon: '📯', color: '#4CAF50' },
+      { name: 'Drive to Basket', icon: '🏃', color: '#2196F3' },
+      { name: 'Pull Up Shot', icon: '🎯', color: '#FF9800' },
+      { name: 'Step Back', icon: '↩️', color: '#9C27B0' },
+      { name: 'Fade Away', icon: '🌊', color: '#E91E63' }
+    ],
+    'Defense': [
+      { name: 'Double Teamed', icon: '👥', color: '#F44336' },
+      { name: 'Split Defense', icon: '✂️', color: '#FF9800' },
+      { name: 'Good Defense', icon: '🛡️', color: '#607D8B' }
+    ],
+    'Play Starters': [
+      { name: 'Bringing Ball Up', icon: '🏀', color: '#4CAF50' },
+      { name: 'Off-Ball Movement', icon: '🏃', color: '#2196F3' },
+      { name: 'Isolation', icon: '👤', color: '#E91E63' },
+      { name: 'Transition', icon: '⚡', color: '#607D8B' }
+    ]
+  };
 
   // Complex playmaker multi-step quick actions for rich context
   const complexPlaymakerActions = [
@@ -100,6 +133,107 @@ function QuickActionsSimple({ onQuickTag, onAutoSave, selectedPlayer, gameTime, 
     // Don't auto-save - let the user control when to save
   };
 
+  const handleDynamicAction = (action) => {
+    // Add to the main sequence via onQuickTag
+    onQuickTag(action.name);
+  };
+
+  const removeAction = (index) => {
+    // This would need to be implemented in the parent component
+    // For now, we'll just call onQuickTag with a special "remove" action
+    // The parent should handle this by removing the action at the specified index
+    if (typeof onQuickTag === 'function') {
+      // We'll use a special format to indicate removal
+      onQuickTag(`REMOVE_AT_INDEX_${index}`);
+    }
+  };
+
+  // Convert currentSequence to action names for display
+  const currentActions = currentSequence.map(item => 
+    typeof item === 'string' ? item : item.actionName || item.name || item
+  );
+
+  // Intelligent filtering based on sequence context
+  const getFilteredActionCategories = () => {
+    const filtered = { ...dynamicActionCategories };
+    
+    // If no actions yet, show all Play Starters
+    if (currentActions.length === 0) {
+      return {
+        'Play Starters': dynamicActionCategories['Play Starters']
+      };
+    }
+
+    const lastAction = currentActions[currentActions.length - 1];
+    
+    // After "Bringing Ball Up" - show Ball Movement and Screens
+    if (lastAction === 'Bringing Ball Up') {
+      return {
+        'Ball Movement': dynamicActionCategories['Ball Movement'],
+        'Screens': dynamicActionCategories['Screens']
+      };
+    }
+
+    // After "Off-Ball Movement" - show Screens and Player Actions
+    if (lastAction === 'Off-Ball Movement') {
+      return {
+        'Screens': dynamicActionCategories['Screens'],
+        'Player Actions': dynamicActionCategories['Player Actions']
+      };
+    }
+
+    // After "Isolation" - show Player Actions and Defense
+    if (lastAction === 'Isolation') {
+      return {
+        'Player Actions': dynamicActionCategories['Player Actions'],
+        'Defense': dynamicActionCategories['Defense']
+      };
+    }
+
+    // After "Transition" - show Player Actions
+    if (lastAction === 'Transition') {
+      return {
+        'Player Actions': dynamicActionCategories['Player Actions']
+      };
+    }
+
+    // After screen actions - show Player Actions
+    if (['Off-Ball Screen Set', 'Pick and Roll', 'Pick and Pop', 'Screen Mismatch'].includes(lastAction)) {
+      return {
+        'Player Actions': dynamicActionCategories['Player Actions']
+      };
+    }
+
+    // After ball movement actions - show Player Actions or Screens
+    if (['Dribble Handoff', 'Pass Out', 'Pass to Roller', 'Pass to Corner'].includes(lastAction)) {
+      return {
+        'Player Actions': dynamicActionCategories['Player Actions'],
+        'Screens': dynamicActionCategories['Screens']
+      };
+    }
+
+    // After player actions - show Defense or Ball Movement
+    if (['Post Up', 'Drive to Basket', 'Pull Up Shot', 'Step Back', 'Fade Away'].includes(lastAction)) {
+      return {
+        'Defense': dynamicActionCategories['Defense'],
+        'Ball Movement': dynamicActionCategories['Ball Movement']
+      };
+    }
+
+    // After defense actions - show Player Actions or Ball Movement
+    if (['Double Teamed', 'Split Defense', 'Good Defense'].includes(lastAction)) {
+      return {
+        'Player Actions': dynamicActionCategories['Player Actions'],
+        'Ball Movement': dynamicActionCategories['Ball Movement']
+      };
+    }
+
+    // Default: show all categories
+    return filtered;
+  };
+
+  const filteredCategories = getFilteredActionCategories();
+
   if (loading) {
     return (
       <div className="quick-actions-container">
@@ -111,72 +245,65 @@ function QuickActionsSimple({ onQuickTag, onAutoSave, selectedPlayer, gameTime, 
   return (
     <>
       <div className="quick-actions-container">
-        {/* Outcome-Based Quick Tagging - Compact */}
-        <div className="outcome-based-section compact">
-          <div className="outcome-based-title">⚡ Quick Tags</div>
-          <div className="outcome-based-description">Click to add, then save manually</div>
-          <div className="outcome-based-grid compact">
-            {outcomeActions.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => handleOutcomeAction(action)}
-                disabled={isDisabled}
-                className="outcome-action-btn compact"
-                style={{ backgroundColor: action.color }}
-                title={`Quick tag: ${action.name}`}
-              >
-                <span className="outcome-action-icon">{action.icon}</span>
-                <span className="outcome-action-name">{action.name}</span>
-              </button>
-            ))}
+        {/* Dynamic Step-by-Step Tagging */}
+        <div className="dynamic-sequence-section compact">
+          <div className="dynamic-sequence-title">🎬 Build Play Step-by-Step</div>
+          <div className="dynamic-sequence-description">
+            {currentActions.length === 0 
+              ? "Start by selecting how the play begins..."
+              : `Next logical actions after "${currentActions[currentActions.length - 1]}"`
+            }
           </div>
-        </div>
-
-        {/* Complex Playmaker Multi-Step Actions */}
-        <div className="complex-playmaker-section compact">
-          <div className="complex-playmaker-title">🧠 Complex Plays</div>
-          <div className="complex-playmaker-description">Rich context for any playmaker</div>
-          <div className="complex-playmaker-grid compact">
-            {complexPlaymakerActions.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => handleComplexPlaymakerAction(action)}
-                disabled={isDisabled}
-                className="complex-playmaker-btn compact"
-                style={{ backgroundColor: action.color }}
-                title={action.description}
-              >
-                <span className="complex-playmaker-name">{action.name}</span>
-                <span className="complex-playmaker-desc">{action.description}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Simple Flow Options - Compact */}
-        <div className="flow-section compact">
-          <div className="flow-title">🎯 Main Action</div>
           
-          <div className="flow-options-grid compact">
-            {[
-              { name: 'Bringing Ball Up', icon: '🏀', color: '#4CAF50' },
-              { name: 'Off-Ball Movement', icon: '🏃', color: '#2196F3' },
-              { name: 'Post Up', icon: '📯', color: '#FF9800' },
-              { name: 'Pick and Roll', icon: '🔄', color: '#9C27B0' },
-              { name: 'Isolation', icon: '👤', color: '#E91E63' },
-              { name: 'Transition', icon: '⚡', color: '#607D8B' }
-            ].map((option, index) => (
-              <button
-                key={index}
-                onClick={() => onQuickTag(option.name)}
-                disabled={isDisabled}
-                className="flow-option-btn compact"
-                style={{ backgroundColor: option.color }}
-                title={option.name}
-              >
-                <span className="flow-option-icon">{option.icon}</span>
-                <span className="flow-option-name">{option.name}</span>
-              </button>
+          {/* Current Sequence Display */}
+          {currentActions.length > 0 && (
+            <div className="current-sequence-display compact">
+              <div className="sequence-header">
+                <span className="sequence-label">Current:</span>
+                <div className="sequence-actions">
+                  <button onClick={() => onAutoSave && onAutoSave()} className="save-sequence-btn compact">✅</button>
+                  <button onClick={() => onQuickTag('CLEAR_ALL')} className="clear-sequence-btn compact">🗑️</button>
+                </div>
+              </div>
+              <div className="sequence-items compact">
+                {currentActions.map((action, index) => (
+                  <span key={index} className="sequence-item compact">
+                    <span className="sequence-item-text">{action}</span>
+                    <button 
+                      onClick={() => removeAction(index)}
+                      className="sequence-item-remove"
+                      title="Remove this action"
+                    >
+                      ×
+                    </button>
+                    {index < currentActions.length - 1 && <span className="sequence-arrow">→</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Intelligent Dynamic Action Categories */}
+          <div className="dynamic-categories-grid">
+            {Object.entries(filteredCategories).map(([category, actions]) => (
+              <div key={category} className="dynamic-category">
+                <div className="category-title">{category}</div>
+                <div className="category-actions">
+                  {actions.map((action, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleDynamicAction(action)}
+                      disabled={isDisabled}
+                      className="dynamic-action-btn compact"
+                      style={{ backgroundColor: action.color }}
+                      title={action.name}
+                    >
+                      <span className="dynamic-action-icon">{action.icon}</span>
+                      <span className="dynamic-action-name">{action.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>

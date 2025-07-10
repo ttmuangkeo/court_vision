@@ -112,6 +112,19 @@ function FastTagging() {
       alert('Please enter game time');
       return;
     }
+
+    // Handle special actions
+    if (actionName === 'CLEAR_ALL') {
+      setCurrentPlayTags([]);
+      return;
+    }
+
+    if (actionName.startsWith('REMOVE_AT_INDEX_')) {
+      const index = parseInt(actionName.replace('REMOVE_AT_INDEX_', ''));
+      setCurrentPlayTags(prev => prev.filter((_, i) => i !== index));
+      return;
+    }
+
     const tag = tags.find(t => t.name === actionName);
     if (!tag) {
       console.warn(`Tag "${actionName}" not found in database`);
@@ -241,50 +254,51 @@ function FastTagging() {
         <div className="fast-tagging-main-area">
           {/* Top Bar: Game Time/Quarter */}
           <div className="fast-tagging-topbar">
-            <GameTimeInput
-              gameTime={gameTime}
-              setGameTime={setGameTime}
-              currentQuarter={currentQuarter}
-              setCurrentQuarter={setCurrentQuarter}
-              onTimeChange={refreshTrigger}
-            />
-          </div>
-          {/* Main Row: Sequence | Quick Actions | Prediction | Decision Quality */}
-          <div className="fast-tagging-panels-row">
-            {/* Sequence Box */}
-            <div className="fast-tagging-sequence-panel">
-              <div className="fast-tagging-sequence-title">Current Play Sequence</div>
-              {currentPlayTags.length > 0 ? (
-                <>
-                  <div className="fast-tagging-sequence-list">
-                    {currentPlayTags.map((tagData, index) => (
-                      <div className="fast-tagging-sequence-tag" key={index}>
-                        <span>{index + 1}.</span>
-                        <span>{tagData.actionName}</span>
-                        {index < currentPlayTags.length - 1 && <span>→</span>}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="fast-tagging-sequence-actions">
-                    <button
-                      className="fast-tagging-save-btn"
-                      onClick={handleSavePlay}
-                    >
-                      ✅ Save Play
-                    </button>
-                    <button
-                      className="fast-tagging-clear-btn"
-                      onClick={handleClearPlay}
-                    >
-                      🗑️ Clear
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="fast-tagging-sequence-empty">No actions tagged yet. Use the buttons below to build your sequence.</div>
-              )}
+            <div className="fast-tagging-topbar-left">
+              <GameTimeInput
+                gameTime={gameTime}
+                setGameTime={setGameTime}
+                currentQuarter={currentQuarter}
+                setCurrentQuarter={setCurrentQuarter}
+                onTimeChange={refreshTrigger}
+              />
             </div>
-            {/* Quick Actions Bar (contextual) - now outside the sequence box */}
+            {/* Current Sequence Display - moved to top right */}
+            {currentPlayTags.length > 0 && (
+              <div className="fast-tagging-sequence-display">
+                <div className="sequence-display-header">
+                  <span className="sequence-display-title">Current Sequence:</span>
+                  <div className="sequence-display-actions">
+                    <button
+                      className="sequence-save-btn"
+                      onClick={handleSavePlay}
+                      title="Save Play"
+                    >
+                      ✅
+                    </button>
+                    <button
+                      className="sequence-clear-btn"
+                      onClick={handleClearPlay}
+                      title="Clear Sequence"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+                <div className="sequence-display-items">
+                  {currentPlayTags.map((tagData, index) => (
+                    <span key={index} className="sequence-display-item">
+                      {tagData.actionName}
+                      {index < currentPlayTags.length - 1 && <span className="sequence-display-arrow">→</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          {/* Main Row: Quick Actions | Prediction | Decision Quality */}
+          <div className="fast-tagging-panels-row">
+            {/* Quick Actions Bar */}
             <div className="fast-tagging-quickactions-panel">
               <QuickActions
                 onQuickTag={handleQuickTag}
