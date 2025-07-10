@@ -101,3 +101,71 @@
   font-size: 8px;
   line-height: 1.0;
 } 
+
+/* Complex Playmaker Actions styles */
+.complex-playmaker-section.compact {
+  padding: 6px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+}
+
+.complex-playmaker-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 2px;
+  text-align: center;
+}
+
+.complex-playmaker-description {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.complex-playmaker-grid.compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.complex-playmaker-btn.compact {
+  padding: 6px 4px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 50px;
+}
+
+.complex-playmaker-btn.compact:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.complex-playmaker-btn.compact:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.complex-playmaker-name {
+  font-size: 9px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  line-height: 1.0;
+}
+
+.complex-playmaker-desc {
+  font-size: 8px;
+  opacity: 0.9;
+  line-height: 1.0;
+} 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './QuickActions.css';
 import './QuickActionsCompact.css';
 import TagDetailsModal from '../TagDetailsModal';
-import { playFlows, quickSequences } from './quickActionsConfig';
+import { playFlows } from './quickActionsConfig';
 
 const API_BASE = 'http://localhost:3000/api';
 
@@ -40,15 +40,64 @@ function QuickActionsSimple({ onQuickTag, onAutoSave, selectedPlayer, gameTime, 
     { name: 'Good Defense', icon: '🛡️', color: '#607D8B' }
   ];
 
-  const handleOutcomeAction = (action) => {
-    // Create a simple sequence for the outcome
-    onQuickTag('Quick Action');
-    onQuickTag(action.name);
-    
-    // Auto-save immediately
-    if (typeof onAutoSave === 'function') {
-      setTimeout(() => onAutoSave(), 0);
+  // Complex playmaker multi-step quick actions for rich context
+  const complexPlaymakerActions = [
+    { 
+      name: '🎯 Screen Assist', 
+      sequence: ['Off-Ball Screen Set', 'Dribble Handoff', 'Assist'],
+      color: '#4CAF50',
+      description: 'Screen set → Handoff → Assist'
+    },
+    { 
+      name: '📯 Post Assist', 
+      sequence: ['Post Up', 'Double Teamed', 'Pass Out', 'Assist'],
+      color: '#2196F3',
+      description: 'Post up → Double team → Pass → Assist'
+    },
+    { 
+      name: '⚡ Transition Assist', 
+      sequence: ['Transition', 'Drive to Basket', 'Pass Out', 'Assist'],
+      color: '#FF9800',
+      description: 'Transition → Drive → Pass → Assist'
+    },
+    { 
+      name: '🔄 Pick & Roll Assist', 
+      sequence: ['Pick and Roll', 'Drive to Basket', 'Pass to Roller', 'Assist'],
+      color: '#9C27B0',
+      description: 'Pick & roll → Drive → Pass → Assist'
+    },
+    { 
+      name: '👤 Isolation Score', 
+      sequence: ['Isolation', 'Double Teamed', 'Split Defense', 'Made Shot'],
+      color: '#E91E63',
+      description: 'Isolation → Double team → Split → Score'
+    },
+    { 
+      name: '📐 Elbow Play', 
+      sequence: ['High Post Play', 'Pull Up Shot', 'Made Shot'],
+      color: '#607D8B',
+      description: 'High post → Pull up → Score'
     }
+  ];
+
+  const handleOutcomeAction = (action) => {
+    // Find the actual tag in the database
+    const tag = tags.find(t => t.name === action.name);
+    if (tag) {
+      // Add the actual tag from database - let the user save manually
+      onQuickTag(action.name);
+      // Don't auto-save - let the user control when to save
+    } else {
+      console.warn(`Tag "${action.name}" not found in database`);
+    }
+  };
+
+  const handleComplexPlaymakerAction = (quickAction) => {
+    // Add each step in the sequence
+    quickAction.sequence.forEach(step => {
+      onQuickTag(step);
+    });
+    // Don't auto-save - let the user control when to save
   };
 
   if (loading) {
@@ -64,7 +113,8 @@ function QuickActionsSimple({ onQuickTag, onAutoSave, selectedPlayer, gameTime, 
       <div className="quick-actions-container">
         {/* Outcome-Based Quick Tagging - Compact */}
         <div className="outcome-based-section compact">
-          <div className="outcome-based-title">⚡ Quick Outcome</div>
+          <div className="outcome-based-title">⚡ Quick Tags</div>
+          <div className="outcome-based-description">Click to add, then save manually</div>
           <div className="outcome-based-grid compact">
             {outcomeActions.map((action, index) => (
               <button
@@ -77,6 +127,27 @@ function QuickActionsSimple({ onQuickTag, onAutoSave, selectedPlayer, gameTime, 
               >
                 <span className="outcome-action-icon">{action.icon}</span>
                 <span className="outcome-action-name">{action.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Complex Playmaker Multi-Step Actions */}
+        <div className="complex-playmaker-section compact">
+          <div className="complex-playmaker-title">🧠 Complex Plays</div>
+          <div className="complex-playmaker-description">Rich context for any playmaker</div>
+          <div className="complex-playmaker-grid compact">
+            {complexPlaymakerActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={() => handleComplexPlaymakerAction(action)}
+                disabled={isDisabled}
+                className="complex-playmaker-btn compact"
+                style={{ backgroundColor: action.color }}
+                title={action.description}
+              >
+                <span className="complex-playmaker-name">{action.name}</span>
+                <span className="complex-playmaker-desc">{action.description}</span>
               </button>
             ))}
           </div>
@@ -105,33 +176,6 @@ function QuickActionsSimple({ onQuickTag, onAutoSave, selectedPlayer, gameTime, 
               >
                 <span className="flow-option-icon">{option.icon}</span>
                 <span className="flow-option-name">{option.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Sequences - Compact */}
-        <div className="quick-sequences-section compact">
-          <div className="quick-sequences-title">Quick Sequences</div>
-          <div className="quick-sequences-grid compact">
-            {Object.entries(quickSequences).slice(0, 4).map(([name, actions]) => (
-              <button
-                key={name}
-                onClick={() => {
-                  actions.forEach(action => onQuickTag(action));
-                  if (typeof onAutoSave === 'function') {
-                    setTimeout(() => onAutoSave(), 0);
-                  }
-                }}
-                disabled={isDisabled}
-                className="quick-sequence-btn compact"
-                title={`${name}: ${actions.join(' → ')}`}
-              >
-                <div className="quick-sequence-name">{name}</div>
-                <div className="quick-sequence-preview">
-                  {actions.slice(0, 2).join(' → ')}
-                  {actions.length > 2 && '...'}
-                </div>
               </button>
             ))}
           </div>
