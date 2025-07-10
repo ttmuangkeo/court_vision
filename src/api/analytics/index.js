@@ -88,6 +88,7 @@ router.get('/team-tendencies/:teamId', authenticateJWT, async (req, res) => {
         const { teamId } = req.params;
         const parsedTeamId = parseInt(teamId);
         const { gameId } = req.query;
+        const parsedGameId = gameId ? parseInt(gameId) : undefined;
         const userId = req.user.id;
 
         // Get all plays for this team (filtered by user)

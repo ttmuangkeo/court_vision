@@ -1,0 +1,103 @@
+/* Compact layout styles for better viewport fit */
+.quick-actions-container {
+  padding: 8px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.outcome-based-section.compact {
+  padding: 6px;
+  margin-bottom: 8px;
+}
+
+.outcome-based-title {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.outcome-based-description {
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.outcome-based-grid.compact {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.outcome-action-btn.compact {
+  padding: 6px 4px;
+  font-size: 10px;
+  min-height: 50px;
+}
+
+.outcome-action-icon {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.outcome-action-name {
+  font-size: 9px;
+  line-height: 1.0;
+}
+
+.flow-section.compact {
+  margin-bottom: 8px;
+}
+
+.flow-title {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.flow-options-grid.compact {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.flow-option-btn.compact {
+  padding: 6px 4px;
+  font-size: 10px;
+  min-height: 50px;
+}
+
+.flow-option-icon {
+  font-size: 12px;
+  margin-right: 2px;
+}
+
+.flow-option-name {
+  font-size: 9px;
+  line-height: 1.0;
+}
+
+.quick-sequences-section.compact {
+  margin-bottom: 8px;
+}
+
+.quick-sequences-title {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.quick-sequences-grid.compact {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.quick-sequence-btn.compact {
+  padding: 6px 4px;
+  font-size: 10px;
+  min-height: 40px;
+}
+
+.quick-sequence-name {
+  font-size: 9px;
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+.quick-sequence-preview {
+  font-size: 8px;
+  line-height: 1.0;
+} 

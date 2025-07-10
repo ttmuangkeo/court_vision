@@ -5,7 +5,7 @@ import { useAuth } from '../../../common/AuthContext';
 import GameHeader from '../GameHeader';
 import PlayerSelector from '../PlayerSelector';
 import GameTimeInput from '../GameTimeInput/GameTimeInput';
-import QuickActions from '../QuickActions';
+import QuickActions from '../QuickActions/QuickActionsSimple';
 import PredictionPanel from '../PredictionPanel';
 import DecisionQualityPanel from '../DecisionQualityPanel';
 import './FastTagging.css';

@@ -1,12 +1,14 @@
 const axios = require('axios');
 
+// Static cooldown tracking shared across all instances
+const staticCooldowns = new Map();
+let staticLastApiCall = null; // Changed to let for proper assignment
+
 class GameAnalysisAI {
   constructor() {
     this.apiKey = process.env.OPENAI_API_KEY;
     this.baseUrl = 'https://api.openai.com/v1';
-    this.lastApiCall = null; // Track last API call for rate limiting
     this.analysisCache = new Map(); // Cache for analysis results
-    this.gameCooldowns = new Map(); // Track cooldowns per game
   }
 
   async generateAIAnalysis(boxScoreData) {
@@ -24,9 +26,10 @@ class GameAnalysisAI {
 
       // Check if this specific game is in cooldown
       const now = Date.now();
-      const gameCooldown = this.gameCooldowns.get(game.GameID);
+      const gameCooldown = staticCooldowns.get(game.GameID);
       if (gameCooldown && now < gameCooldown) {
-        console.log(`Game ${game.GameID} in cooldown, using fallback analysis`);
+        const remainingTime = Math.ceil((gameCooldown - now) / 1000 / 60);
+        console.log(`Game ${game.GameID} in cooldown (${remainingTime} minutes remaining), using fallback analysis`);
         const fallbackAnalysis = this.generateFallbackAnalysis(this.prepareAnalysisData(boxScoreData));
         this.analysisCache.set(cacheKey, fallbackAnalysis);
         return fallbackAnalysis;
@@ -44,23 +47,26 @@ class GameAnalysisAI {
         return fallbackAnalysis;
       }
 
-      // Global rate limiting - only make API calls every 30 seconds
-      if (this.lastApiCall && (now - this.lastApiCall) < 30000) {
-        console.log('Global rate limiting: Using fallback analysis to avoid API rate limits');
+      // Stricter rate limiting for free trial accounts - 2 minutes between calls
+      if (staticLastApiCall && (now - staticLastApiCall) < 120000) {
+        const remainingTime = Math.ceil((120000 - (now - staticLastApiCall)) / 1000 / 60);
+        console.log(`Rate limiting: ${remainingTime} minutes remaining, using fallback analysis`);
         const fallbackAnalysis = this.generateFallbackAnalysis(analysisData);
         this.analysisCache.set(cacheKey, fallbackAnalysis);
         return fallbackAnalysis;
       }
 
-      // Make direct HTTP request to OpenAI API
+      console.log(`Making OpenAI API call for game ${game.GameID}...`);
+      
+      // Make direct HTTP request to OpenAI API with shorter prompt
       const response = await axios.post(
         `${this.baseUrl}/chat/completions`,
         {
-          model: "gpt-3.5-turbo", // Use 3.5-turbo instead of gpt-4
+          model: "gpt-3.5-turbo",
           messages: [
             {
               role: "system",
-              content: "You are an expert NBA analyst with deep knowledge of basketball strategy, statistics, and game analysis. Provide insightful, data-driven analysis of NBA games."
+              content: "You are an NBA analyst. Provide brief, insightful analysis in JSON format."
             },
             {
               role: "user",
@@ -68,7 +74,7 @@ class GameAnalysisAI {
             }
           ],
           temperature: 0.7,
-          max_tokens: 1500 // Reduced to save tokens
+          max_tokens: 800 // Reduced token usage
         },
         {
           headers: {
@@ -79,7 +85,8 @@ class GameAnalysisAI {
       );
 
       // Update last API call time
-      this.lastApiCall = now;
+      staticLastApiCall = now;
+      console.log(`Successfully received AI analysis for game ${game.GameID}`);
       const aiAnalysis = response.data.choices[0].message.content;
       
       // Parse the AI response and structure it
@@ -97,11 +104,15 @@ class GameAnalysisAI {
         const status = error.response.status;
         console.log(`OpenAI API error (${status}), using fallback analysis`);
         
+        // Extract game ID from boxScoreData for error handling
+        const game = boxScoreData.Game;
+        const gameId = game.GameID;
+        
         // For rate limits (429), set a longer cooldown for this specific game
         if (status === 429) {
           const cooldownUntil = Date.now() + 300000; // 5 minute cooldown
-          this.gameCooldowns.set(game.GameID, cooldownUntil);
-          console.log(`Rate limit hit for game ${game.GameID}, setting 5-minute cooldown`);
+          staticCooldowns.set(gameId, cooldownUntil);
+          console.log(`Rate limit hit for game ${gameId}, setting 5-minute cooldown until ${new Date(cooldownUntil).toLocaleTimeString()}`);
         }
         
         // Use fallback for any API error (401, 404, 429, etc.)
@@ -109,7 +120,7 @@ class GameAnalysisAI {
         const fallbackAnalysis = this.generateFallbackAnalysis(analysisData);
         
         // Cache the fallback result
-        const cacheKey = `game_${game.GameID}`;
+        const cacheKey = `game_${gameId}`;
         this.analysisCache.set(cacheKey, fallbackAnalysis);
         
         return fallbackAnalysis;
@@ -120,83 +131,11 @@ class GameAnalysisAI {
   }
 
   createAnalysisPrompt(analysisData) {
-    return `
-Please analyze this NBA game data and provide a comprehensive analysis in the following JSON format:
+    return `Analyze this NBA game: ${analysisData.gameInfo.awayTeam} (${analysisData.gameInfo.awayScore}) vs ${analysisData.gameInfo.homeTeam} (${analysisData.gameInfo.homeScore}). Winner: ${analysisData.gameInfo.winner} by ${analysisData.gameInfo.margin} points.
 
-Game Data:
-- Away Team: ${analysisData.gameInfo.awayTeam} (${analysisData.gameInfo.awayScore} points)
-- Home Team: ${analysisData.gameInfo.homeTeam} (${analysisData.gameInfo.homeScore} points)
-- Winner: ${analysisData.gameInfo.winner}
-- Margin: ${analysisData.gameInfo.margin} points
+Key stats - Away: ${analysisData.awayTeamStats.fieldGoalPercentage}% FG, ${analysisData.awayTeamStats.threePointPercentage}% 3P, ${analysisData.awayTeamStats.assists} assists, ${analysisData.awayTeamStats.turnovers} turnovers. Home: ${analysisData.homeTeamStats.fieldGoalPercentage}% FG, ${analysisData.homeTeamStats.threePointPercentage}% 3P, ${analysisData.homeTeamStats.assists} assists, ${analysisData.homeTeamStats.turnovers} turnovers.
 
-Away Team Stats:
-- Field Goal %: ${analysisData.awayTeamStats.fieldGoalPercentage}%
-- 3-Point %: ${analysisData.awayTeamStats.threePointPercentage}%
-- Free Throw %: ${analysisData.awayTeamStats.freeThrowPercentage}%
-- Rebounds: ${analysisData.awayTeamStats.rebounds} (${analysisData.awayTeamStats.offensiveRebounds} offensive, ${analysisData.awayTeamStats.defensiveRebounds} defensive)
-- Assists: ${analysisData.awayTeamStats.assists}
-- Steals: ${analysisData.awayTeamStats.steals}
-- Blocks: ${analysisData.awayTeamStats.blocks}
-- Turnovers: ${analysisData.awayTeamStats.turnovers}
-- Plus/Minus: ${analysisData.awayTeamStats.plusMinus}
-- Effective FG %: ${analysisData.awayTeamStats.effectiveFieldGoalPercentage}%
-- True Shooting %: ${analysisData.awayTeamStats.trueShootingPercentage}%
-
-Home Team Stats:
-- Field Goal %: ${analysisData.homeTeamStats.fieldGoalPercentage}%
-- 3-Point %: ${analysisData.homeTeamStats.threePointPercentage}%
-- Free Throw %: ${analysisData.homeTeamStats.freeThrowPercentage}%
-- Rebounds: ${analysisData.homeTeamStats.rebounds} (${analysisData.homeTeamStats.offensiveRebounds} offensive, ${analysisData.homeTeamStats.defensiveRebounds} defensive)
-- Assists: ${analysisData.homeTeamStats.assists}
-- Steals: ${analysisData.homeTeamStats.steals}
-- Blocks: ${analysisData.homeTeamStats.blocks}
-- Turnovers: ${analysisData.homeTeamStats.turnovers}
-- Plus/Minus: ${analysisData.homeTeamStats.plusMinus}
-- Effective FG %: ${analysisData.homeTeamStats.effectiveFieldGoalPercentage}%
-- True Shooting %: ${analysisData.homeTeamStats.trueShootingPercentage}%
-
-Please provide your analysis in this exact JSON format:
-
-{
-  "summary": "Brief 2-3 sentence summary of the game outcome and key factors",
-  "keyInsights": [
-    "Insight 1 about what determined the outcome",
-    "Insight 2 about team performance",
-    "Insight 3 about strategic elements"
-  ],
-  "teamAnalysis": {
-    "away": {
-      "strengths": ["Strength 1", "Strength 2"],
-      "weaknesses": ["Weakness 1", "Weakness 2"],
-      "performance": "Detailed analysis of away team performance"
-    },
-    "home": {
-      "strengths": ["Strength 1", "Strength 2"],
-      "weaknesses": ["Weakness 1", "Weakness 2"],
-      "performance": "Detailed analysis of home team performance"
-    }
-  },
-  "matchupAnalysis": {
-    "advantages": {
-      "away": ["Advantage 1", "Advantage 2"],
-      "home": ["Advantage 1", "Advantage 2"]
-    },
-    "keyFactors": ["Factor 1 that determined the outcome", "Factor 2", "Factor 3"]
-  },
-  "strategicInsights": {
-    "offensiveStrategy": "Analysis of offensive strategies used",
-    "defensiveStrategy": "Analysis of defensive strategies used",
-    "adjustments": "Key adjustments that could have been made"
-  },
-  "gamePlan": {
-    "forWinner": "Strategic advice for the winning team going forward",
-    "forLoser": "Strategic advice for the losing team going forward",
-    "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
-  }
-}
-
-Focus on providing actionable insights, statistical analysis, and strategic observations. Be specific about what worked, what didn't, and why the game turned out the way it did.
-`;
+Provide analysis in JSON: {"summary": "2-3 sentence summary", "keyInsights": ["insight1", "insight2"], "teamAnalysis": {"away": {"strengths": ["s1"], "weaknesses": ["w1"], "performance": "analysis"}, "home": {"strengths": ["s1"], "weaknesses": ["w1"], "performance": "analysis"}}, "matchupAnalysis": {"advantages": {"away": ["a1"], "home": ["a1"]}, "keyFactors": ["f1", "f2"]}, "strategicInsights": {"offensiveStrategy": "analysis", "defensiveStrategy": "analysis", "adjustments": "analysis"}, "gamePlan": {"forWinner": "advice", "forLoser": "advice", "keyTakeaways": ["t1", "t2"]}}`;
   }
 
   structureAIAnalysis(aiResponse, analysisData) {

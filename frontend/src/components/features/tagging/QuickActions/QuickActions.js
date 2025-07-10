@@ -7,7 +7,7 @@ const API_BASE = 'http://localhost:3000/api';
 
 // List of actions that should auto-save the sequence (handoff actions)
 const HANDOFF_ACTIONS = [
-  'Pass to Roller', 'Pass to Corner', 'Pass to Popper', 'Pass Out', 'Assist',
+  'Set Play', 'Pass to Roller', 'Pass to Corner', 'Pass to Popper', 'Pass Out', 'Assist',
   'Quick Shot', 'Pull Up Shot', 'Step Back', 'Fade Away', 'Layup/Dunk',
   'Made Shot', 'Missed Shot', 'Blocked', 'Shot Attempt',
   'Foul Drawn', 'Free Throws', 'And One', 'Offensive Foul',

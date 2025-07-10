@@ -9,7 +9,8 @@ export const playFlows = {
       { name: 'Off-Ball Movement', icon: '🏃', color: '#2196F3', nextFlow: 'off_ball' },
       { name: 'Defensive Play', icon: '🛡️', color: '#F44336', nextFlow: 'defensive' },
       { name: 'Transition', icon: '⚡', color: '#FF9800', nextFlow: 'transition' },
-      { name: 'Set Play', icon: '📋', color: '#9C27B0', nextFlow: 'set_play' }
+      { name: 'Set Play', icon: '📋', color: '#9C27B0', nextFlow: 'set_play' },
+      { name: 'Complex Playmaker', icon: '🧠', color: '#E91E63', nextFlow: 'complex_playmaker' }
     ]
   },
 
@@ -225,10 +226,39 @@ export const playFlows = {
     label: '📋 Set Play Action',
     description: 'What type of set play?',
     options: [
+      { name: 'Set Play', icon: '📋', color: '#9C27B0', nextFlow: 'set_play_type' },
+      { name: 'Pick and Roll', icon: '🔄', color: '#4CAF50', nextFlow: 'pick_roll_result' },
+      { name: 'Pick and Pop', icon: '📤', color: '#2196F3', nextFlow: 'pick_pop_result' },
+      { name: 'Post Up', icon: '📯', color: '#FF9800', nextFlow: 'post_up' },
+      { name: 'Isolation', icon: '👤', color: '#607D8B', nextFlow: 'isolation' }
+    ]
+  },
+
+  // SET PLAY TYPE FLOW
+  'set_play_type': {
+    label: '📋 Set Play Type',
+    description: 'What type of set play was called?',
+    options: [
       { name: 'Pick and Roll', icon: '🔄', color: '#4CAF50', nextFlow: 'pick_roll_result' },
       { name: 'Pick and Pop', icon: '📤', color: '#2196F3', nextFlow: 'pick_pop_result' },
       { name: 'Post Up', icon: '📯', color: '#FF9800', nextFlow: 'post_up' },
       { name: 'Isolation', icon: '👤', color: '#9C27B0', nextFlow: 'isolation' }
+    ]
+  },
+
+  // COMPLEX PLAYMAKER FLOW - For players like Jokic
+  'complex_playmaker': {
+    label: '🧠 Complex Playmaker',
+    description: 'Tag multi-step actions for unique playmakers (e.g. Jokic)',
+    options: [
+      { name: 'Off-Ball Screen Set', icon: '📞', color: '#4CAF50', nextFlow: 'screen_set_result' },
+      { name: 'Dribble Handoff', icon: '🤝', color: '#2196F3', nextFlow: 'handoff_result' },
+      { name: 'Post Up', icon: '📯', color: '#FF9800', nextFlow: 'post_up' },
+      { name: 'High Post Play', icon: '🎯', color: '#9C27B0', nextFlow: 'high_post' },
+      { name: 'Elbow Play', icon: '📐', color: '#E91E63', nextFlow: 'elbow_play' },
+      { name: 'Back to Basket', icon: '🔄', color: '#607D8B', nextFlow: 'back_to_basket' },
+      { name: 'Pass Out', icon: '📤', color: '#00BCD4', nextFlow: 'pass_result' },
+      { name: 'Double Teamed', icon: '👥', color: '#F44336', nextFlow: 'double_team_response' }
     ]
   },
 
@@ -247,7 +277,8 @@ export const quickSequences = {
   'Pick and Roll Drive': ['Bringing Ball Up', 'Calling for Screen', 'Pick and Roll', 'Drive to Basket', 'Layup/Dunk'],
   'Pick and Roll Pass': ['Bringing Ball Up', 'Calling for Screen', 'Pick and Roll', 'Pass to Roller', 'Assist'],
   'Isolation Step Back': ['Bringing Ball Up', 'Isolation', 'Step Back', 'Made Shot'],
-  'Double Team Pass': ['Bringing Ball Up', 'Isolation', 'Double Teamed', 'Pass Out', 'Assist']
+  'Double Team Pass': ['Bringing Ball Up', 'Isolation', 'Double Teamed', 'Pass Out', 'Assist'],
+  'Jokic Sequence': ['Complex Playmaker', 'Off-Ball Screen Set', 'Dribble Handoff', 'Post Up', 'Double Teamed', 'Pass Out', 'Assist']
 };
 
 // Legacy support for existing tag system

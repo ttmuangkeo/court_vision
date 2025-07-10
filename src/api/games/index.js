@@ -32,8 +32,8 @@ router.get('/', async (req, res) => {
         }
         if (team) {
             where.OR = [
-                {homeTeamId: team},
-                {awayTeamId: team}
+                {homeTeamId: parseInt(team)},
+                {awayTeamId: parseInt(team)}
             ];
         }
 
