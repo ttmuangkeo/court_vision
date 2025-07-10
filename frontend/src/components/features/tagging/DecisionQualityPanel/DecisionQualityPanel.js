@@ -17,7 +17,7 @@ function DecisionQualityPanel({ gameId, selectedPlayer, refreshTrigger }) {
 
             try {
                 setLoading(true);
-                const response = await axios.get(`${API_BASE}/analytics/decision-quality/${selectedPlayer.espnId}`, {
+                const response = await axios.get(`${API_BASE}/analytics/decision-quality/${selectedPlayer.id}`, {
                     params: { gameId }
                 });
                 setDecisionData(response.data.data);

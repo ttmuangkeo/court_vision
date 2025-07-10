@@ -9,6 +9,7 @@ router.get('/player-patterns/:playerId', authenticateJWT, async (req, res) => {
         const { playerId } = req.params;
         const parsedPlayerId = parseInt(playerId);
         const { gameId } = req.query;
+        const parsedGameId = gameId ? parseInt(gameId) : undefined;
         const userId = req.user.id;
 
         // Get all plays where this player was involved (filtered by user)
@@ -165,6 +166,7 @@ router.get('/defensive-scouting/:playerId', authenticateJWT, async (req, res) =>
         const { playerId } = req.params;
         const parsedPlayerId = parseInt(playerId);
         const { gameId } = req.query;
+        const parsedGameId = gameId ? parseInt(gameId) : undefined;
         const userId = req.user.id;
 
         // Get all plays with sequences for this player (filtered by user)
@@ -721,6 +723,7 @@ router.get('/decision-quality/:playerId', authenticateJWT, async (req, res) => {
         const { playerId } = req.params;
         const parsedPlayerId = parseInt(playerId);
         const { gameId } = req.query;
+        const parsedGameId = gameId ? parseInt(gameId) : undefined;
         const userId = req.user.id;
 
         // Get all plays with sequences for this player (filtered by user)
