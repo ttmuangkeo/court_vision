@@ -50,6 +50,18 @@ router.get('/', async (req, res) => {
                         contains: searchTerm,
                         mode: 'insensitive'
                     }
+                },
+                {
+                    firstName: {
+                        startsWith: searchTerm,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    lastName: {
+                        startsWith: searchTerm,
+                        mode: 'insensitive'
+                    }
                 }
             ];
         }
@@ -77,8 +89,10 @@ router.get('/', async (req, res) => {
                 avgPoints: order === 'desc' ? 'desc' : 'asc'
             };
         } else {
-            // Default: sort by firstName, then lastName
-            orderBy = [{ firstName: order }, { lastName: order }];
+            orderBy = {
+                firstName: order,
+                lastName: order
+            };
         }
 
         const players = await prisma.player.findMany({

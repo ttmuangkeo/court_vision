@@ -273,10 +273,23 @@ function PlayerDetail() {
                                 lineHeight: '1.4',
                                 marginBottom: '0'
                             }}>
-                                {player.displayHeight && player.displayWeight ? `${player.displayHeight} • ${player.displayWeight} lbs` : ''}
-                                {player.age ? ` • ${player.age} years old` : ''}
+                                {player.height ? `${Math.floor(player.height / 12)}'${player.height % 12}"` : ''}
+                                {player.weight ? ` • ${player.weight} lbs` : ''}
+                                {player.birthDate ? ` • ${new Date(player.birthDate).getFullYear()}` : ''}
                                 {player.experience ? ` • ${player.experience} years experience` : ''}
                             </p>
+                            {player.birthCity && player.birthCountry && (
+                                <p style={{ 
+                                    fontSize: '0.9rem', 
+                                    fontWeight: '400',
+                                    opacity: '0.8',
+                                    lineHeight: '1.4',
+                                    marginTop: '4px',
+                                    marginBottom: '0'
+                                }}>
+                                    Born in {player.birthCity}, {player.birthCountry}
+                                </p>
+                            )}
                         </div>
 
                         {/* Team Logo (if NBA player) */}
@@ -397,6 +410,335 @@ function PlayerDetail() {
                             Years Exp
                         </div>
                     </div>
+                </div>
+
+                {/* Player Information Section */}
+                <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gap: '20px',
+                    marginBottom: '30px'
+                }}>
+                    {/* Personal Information */}
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '24px',
+                        borderRadius: '16px',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                    }}>
+                        <h3 style={{ 
+                            fontSize: '1.25rem', 
+                            fontWeight: '700', 
+                            color: '#1e293b',
+                            marginBottom: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                            👤 Personal Information
+                        </h3>
+                        <div style={{ display: 'grid', gap: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ color: '#64748b', fontWeight: '500' }}>Full Name</span>
+                                <span style={{ fontWeight: '600' }}>{player.firstName} {player.lastName}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ color: '#64748b', fontWeight: '500' }}>Position</span>
+                                <span style={{ fontWeight: '600', color: getPositionColor(player.position) }}>{player.position}</span>
+                            </div>
+                            {player.jersey && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Jersey Number</span>
+                                    <span style={{ fontWeight: '600' }}>#{player.jersey}</span>
+                                </div>
+                            )}
+                            {player.birthDate && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Birth Date</span>
+                                    <span style={{ fontWeight: '600' }}>{new Date(player.birthDate).toLocaleDateString()}</span>
+                                </div>
+                            )}
+                            {player.birthCity && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Birth Place</span>
+                                    <span style={{ fontWeight: '600' }}>{player.birthCity}, {player.birthCountry}</span>
+                                </div>
+                            )}
+                            {player.experience && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Experience</span>
+                                    <span style={{ fontWeight: '600' }}>{player.experience} years</span>
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ color: '#64748b', fontWeight: '500' }}>Status</span>
+                                <span style={{ 
+                                    fontWeight: '600', 
+                                    color: player.status === 'Active' ? '#10b981' : '#f59e0b'
+                                }}>
+                                    {player.status}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Physical Attributes */}
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '24px',
+                        borderRadius: '16px',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                    }}>
+                        <h3 style={{ 
+                            fontSize: '1.25rem', 
+                            fontWeight: '700', 
+                            color: '#1e293b',
+                            marginBottom: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                            📏 Physical Attributes
+                        </h3>
+                        <div style={{ display: 'grid', gap: '12px' }}>
+                            {player.height && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Height</span>
+                                    <span style={{ fontWeight: '600' }}>{Math.floor(player.height / 12)}' {player.height % 12}"</span>
+                                </div>
+                            )}
+                            {player.weight && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Weight</span>
+                                    <span style={{ fontWeight: '600' }}>{player.weight} lbs</span>
+                                </div>
+                            )}
+                            {player.positionCategory && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Position Category</span>
+                                    <span style={{ fontWeight: '600' }}>{player.positionCategory}</span>
+                                </div>
+                            )}
+                            {player.depthChartPosition && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Depth Chart Position</span>
+                                    <span style={{ fontWeight: '600' }}>{player.depthChartPosition}</span>
+                                </div>
+                            )}
+                            {player.depthChartOrder && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Depth Chart Order</span>
+                                    <span style={{ fontWeight: '600' }}>{player.depthChartOrder}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Team Information */}
+                    {player.teamId && (
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '24px',
+                            borderRadius: '16px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                        }}>
+                            <h3 style={{ 
+                                fontSize: '1.25rem', 
+                                fontWeight: '700', 
+                                color: '#1e293b',
+                                marginBottom: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                🏀 Team Information
+                            </h3>
+                            <div style={{ display: 'grid', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Team</span>
+                                    <span style={{ fontWeight: '600' }}>{teamDisplayName}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Team ID</span>
+                                    <span style={{ fontWeight: '600' }}>{player.teamId}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Global Team ID</span>
+                                    <span style={{ fontWeight: '600' }}>{player.globalTeamId}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Career Statistics */}
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '24px',
+                        borderRadius: '16px',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                    }}>
+                        <h3 style={{ 
+                            fontSize: '1.25rem', 
+                            fontWeight: '700', 
+                            color: '#1e293b',
+                            marginBottom: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                            📊 Career Statistics
+                        </h3>
+                        <div style={{ display: 'grid', gap: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ color: '#64748b', fontWeight: '500' }}>Total Plays Tagged</span>
+                                <span style={{ fontWeight: '600', color: primaryColor }}>{player._count?.playTags || 0}</span>
+                            </div>
+                            {playerPatterns && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Patterns Identified</span>
+                                    <span style={{ fontWeight: '600', color: '#3b82f6' }}>{playerPatterns.totalPlays || 0}</span>
+                                </div>
+                            )}
+                            {decisionQuality && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Average Decision Score</span>
+                                    <span style={{ fontWeight: '600', color: '#10b981' }}>
+                                        {decisionQuality.averageScore ? Math.round(decisionQuality.averageScore * 100) / 100 : 0}
+                                    </span>
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                <span style={{ color: '#64748b', fontWeight: '500' }}>Recent Plays</span>
+                                <span style={{ fontWeight: '600', color: '#f59e0b' }}>{recentPlays.length}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Injury Information */}
+                    {(player.injuryStatus || player.injuryBodyPart || player.injuryNotes) && (
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '24px',
+                            borderRadius: '16px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                        }}>
+                            <h3 style={{ 
+                                fontSize: '1.25rem', 
+                                fontWeight: '700', 
+                                color: '#1e293b',
+                                marginBottom: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                🏥 Injury Information
+                            </h3>
+                            <div style={{ display: 'grid', gap: '12px' }}>
+                                {player.injuryStatus && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                        <span style={{ color: '#64748b', fontWeight: '500' }}>Status</span>
+                                        <span style={{ 
+                                            fontWeight: '600', 
+                                            color: player.injuryStatus === 'Out' ? '#ef4444' : '#f59e0b'
+                                        }}>
+                                            {player.injuryStatus}
+                                        </span>
+                                    </div>
+                                )}
+                                {player.injuryBodyPart && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                        <span style={{ color: '#64748b', fontWeight: '500' }}>Injured Area</span>
+                                        <span style={{ fontWeight: '600' }}>{player.injuryBodyPart}</span>
+                                    </div>
+                                )}
+                                {player.injuryStartDate && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                        <span style={{ color: '#64748b', fontWeight: '500' }}>Injury Date</span>
+                                        <span style={{ fontWeight: '600' }}>{new Date(player.injuryStartDate).toLocaleDateString()}</span>
+                                    </div>
+                                )}
+                                {player.injuryNotes && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                        <span style={{ color: '#64748b', fontWeight: '500' }}>Notes</span>
+                                        <span style={{ fontWeight: '600' }}>{player.injuryNotes}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Education & Background */}
+                    {(player.highSchool || player.college) && (
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '24px',
+                            borderRadius: '16px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                        }}>
+                            <h3 style={{ 
+                                fontSize: '1.25rem', 
+                                fontWeight: '700', 
+                                color: '#1e293b',
+                                marginBottom: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                🎓 Education & Background
+                            </h3>
+                            <div style={{ display: 'grid', gap: '12px' }}>
+                                {player.highSchool && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                        <span style={{ color: '#64748b', fontWeight: '500' }}>High School</span>
+                                        <span style={{ fontWeight: '600' }}>{player.highSchool}</span>
+                                    </div>
+                                )}
+                                {player.college && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                        <span style={{ color: '#64748b', fontWeight: '500' }}>College</span>
+                                        <span style={{ fontWeight: '600' }}>{player.college}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Financial Information */}
+                    {player.salary && (
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '24px',
+                            borderRadius: '16px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                        }}>
+                            <h3 style={{ 
+                                fontSize: '1.25rem', 
+                                fontWeight: '700', 
+                                color: '#1e293b',
+                                marginBottom: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                💰 Financial Information
+                            </h3>
+                            <div style={{ display: 'grid', gap: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Salary</span>
+                                    <span style={{ fontWeight: '600' }}>
+                                        ${player.salary.toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Content Layout */}
